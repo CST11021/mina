@@ -33,6 +33,7 @@ import org.apache.mina.common.IoFilter.WriteRequest;
  * @version $Rev$, $Date$
  */
 public interface IoFilterChain {
+
     /**
      * Returns the parent {@link IoSession} of this chain.
      * @return {@link IoSession}
@@ -220,4 +221,5 @@ public interface IoFilterChain {
          */
         NextFilter getNextFilter();
     }
+
 }

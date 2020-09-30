@@ -54,8 +54,14 @@ public class IoHandlerAdapter implements IoHandler {
         }
     }
 
-    public void messageReceived(IoSession session, Object message)
-            throws Exception {
+    /**
+     * 接收来自的请求
+     *
+     * @param session
+     * @param message
+     * @throws Exception
+     */
+    public void messageReceived(IoSession session, Object message) throws Exception {
     }
 
     public void messageSent(IoSession session, Object message) throws Exception {

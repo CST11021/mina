@@ -6,16 +6,16 @@
  *  to you under the Apache License, Version 2.0 (the
  *  "License"); you may not use this file except in compliance
  *  with the License.  You may obtain a copy of the License at
- *  
+ *
  *    http://www.apache.org/licenses/LICENSE-2.0
- *  
+ *
  *  Unless required by applicable law or agreed to in writing,
  *  software distributed under the License is distributed on an
  *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
  *  KIND, either express or implied.  See the License for the
  *  specific language governing permissions and limitations
- *  under the License. 
- *  
+ *  under the License.
+ *
  */
 package org.apache.mina.common;
 
@@ -28,7 +28,7 @@ import java.net.SocketAddress;
  * <p>
  * Please refer to
  * <a href="../../../../../xref-examples/org/apache/mina/examples/echoserver/Main.html">EchoServer</a>
- * example. 
+ * example.
  * <p>
  * You should bind to the desired socket address to accept incoming
  * connections, and then events for incoming connections will be sent to
@@ -37,53 +37,50 @@ import java.net.SocketAddress;
  * Threads accept incoming connections start automatically when
  * {@link #bind(SocketAddress, IoHandler)} is invoked, and stop when all
  * addresses are unbound.
- * 
+ *
  * @author The Apache Directory Project (mina-dev@directory.apache.org)
  * @version $Rev$, $Date$
  */
 public interface IoAcceptor extends IoService {
+
     /**
-     * Binds to the specified <code>address</code> and handles incoming
-     * connections with the specified <code>handler</code>.
-     * 
-     * @throws IOException if failed to bind
+     * 启动服务（开始监听客户端请求）
+     *
+     * @param address
+     * @param handler
+     * @throws IOException
      */
     void bind(SocketAddress address, IoHandler handler) throws IOException;
 
     /**
-     * Binds to the specified <code>address</code> and handles incoming
-     * connections with the specified <code>handler</code>.
+     * 启动服务（开始监听客户端请求）
      *
-     * @param config the configuration
-     * @throws IOException if failed to bind
+     * @param address
+     * @param handler
+     * @param config
+     * @throws IOException
      */
-    void bind(SocketAddress address, IoHandler handler, IoServiceConfig config)
-            throws IOException;
+    void bind(SocketAddress address, IoHandler handler, IoServiceConfig config) throws IOException;
 
     /**
-     * Unbinds from the specified <code>address</code> and disconnects all clients
-     * connected there.
+     * 断开所有客户端的连接，并关闭服务
+     *
+     * @param address
      */
     void unbind(SocketAddress address);
 
     /**
-     * Unbinds all addresses which were bound by this acceptor.
+     * 取消绑定此接受者绑定的所有地址
      */
     void unbindAll();
 
     /**
-     * (Optional) Returns an {@link IoSession} that is bound to the specified
-     * <tt>localAddress</tt> and <tt>remoteAddress</tt> which reuses
-     * the <tt>localAddress</tt> that is already bound by {@link IoAcceptor}
-     * via {@link #bind(SocketAddress, IoHandler)}.
-     * <p>
-     * This operation is optional.  Please throw {@link UnsupportedOperationException}
-     * if the transport type doesn't support this operation.  This operation is
-     * usually implemented for connectionless transport types.
-     * 
-     * @throws UnsupportedOperationException if this operation is not supported
-     * @throws IllegalArgumentException if the specified <tt>localAddress</tt> is
-     *                                  not bound yet. (see {@link #bind(SocketAddress, IoHandler)})
+     * 创建一个会话
+     *
+     * @param remoteAddress     客户端地址
+     * @param localAddress      服务端地址
+     * @return
      */
     IoSession newSession(SocketAddress remoteAddress, SocketAddress localAddress);
+
 }

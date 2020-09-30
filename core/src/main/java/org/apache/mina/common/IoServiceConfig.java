@@ -26,6 +26,7 @@ package org.apache.mina.common;
  * @version $Rev$, $Date$
  */
 public interface IoServiceConfig extends Cloneable {
+
     /**
      * Resturns the default configuration of the new {@link IoSession}s.
      */
@@ -84,4 +85,5 @@ public interface IoServiceConfig extends Cloneable {
      * Returns a deep clone of this configuration.
      */
     Object clone();
+
 }

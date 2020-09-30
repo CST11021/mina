@@ -46,6 +46,7 @@ import org.apache.mina.common.support.IoServiceListenerSupport;
  * @version $Rev$, $Date$
  */
 class SocketSessionImpl extends BaseIoSession {
+
     private final IoService manager;
 
     private final IoServiceConfig serviceConfig;
@@ -60,16 +61,21 @@ class SocketSessionImpl extends BaseIoSession {
 
     private final Queue<WriteRequest> writeRequestQueue;
 
+    /** 服务端的请求处理器，及session相关的回调接口 */
     private final IoHandler handler;
 
+    /** 客户端的地址 */
     private final SocketAddress remoteAddress;
 
+    /** 创建socket的本地地址，即服务端地址 */
     private final SocketAddress localAddress;
 
+    /** 用于接收客户端请求的服务端ip和端口 */
     private final SocketAddress serviceAddress;
 
     private final IoServiceListenerSupport serviceListeners;
 
+    /** 表示该会话订阅的NIO事件 */
     private SelectionKey key;
 
     private int readBufferSize = 1024;
@@ -79,9 +85,8 @@ class SocketSessionImpl extends BaseIoSession {
      * Creates a new instance.
      */
     SocketSessionImpl(IoService manager, SocketIoProcessor ioProcessor,
-            IoServiceListenerSupport listeners, IoServiceConfig serviceConfig,
-            SocketChannel ch, IoHandler defaultHandler,
-            SocketAddress serviceAddress) {
+                      IoServiceListenerSupport listeners, IoServiceConfig serviceConfig,
+                      SocketChannel ch, IoHandler defaultHandler, SocketAddress serviceAddress) {
         this.manager = manager;
         this.serviceListeners = listeners;
         this.ioProcessor = ioProcessor;
@@ -190,7 +195,7 @@ class SocketSessionImpl extends BaseIoSession {
     int getReadBufferSize() {
         return readBufferSize;
     }
-    
+
     void increaseReadBufferSize() {
         int newReadBufferSize = getReadBufferSize() << 1;
         if (newReadBufferSize <= ((SocketSessionConfig) getConfig()).getReceiveBufferSize() << 1) {
@@ -200,25 +205,24 @@ class SocketSessionImpl extends BaseIoSession {
             setReadBufferSize(newReadBufferSize);
         }
     }
-    
+
     void decreaseReadBufferSize() {
         if (deferDecreaseReadBufferSize) {
             deferDecreaseReadBufferSize = false;
             return;
         }
-        
+
         if (getReadBufferSize() > 64) {
             setReadBufferSize(getReadBufferSize() >>> 1);
         }
     }
-    
+
     private void setReadBufferSize(int readBufferSize) {
         this.readBufferSize = readBufferSize;
         this.deferDecreaseReadBufferSize = true;
     }
 
-    private class SessionConfigImpl extends BaseIoSessionConfig implements
-            SocketSessionConfig {
+    private class SessionConfigImpl extends BaseIoSessionConfig implements SocketSessionConfig {
         public boolean isKeepAlive() {
             try {
                 return ch.socket().getKeepAlive();

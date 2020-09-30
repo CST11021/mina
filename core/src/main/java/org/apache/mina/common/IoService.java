@@ -23,13 +23,13 @@ import java.net.SocketAddress;
 import java.util.Set;
 
 /**
- * Base interface for all {@link IoAcceptor}s and {@link IoConnector}s
- * that provide I/O service and manage {@link IoSession}s.
+ * 所有提供I/O服务和管理IoSession的服务，是IoAcceptor和IoConnector都实现了该接口
  *
  * @author The Apache Directory Project (mina-dev@directory.apache.org)
  * @version $Rev$, $Date$
  */
 public interface IoService {
+
     /**
      * Adds an {@link IoServiceListener} that listens any events related with
      * this service.
@@ -79,31 +79,23 @@ public interface IoService {
     IoServiceConfig getDefaultConfig();
 
     /**
-     * Returns the global {@link IoFilterChainBuilder} which will modify the
-     * {@link IoFilterChain} of all {@link IoSession}s which is managed
-     * by this service.
-     * The default value is an empty {@link DefaultIoFilterChainBuilder}.
+     * 获取过滤器链的Builder，该Builder用于创建过滤器链
+     *
+     * @return
      */
     IoFilterChainBuilder getFilterChainBuilder();
 
     /**
-     * Sets the global {@link IoFilterChainBuilder} which will modify the
-     * {@link IoFilterChain} of all {@link IoSession}s which is managed
-     * by this service.
-     * If you specify <tt>null</tt> this property will be set to
-     * an empty {@link DefaultIoFilterChainBuilder}.
+     * 过滤器链的Builder，该Builder用于创建过滤器链
+     *
+     * @param builder
      */
     void setFilterChainBuilder(IoFilterChainBuilder builder);
 
     /**
-     * A shortcut for <tt>( ( DefaultIoFilterChainBuilder ) </tt>{@link #getFilterChainBuilder()}<tt> )</tt>.
-     * Please note that the returned object is not a <b>real</b> {@link IoFilterChain}
-     * but a {@link DefaultIoFilterChainBuilder}.  Modifying the returned builder
-     * won't affect the existing {@link IoSession}s at all, because
-     * {@link IoFilterChainBuilder}s affect only newly created {@link IoSession}s.
+     * 获取过滤器链的Builder，该Builder用于创建过滤器链
      *
-     * @throws IllegalStateException if the current {@link IoFilterChainBuilder} is
-     *                               not a {@link DefaultIoFilterChainBuilder}
+     * @return
      */
     DefaultIoFilterChainBuilder getFilterChain();
 }

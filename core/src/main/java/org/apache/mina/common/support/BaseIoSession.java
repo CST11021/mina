@@ -45,30 +45,30 @@ import org.apache.mina.common.IoFilter.WriteRequest;
  * @version $Rev$, $Date$
  */
 public abstract class BaseIoSession implements IoSession {
-    
+
     private static final IoFutureListener SCHEDULED_COUNTER_RESETTER =
-        new IoFutureListener() {
-            public void operationComplete(IoFuture future) {
-                BaseIoSession s = (BaseIoSession) future.getSession();
-                s.scheduledWriteBytes.set(0);
-                s.scheduledWriteRequests.set(0);
-            }
-        };
-    
+            new IoFutureListener() {
+                public void operationComplete(IoFuture future) {
+                    BaseIoSession s = (BaseIoSession) future.getSession();
+                    s.scheduledWriteBytes.set(0);
+                    s.scheduledWriteRequests.set(0);
+                }
+            };
+
     private final Object lock = new Object();
 
-    private final Map<String, Object> attributes = Collections
-            .synchronizedMap(new HashMap<String, Object>(8));
+    private final Map<String, Object> attributes = Collections.synchronizedMap(new HashMap<String, Object>(8));
 
+    /** session的创建时间 */
     private final long creationTime;
 
     /**
      * A future that will be set 'closed' when the connection is closed.
      */
     private final CloseFuture closeFuture = new DefaultCloseFuture(this);
-    
+
     private final AtomicBoolean scheduledForFlush = new AtomicBoolean();
-    
+
     private final AtomicInteger scheduledWriteBytes = new AtomicInteger();
 
     private final AtomicInteger scheduledWriteRequests = new AtomicInteger();
@@ -95,25 +95,23 @@ public abstract class BaseIoSession implements IoSession {
 
     private long writtenMessages;
 
+    /** 最后一次读取客户端请求数据的时间 */
     private long lastReadTime;
 
+    /** 最后一次向客户端发送响应的时间 */
     private long lastWriteTime;
 
+
     private int idleCountForBoth;
-
     private int idleCountForRead;
-
     private int idleCountForWrite;
 
     private long lastIdleTimeForBoth;
-
     private long lastIdleTimeForRead;
-
     private long lastIdleTimeForWrite;
 
     protected BaseIoSession() {
-        creationTime = lastReadTime = lastWriteTime = lastIdleTimeForBoth = lastIdleTimeForRead = lastIdleTimeForWrite = System
-                .currentTimeMillis();
+        creationTime = lastReadTime = lastWriteTime = lastIdleTimeForBoth = lastIdleTimeForRead = lastIdleTimeForWrite = System.currentTimeMillis();
         closeFuture.addListener(SCHEDULED_COUNTER_RESETTER);
     }
 
@@ -128,11 +126,11 @@ public abstract class BaseIoSession implements IoSession {
     public CloseFuture getCloseFuture() {
         return closeFuture;
     }
-    
+
     public boolean isScheduledForFlush() {
         return scheduledForFlush.get();
     }
-    
+
     public boolean setScheduledForFlush(boolean flag) {
         if (flag) {
             return scheduledForFlush.compareAndSet(false, true);
@@ -164,12 +162,26 @@ public abstract class BaseIoSession implements IoSession {
         closeFuture.setClosed();
     }
 
+    /**
+     * 向客户端发送响应数据
+     *
+     * @param message
+     * @return
+     */
     public WriteFuture write(Object message) {
         return write(message, null);
     }
 
+    /**
+     * 向客户端发送响应数据
+     *
+     * @param message
+     * @param remoteAddress
+     * @return
+     */
     public WriteFuture write(Object message, SocketAddress remoteAddress) {
-        if (isClosing() ) {
+
+        if (isClosing()) {
             return DefaultWriteFuture.newNotWrittenFuture(this);
         }
 
@@ -180,9 +192,8 @@ public abstract class BaseIoSession implements IoSession {
     }
 
     /**
-     * Implement this method to perform real write operation with
-     * the specified <code>writeRequest</code>.
-     *
+     * Implement this method to perform real write operation with the specified <code>writeRequest</code>.
+     * <p>
      * By default, this method is implemented to set the future to
      * 'not written' immediately.
      *
@@ -192,18 +203,19 @@ public abstract class BaseIoSession implements IoSession {
         writeRequest.getFuture().setWritten(false);
     }
 
+
+
+
+
     public Object getAttachment() {
         return getAttribute("");
     }
-
     public Object setAttachment(Object attachment) {
         return setAttribute("", attachment);
     }
-
     public Object getAttribute(String key) {
         return attributes.get(key);
     }
-
     public Object setAttribute(String key, Object value) {
         if (value == null) {
             return removeAttribute(key);
@@ -211,24 +223,25 @@ public abstract class BaseIoSession implements IoSession {
             return attributes.put(key, value);
         }
     }
-
     public Object setAttribute(String key) {
         return setAttribute(key, Boolean.TRUE);
     }
-
     public Object removeAttribute(String key) {
         return attributes.remove(key);
     }
-
     public boolean containsAttribute(String key) {
         return getAttribute(key) != null;
     }
-
     public Set<String> getAttributeKeys() {
         synchronized (attributes) {
             return new HashSet<String>(attributes.keySet());
         }
     }
+
+
+
+
+
 
     public int getIdleTime(IdleStatus status) {
         if (status == IdleStatus.BOTH_IDLE)
@@ -334,11 +347,11 @@ public abstract class BaseIoSession implements IoSession {
     public long getWrittenMessages() {
         return writtenMessages;
     }
-    
+
     public int getScheduledWriteBytes() {
         return scheduledWriteBytes.get();
     }
-    
+
     public int getScheduledWriteRequests() {
         return scheduledWriteRequests.get();
     }
@@ -358,11 +371,11 @@ public abstract class BaseIoSession implements IoSession {
             lastWriteTime = System.currentTimeMillis();
             idleCountForBoth = 0;
             idleCountForWrite = 0;
-            
+
             scheduledWriteBytes.addAndGet(-increment);
         }
     }
-    
+
     public void increaseReadMessages() {
         readMessages++;
         lastReadTime = System.currentTimeMillis();
@@ -373,7 +386,7 @@ public abstract class BaseIoSession implements IoSession {
         lastWriteTime = System.currentTimeMillis();
         scheduledWriteRequests.decrementAndGet();
     }
-    
+
     public void increaseScheduledWriteBytes(int increment) {
         scheduledWriteBytes.addAndGet(increment);
     }

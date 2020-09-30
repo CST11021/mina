@@ -35,24 +35,49 @@ import org.apache.mina.common.IoSession;
  * @version $Rev$, $Date$
  */
 public abstract class BaseIoService implements IoService {
-    /**
-     * Current filter chain builder.
-     */
+
+    /** 用于管理所有的Service监听器 */
+    private final IoServiceListenerSupport listeners;
+
+    /** 用于创建过滤器链的builder */
     private IoFilterChainBuilder filterChainBuilder = new DefaultIoFilterChainBuilder();
 
-    /**
-     * Maintains the {@link IoServiceListener}s of this service.
-     */
-    private final IoServiceListenerSupport listeners;
 
     protected BaseIoService() {
         this.listeners = new IoServiceListenerSupport();
     }
 
+
+
+    // 过滤器相关
+
+    /**
+     * 获取过滤器链的Builder，该Builder用于创建过滤器链
+     *
+     * @return
+     */
+    public DefaultIoFilterChainBuilder getFilterChain() {
+        if (filterChainBuilder instanceof DefaultIoFilterChainBuilder) {
+            return (DefaultIoFilterChainBuilder) filterChainBuilder;
+        } else {
+            throw new IllegalStateException("Current filter chain builder is not a DefaultIoFilterChainBuilder.");
+        }
+    }
+
+    /**
+     * 获取过滤器链的Builder，该Builder用于创建过滤器链
+     *
+     * @return
+     */
     public IoFilterChainBuilder getFilterChainBuilder() {
         return filterChainBuilder;
     }
 
+    /**
+     * 过滤器链的Builder，该Builder用于创建过滤器链
+     *
+     * @param builder
+     */
     public void setFilterChainBuilder(IoFilterChainBuilder builder) {
         if (builder == null) {
             builder = new DefaultIoFilterChainBuilder();
@@ -60,27 +85,52 @@ public abstract class BaseIoService implements IoService {
         filterChainBuilder = builder;
     }
 
-    public DefaultIoFilterChainBuilder getFilterChain() {
-        if (filterChainBuilder instanceof DefaultIoFilterChainBuilder) {
-            return (DefaultIoFilterChainBuilder) filterChainBuilder;
-        } else {
-            throw new IllegalStateException(
-                    "Current filter chain builder is not a DefaultIoFilterChainBuilder.");
-        }
+
+    // 监听器
+
+    /**
+     * 获取IoServiceListener管理器
+     *
+     * @return
+     */
+    protected IoServiceListenerSupport getListeners() {
+        return listeners;
     }
 
+    /**
+     * 添加IoServiceListener
+     *
+     * @param listener
+     */
     public void addListener(IoServiceListener listener) {
         getListeners().add(listener);
     }
 
+    /**
+     * 移除IoServiceListener
+     *
+     * @param listener
+     */
     public void removeListener(IoServiceListener listener) {
         getListeners().remove(listener);
     }
 
+
+    /**
+     * 获取所有被管理的监听器的服务地址
+     *
+     * @return
+     */
     public Set<SocketAddress> getManagedServiceAddresses() {
         return getListeners().getManagedServiceAddresses();
     }
 
+    /**
+     * 获取指定服务的会话集合
+     *
+     * @param serviceAddress the address to return all sessions for.
+     * @return
+     */
     public Set<IoSession> getManagedSessions(SocketAddress serviceAddress) {
         return getListeners().getManagedSessions(serviceAddress);
     }
@@ -89,7 +139,6 @@ public abstract class BaseIoService implements IoService {
         return getListeners().isManaged(serviceAddress);
     }
 
-    protected IoServiceListenerSupport getListeners() {
-        return listeners;
-    }
+
+
 }

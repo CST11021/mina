@@ -84,14 +84,10 @@ public class StatCollector {
     private float bytesReadThroughput = 0f;
 
     private final IoServiceListener serviceListener = new IoServiceListener() {
-        public void serviceActivated(IoService service,
-                SocketAddress serviceAddress, IoHandler handler,
-                IoServiceConfig config) {
+        public void serviceActivated(IoService service, SocketAddress serviceAddress, IoHandler handler, IoServiceConfig config) {
         }
 
-        public void serviceDeactivated(IoService service,
-                SocketAddress serviceAddress, IoHandler handler,
-                IoServiceConfig config) {
+        public void serviceDeactivated(IoService service, SocketAddress serviceAddress, IoHandler handler, IoServiceConfig config) {
         }
 
         public void sessionCreated(IoSession session) {

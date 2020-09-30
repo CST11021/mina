@@ -32,18 +32,17 @@ import org.apache.mina.common.IoSession;
  * @author The Apache Directory Project (mina-dev@directory.apache.org)
  * @version $Rev$, $Date$
  */
-public abstract class BaseIoAcceptor extends BaseIoService implements
-        IoAcceptor {
+public abstract class BaseIoAcceptor extends BaseIoService implements IoAcceptor {
+
     protected BaseIoAcceptor() {
     }
 
-    public void bind(SocketAddress address, IoHandler handler)
-            throws IOException {
+    public void bind(SocketAddress address, IoHandler handler) throws IOException {
         this.bind(address, handler, getDefaultConfig());
     }
 
-    public IoSession newSession(SocketAddress remoteAddress,
-            SocketAddress localAddress) {
+    public IoSession newSession(SocketAddress remoteAddress, SocketAddress localAddress) {
         throw new UnsupportedOperationException();
     }
+
 }

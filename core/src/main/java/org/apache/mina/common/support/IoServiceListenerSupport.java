@@ -43,16 +43,14 @@ import org.apache.mina.common.RuntimeIOException;
 import org.apache.mina.util.IdentityHashSet;
 
 /**
- * A helper which provides addition and removal of {@link IoServiceListener}s and firing
- * events.
+ * 用于添加和删除IoServiceListener以及触发事件
  *
  * @author The Apache Directory Project (mina-dev@directory.apache.org)
  * @version $Rev$, $Date$
  */
 public class IoServiceListenerSupport {
-    /**
-     * A list of {@link IoServiceListener}s.
-     */
+
+    /** 保存所有的监听器 */
     private final List<IoServiceListener> listeners = new CopyOnWriteArrayList<IoServiceListener>();
 
     /**
@@ -65,34 +63,37 @@ public class IoServiceListenerSupport {
      */
     private final ConcurrentMap<SocketAddress, Set<IoSession>> managedSessions = new ConcurrentHashMap<SocketAddress, Set<IoSession>>();
 
+
     /**
      * Creates a new instance.
      */
     public IoServiceListenerSupport() {
     }
 
-    /**
-     * Adds a new listener.
-     */
+
     public void add(IoServiceListener listener) {
         listeners.add(listener);
     }
-
-    /**
-     * Removes an existing listener.
-     */
     public void remove(IoServiceListener listener) {
         listeners.remove(listener);
     }
 
-    public Set<SocketAddress> getManagedServiceAddresses() {
-        return Collections.unmodifiableSet(managedServiceAddresses);
-    }
+
 
     public boolean isManaged(SocketAddress serviceAddress) {
         return managedServiceAddresses.contains(serviceAddress);
     }
+    public Set<SocketAddress> getManagedServiceAddresses() {
+        return Collections.unmodifiableSet(managedServiceAddresses);
+    }
 
+
+    /**
+     * 获取服务器的所有会话
+     *
+     * @param serviceAddress
+     * @return
+     */
     public Set<IoSession> getManagedSessions(SocketAddress serviceAddress) {
         Set<IoSession> sessions = managedSessions.get(serviceAddress);
 
@@ -105,13 +106,16 @@ public class IoServiceListenerSupport {
         }
     }
 
+
     /**
-     * Calls {@link IoServiceListener#serviceActivated(IoService, SocketAddress, IoHandler, IoServiceConfig)}
-     * for all registered listeners.
+     * 当服务启动时，调用该方法
+     *
+     * @param service
+     * @param serviceAddress
+     * @param handler
+     * @param config
      */
-    public void fireServiceActivated(IoService service,
-            SocketAddress serviceAddress, IoHandler handler,
-            IoServiceConfig config) {
+    public void fireServiceActivated(IoService service, SocketAddress serviceAddress, IoHandler handler, IoServiceConfig config) {
         if (!managedServiceAddresses.add(serviceAddress)) {
             return;
         }
@@ -126,12 +130,14 @@ public class IoServiceListenerSupport {
     }
 
     /**
-     * Calls {@link IoServiceListener#serviceDeactivated(IoService, SocketAddress, IoHandler, IoServiceConfig)}
-     * for all registered listeners.
+     * 当服务关闭时调用该方法
+     *
+     * @param service
+     * @param serviceAddress
+     * @param handler
+     * @param config
      */
-    public synchronized void fireServiceDeactivated(IoService service,
-            SocketAddress serviceAddress, IoHandler handler,
-            IoServiceConfig config) {
+    public synchronized void fireServiceDeactivated(IoService service, SocketAddress serviceAddress, IoHandler handler, IoServiceConfig config) {
         if (!managedServiceAddresses.remove(serviceAddress)) {
             return;
         }
@@ -139,8 +145,7 @@ public class IoServiceListenerSupport {
         try {
             for (IoServiceListener listener : listeners) {
                 try {
-                    listener.serviceDeactivated(service, serviceAddress, handler,
-                            config);
+                    listener.serviceDeactivated(service, serviceAddress, handler, config);
                 } catch (Throwable e) {
                     ExceptionMonitor.getInstance().exceptionCaught(e);
                 }
@@ -151,7 +156,9 @@ public class IoServiceListenerSupport {
     }
 
     /**
-     * Calls {@link IoServiceListener#sessionCreated(IoSession)} for all registered listeners.
+     * 当session被创建时，调用该方法
+     *
+     * @param session
      */
     public void fireSessionCreated(IoSession session) {
         SocketAddress serviceAddress = session.getServiceAddress();
@@ -162,14 +169,14 @@ public class IoServiceListenerSupport {
             // Get the session set.
             Set<IoSession> sessions = managedSessions.putIfAbsent(serviceAddress,
                     Collections.synchronizedSet(s));
-    
+
             if (null == sessions) {
                 sessions = s;
                 firstSession = true;
             } else {
                 firstSession = false;
             }
-    
+
             // If already registered, ignore.
             if (!sessions.add(session)) {
                 return;
@@ -198,7 +205,9 @@ public class IoServiceListenerSupport {
     }
 
     /**
-     * Calls {@link IoServiceListener#sessionDestroyed(IoSession)} for all registered listeners.
+     * 当session被销毁时，调用该方法
+     *
+     * @param session
      */
     public void fireSessionDestroyed(IoSession session) {
         SocketAddress serviceAddress = session.getServiceAddress();
@@ -211,9 +220,9 @@ public class IoServiceListenerSupport {
             if (sessions == null) {
                 return;
             }
-    
+
             sessions.remove(session);
-    
+
             // Try to remove the remaining empty session set after removal.
             if (sessions.isEmpty()) {
                 lastSession = managedSessions.remove(serviceAddress, sessions);
@@ -243,8 +252,13 @@ public class IoServiceListenerSupport {
         }
     }
 
-    private void disconnectSessions(SocketAddress serviceAddress,
-            IoServiceConfig config) {
+    /**
+     * 将session断开连接
+     *
+     * @param serviceAddress
+     * @param config
+     */
+    private void disconnectSessions(SocketAddress serviceAddress, IoServiceConfig config) {
         if (!(config instanceof IoAcceptorConfig)) {
             return;
         }

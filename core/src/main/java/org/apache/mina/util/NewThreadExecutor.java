@@ -27,7 +27,9 @@ import java.util.concurrent.Executor;
  * @version $Rev: 446581 $, $Date: 2006-09-15 11:36:12Z $,
  */
 public class NewThreadExecutor implements Executor {
+
     public void execute(Runnable command) {
         new Thread(command).start();
     }
+
 }

@@ -51,26 +51,31 @@ class SocketIoProcessor {
      * It improves memory utilization and write throughput significantly.
      */
     private static final int WRITE_SPIN_COUNT = 256;
-    
+
     private final Object lock = new Object();
 
+    /** 处理器执行线程的线程名 */
     private final String threadName;
 
+    /** 执行器，用于执行Worker */
     private final Executor executor;
 
+    /** 封装Processor处理器的执行逻辑 */
+    private Worker worker;
+
     private volatile Selector selector;
+
+    private long lastIdleCheckTime = System.currentTimeMillis();
 
     private final Queue<SocketSessionImpl> newSessions = new ConcurrentLinkedQueue<SocketSessionImpl>();
 
     private final Queue<SocketSessionImpl> removingSessions = new ConcurrentLinkedQueue<SocketSessionImpl>();
 
+    /** 当session向客户端发送响应数据后，会将session保存到该队列 */
     private final Queue<SocketSessionImpl> flushingSessions = new ConcurrentLinkedQueue<SocketSessionImpl>();
 
     private final Queue<SocketSessionImpl> trafficControllingSessions = new ConcurrentLinkedQueue<SocketSessionImpl>();
 
-    private Worker worker;
-
-    private long lastIdleCheckTime = System.currentTimeMillis();
 
     SocketIoProcessor(String threadName, Executor executor) {
         this.threadName = threadName;
@@ -99,7 +104,7 @@ class SocketIoProcessor {
     }
 
     void flush(SocketSessionImpl session) {
-        if ( scheduleFlush(session) ) {
+        if (scheduleFlush(session)) {
             Selector selector = this.selector;
             if (selector != null) {
                 selector.wakeup();
@@ -119,10 +124,15 @@ class SocketIoProcessor {
         removingSessions.add(session);
     }
 
+    /**
+     * 释放session中的缓存数据（即向客户端发送响应的数据）
+     *
+     * @param session
+     * @return
+     */
     private boolean scheduleFlush(SocketSessionImpl session) {
         if (session.setScheduledForFlush(true)) {
             flushingSessions.add(session);
-
             return true;
         }
 
@@ -133,9 +143,12 @@ class SocketIoProcessor {
         trafficControllingSessions.add(session);
     }
 
+    /**
+     * 从newSessions获取一个session，获取session中的通道，注册到Selector，并监听SelectionKey.OP_READ事件（开始监听来自客户端的请求）
+     */
     private void doAddNew() {
         Selector selector = this.selector;
-        for (;;) {
+        for (; ; ) {
             SocketSessionImpl session = newSessions.poll();
 
             if (session == null)
@@ -144,11 +157,9 @@ class SocketIoProcessor {
             SocketChannel ch = session.getChannel();
             try {
                 ch.configureBlocking(false);
-                session.setSelectionKey(ch.register(selector,
-                        SelectionKey.OP_READ, session));
+                session.setSelectionKey(ch.register(selector, SelectionKey.OP_READ, session));
 
-                // AbstractIoFilterChain.CONNECT_FUTURE is cleared inside here
-                // in AbstractIoFilterChain.fireSessionOpened().
+                // AbstractIoFilterChain.CONNECT_FUTURE is cleared inside here in AbstractIoFilterChain.fireSessionOpened().
                 session.getServiceListeners().fireSessionCreated(session);
             } catch (IOException e) {
                 // Clear the AbstractIoFilterChain.CONNECT_FUTURE attribute
@@ -158,10 +169,12 @@ class SocketIoProcessor {
         }
     }
 
+    /**
+     * session处理完一次请求后，需要removingSessions队列移除，并触发fireSessionDestroyed()监听器方法
+     */
     private void doRemove() {
-        for (;;) {
+        for (; ; ) {
             SocketSessionImpl session = removingSessions.poll();
-
             if (session == null)
                 break;
 
@@ -190,14 +203,21 @@ class SocketIoProcessor {
         }
     }
 
+    /**
+     * 处理通道监听的事件：获取客户端的请求，并进行处理，再向客户端发送响应数据
+     *
+     * @param selectedKeys
+     */
     private void process(Set<SelectionKey> selectedKeys) {
         for (SelectionKey key : selectedKeys) {
             SocketSessionImpl session = (SocketSessionImpl) key.attachment();
 
+            // 从session中获取客户端的请求数据，并处理请求
             if (key.isReadable() && session.getTrafficMask().isReadable()) {
                 read(session);
             }
 
+            // 想客户端发送响应数据
             if (key.isWritable() && session.getTrafficMask().isWritable()) {
                 scheduleFlush(session);
             }
@@ -206,10 +226,15 @@ class SocketIoProcessor {
         selectedKeys.clear();
     }
 
+    /**
+     * 从session中获取客户端的请求数据，并处理请求
+     *
+     * @param session
+     */
     private void read(SocketSessionImpl session) {
+        // 用于缓存客户端的请求数据
         ByteBuffer buf = ByteBuffer.allocate(session.getReadBufferSize());
         SocketChannel ch = session.getChannel();
-
         try {
             int readBytes = 0;
             int ret;
@@ -225,6 +250,7 @@ class SocketIoProcessor {
             session.increaseReadBytes(readBytes);
 
             if (readBytes > 0) {
+                // 服务端接收到客户端的请求后，调用fireMessageReceived(session, buf)方法进行处理
                 session.getFilterChain().fireMessageReceived(session, buf);
                 buf = null;
 
@@ -234,6 +260,7 @@ class SocketIoProcessor {
                     session.increaseReadBufferSize();
                 }
             }
+
             if (ret < 0) {
                 scheduleRemove(session);
             }
@@ -255,8 +282,7 @@ class SocketIoProcessor {
             Set<SelectionKey> keys = selector.keys();
             if (keys != null) {
                 for (SelectionKey key : keys) {
-                    SocketSessionImpl session = (SocketSessionImpl) key
-                            .attachment();
+                    SocketSessionImpl session = (SocketSessionImpl) key.attachment();
                     notifyIdleness(session, currentTime);
                 }
             }
@@ -264,34 +290,41 @@ class SocketIoProcessor {
     }
 
     private void notifyIdleness(SocketSessionImpl session, long currentTime) {
-        notifyIdleness0(session, currentTime, session
-                .getIdleTimeInMillis(IdleStatus.BOTH_IDLE),
-                IdleStatus.BOTH_IDLE, Math.max(session.getLastIoTime(), session
-                        .getLastIdleTime(IdleStatus.BOTH_IDLE)));
-        notifyIdleness0(session, currentTime, session
-                .getIdleTimeInMillis(IdleStatus.READER_IDLE),
-                IdleStatus.READER_IDLE, Math.max(session.getLastReadTime(),
-                        session.getLastIdleTime(IdleStatus.READER_IDLE)));
-        notifyIdleness0(session, currentTime, session
-                .getIdleTimeInMillis(IdleStatus.WRITER_IDLE),
-                IdleStatus.WRITER_IDLE, Math.max(session.getLastWriteTime(),
-                        session.getLastIdleTime(IdleStatus.WRITER_IDLE)));
+        notifyIdleness0(
+                session,
+                currentTime,
+                session.getIdleTimeInMillis(IdleStatus.BOTH_IDLE),
+                IdleStatus.BOTH_IDLE,
+                Math.max(session.getLastIoTime(), session.getLastIdleTime(IdleStatus.BOTH_IDLE))
+        );
 
-        notifyWriteTimeout(session, currentTime, session
-                .getWriteTimeoutInMillis(), session.getLastWriteTime());
+        notifyIdleness0(
+                session,
+                currentTime,
+                session.getIdleTimeInMillis(IdleStatus.READER_IDLE),
+                IdleStatus.READER_IDLE,
+                Math.max(session.getLastReadTime(), session.getLastIdleTime(IdleStatus.READER_IDLE))
+        );
+
+        notifyIdleness0(
+                session,
+                currentTime,
+                session.getIdleTimeInMillis(IdleStatus.WRITER_IDLE),
+                IdleStatus.WRITER_IDLE,
+                Math.max(session.getLastWriteTime(), session.getLastIdleTime(IdleStatus.WRITER_IDLE))
+        );
+
+        notifyWriteTimeout(session, currentTime, session.getWriteTimeoutInMillis(), session.getLastWriteTime());
     }
 
-    private void notifyIdleness0(SocketSessionImpl session, long currentTime,
-            long idleTime, IdleStatus status, long lastIoTime) {
-        if (idleTime > 0 && lastIoTime != 0
-                && (currentTime - lastIoTime) >= idleTime) {
+    private void notifyIdleness0(SocketSessionImpl session, long currentTime, long idleTime, IdleStatus status, long lastIoTime) {
+        if (idleTime > 0 && lastIoTime != 0 && (currentTime - lastIoTime) >= idleTime) {
             session.increaseIdleCount(status);
             session.getFilterChain().fireSessionIdle(session, status);
         }
     }
 
-    private void notifyWriteTimeout(SocketSessionImpl session,
-            long currentTime, long writeTimeout, long lastIoTime) {
+    private void notifyWriteTimeout(SocketSessionImpl session, long currentTime, long writeTimeout, long lastIoTime) {
         SelectionKey key = session.getSelectionKey();
         if (writeTimeout > 0 && (currentTime - lastIoTime) >= writeTimeout
                 && key != null && key.isValid()
@@ -301,10 +334,12 @@ class SocketIoProcessor {
         }
     }
 
+    /**
+     * session处理完一次请求后（即接收客户端请求，然后发起响应了之后）的后置处理动作
+     */
     private void doFlush() {
-        for (;;) {
+        for (; ; ) {
             SocketSessionImpl session = flushingSessions.poll();
-
             if (session == null)
                 break;
 
@@ -323,15 +358,15 @@ class SocketIoProcessor {
                 break;
             }
 
-            // Skip if the channel is already closed.
+            // 如果通道已关闭，则跳过
             if (!key.isValid()) {
                 continue;
             }
 
             try {
                 boolean flushedAll = doFlush(session);
-                if( flushedAll && !session.getWriteRequestQueue().isEmpty() && !session.isScheduledForFlush()) {
-                    scheduleFlush( session );
+                if (flushedAll && !session.getWriteRequestQueue().isEmpty() && !session.isScheduledForFlush()) {
+                    scheduleFlush(session);
                 }
             } catch (IOException e) {
                 scheduleRemove(session);
@@ -379,7 +414,7 @@ class SocketIoProcessor {
             scheduleRemove(session);
             return false;
         }
-        
+
         // Clear OP_WRITE
         SelectionKey key = session.getSelectionKey();
         key.interestOps(key.interestOps() & (~SelectionKey.OP_WRITE));
@@ -389,7 +424,7 @@ class SocketIoProcessor {
         int writtenBytes = 0;
         int maxWrittenBytes = ((SocketSessionConfig) session.getConfig()).getSendBufferSize() << 1;
         try {
-            for (;;) {
+            for (; ; ) {
                 WriteRequest req = writeRequestQueue.peek();
 
                 if (req == null)
@@ -400,17 +435,17 @@ class SocketIoProcessor {
                     writeRequestQueue.poll();
 
                     buf.reset();
-                    
+
                     if (!buf.hasRemaining()) {
                         session.increaseWrittenMessages();
                     }
-                    
+
                     session.getFilterChain().fireMessageSent(session, req);
                     continue;
                 }
 
                 int localWrittenBytes = 0;
-                for (int i = WRITE_SPIN_COUNT; i > 0; i --) {
+                for (int i = WRITE_SPIN_COUNT; i > 0; i--) {
                     localWrittenBytes = ch.write(buf.buf());
                     if (localWrittenBytes != 0 || !buf.hasRemaining()) {
                         break;
@@ -436,30 +471,27 @@ class SocketIoProcessor {
         if (trafficControllingSessions.isEmpty())
             return;
 
-        for (;;) {
+        for (; ; ) {
             SocketSessionImpl session = trafficControllingSessions.poll();
-
             if (session == null)
                 break;
 
             SelectionKey key = session.getSelectionKey();
             // Retry later if session is not yet fully initialized.
-            // (In case that Session.suspend??() or session.resume??() is
-            // called before addSession() is processed)
+            // (In case that Session.suspend??() or session.resume??() is called before addSession() is processed)
             if (key == null) {
                 scheduleTrafficControl(session);
                 break;
             }
+
             // skip if channel is already closed
             if (!key.isValid()) {
                 continue;
             }
 
-            // The normal is OP_READ and, if there are write requests in the
-            // session's write queue, set OP_WRITE to trigger flushing.
+            // The normal is OP_READ and, if there are write requests in the session's write queue, set OP_WRITE to trigger flushing.
             int ops = SelectionKey.OP_READ;
-            Queue<WriteRequest> writeRequestQueue = session
-                    .getWriteRequestQueue();
+            Queue<WriteRequest> writeRequestQueue = session.getWriteRequestQueue();
             synchronized (writeRequestQueue) {
                 if (!writeRequestQueue.isEmpty()) {
                     ops |= SelectionKey.OP_WRITE;
@@ -475,18 +507,24 @@ class SocketIoProcessor {
     private class Worker implements Runnable {
         public void run() {
             Selector selector = SocketIoProcessor.this.selector;
-            for (;;) {
+            for (; ; ) {
                 try {
                     int nKeys = selector.select(1000);
+                    // 从newSessions获取一个session，获取session中的通道，注册到Selector，并监听SelectionKey.OP_READ事件（开始监听来自客户端的请求）
                     doAddNew();
+
                     doUpdateTrafficMask();
 
                     if (nKeys > 0) {
+                        // 处理通道监听的事件：获取客户端的请求，并进行处理，再向客户端发送响应数据
                         process(selector.selectedKeys());
                     }
 
+                    // session处理完一次请求后（即接收客户端请求，然后发起响应了之后）的后置处理动作
                     doFlush();
+                    // session处理完一次请求后，需要removingSessions队列移除，并触发fireSessionDestroyed()监听器方法
                     doRemove();
+
                     notifyIdleness();
 
                     if (selector.keys().isEmpty()) {

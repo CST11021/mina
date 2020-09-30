@@ -37,20 +37,26 @@ public class TrafficMask {
     /**
      * This mask suspends writes, and resumes reads if reads were suspended.
      */
-    public static final TrafficMask READ = new TrafficMask(
-            SelectionKey.OP_READ, "read");
+    public static final TrafficMask READ = new TrafficMask(SelectionKey.OP_READ, "read");
 
     /**
      * This mask suspends reads, and resumes writes if writes were suspended.
      */
-    public static final TrafficMask WRITE = new TrafficMask(
-            SelectionKey.OP_WRITE, "write");
+    public static final TrafficMask WRITE = new TrafficMask(SelectionKey.OP_WRITE, "write");
 
     /**
      * This mask resumes both reads and writes if any of them were suspended.
      */
-    public static final TrafficMask ALL = new TrafficMask(SelectionKey.OP_READ
-            | SelectionKey.OP_WRITE, "all");
+    public static final TrafficMask ALL = new TrafficMask(SelectionKey.OP_READ | SelectionKey.OP_WRITE, "all");
+
+    private final int interestOps;
+
+    private final String name;
+
+    private TrafficMask(int interestOps, String name) {
+        this.interestOps = interestOps;
+        this.name = name;
+    }
 
     /**
      * Returns an appropriate {@link TrafficMask} instance from the
@@ -71,15 +77,6 @@ public class TrafficMask {
         } else {
             return NONE;
         }
-    }
-
-    private final int interestOps;
-
-    private final String name;
-
-    private TrafficMask(int interestOps, String name) {
-        this.interestOps = interestOps;
-        this.name = name;
     }
 
     /**

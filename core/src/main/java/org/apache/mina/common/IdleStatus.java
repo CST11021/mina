@@ -35,6 +35,7 @@ package org.apache.mina.common;
  * @version $Rev$, $Date$
  */
 public class IdleStatus {
+
     /**
      * Represents the session status that no data is coming from the remote
      * peer.

@@ -30,50 +30,64 @@ import java.io.IOException;
  * @see IoHandlerAdapter
  */
 public interface IoHandler {
+
     /**
-     * Invoked from an I/O processor thread when a new connection has been created.
-     * Because this method is supposed to be called from the same thread that
-     * handles I/O of multiple sessions, please implement this method to perform
-     * tasks that consumes minimal amount of time such as socket parameter
-     * and user-defined session attribute initialization.
+     * 当一个新的连接建立时，由I/O processor thread调用
+     *
+     * @param session
+     * @throws Exception
      */
     void sessionCreated(IoSession session) throws Exception;
 
     /**
-     * Invoked when a connection has been opened.  This method is invoked after
-     * {@link #sessionCreated(IoSession)}.  The biggest difference from
-     * {@link #sessionCreated(IoSession)} is that it's invoked from other thread
-     * than an I/O processor thread once thread modesl is configured properly.
+     * 当连接打开时调用
+     *
+     * @param session
+     * @throws Exception
      */
     void sessionOpened(IoSession session) throws Exception;
 
     /**
-     * Invoked when a connection is closed.
+     * 当连接关闭时调用
+     *
+     * @param session
+     * @throws Exception
      */
     void sessionClosed(IoSession session) throws Exception;
 
     /**
-     * Invoked with the related {@link IdleStatus} when a connection becomes idle.
-     * This method is not invoked if the transport type is UDP; it's a known bug,
-     * and will be fixed in 2.0.
+     * 当连接进入空闲状态时调用
+     *
+     * @param session
+     * @param status
+     * @throws Exception
      */
     void sessionIdle(IoSession session, IdleStatus status) throws Exception;
 
     /**
-     * Invoked when any exception is thrown by user {@link IoHandler}
-     * implementation or by MINA.  If <code>cause</code> is instanceof
-     * {@link IOException}, MINA will close the connection automatically.
+     * 当实现IoHandler的类抛出异常时调用
+     *
+     * @param session
+     * @param cause
+     * @throws Exception
      */
     void exceptionCaught(IoSession session, Throwable cause) throws Exception;
 
     /**
-     * Invoked when a message is received.
+     * 当接收到客户端请求的消息时调用
+     *
+     * @param session
+     * @param message
+     * @throws Exception
      */
     void messageReceived(IoSession session, Object message) throws Exception;
 
     /**
-     * Invoked when a message written by {@link IoSession#write(Object)} is
-     * sent out.
+     * 当一个消息被(IoSession#write)发送出去后调用
+     *
+     * @param session
+     * @param message
+     * @throws Exception
      */
     void messageSent(IoSession session, Object message) throws Exception;
 }

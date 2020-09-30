@@ -6,16 +6,16 @@
  *  to you under the Apache License, Version 2.0 (the
  *  "License"); you may not use this file except in compliance
  *  with the License.  You may obtain a copy of the License at
- *  
+ *
  *    http://www.apache.org/licenses/LICENSE-2.0
- *  
+ *
  *  Unless required by applicable law or agreed to in writing,
  *  software distributed under the License is distributed on an
  *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
  *  KIND, either express or implied.  See the License for the
  *  specific language governing permissions and limitations
- *  under the License. 
- *  
+ *  under the License.
+ *
  */
 package org.apache.mina.common;
 
@@ -42,7 +42,7 @@ import org.apache.mina.common.IoFilterChain.Entry;
  * doesn't manage the life cycle of the {@link IoFilter}s at all, and the
  * existing {@link IoSession}s won't get affected by the changes in this builder.
  * {@link IoFilterChainBuilder}s affect only newly created {@link IoSession}s.
- * 
+ *
  * <pre>
  * IoAcceptor acceptor = ...;
  * DefaultIoFilterChainBuilder builder = acceptor.getFilterChain();
@@ -53,32 +53,47 @@ import org.apache.mina.common.IoFilterChain.Entry;
  * @author The Apache Directory Project (mina-dev@directory.apache.org)
  * @version $Rev$, $Date$
  */
-public class DefaultIoFilterChainBuilder implements IoFilterChainBuilder,
-        Cloneable {
+public class DefaultIoFilterChainBuilder implements IoFilterChainBuilder, Cloneable {
+
+    /** 保存过滤器的集合 */
     private final List<Entry> entries;
 
     /**
-     * Creates a new instance with an empty filter list.
+     * 创建一个空的过滤器链集合
      */
     public DefaultIoFilterChainBuilder() {
+        // CopyOnWriteArrayList用于替代遍历操作为主情况下的同步List
         entries = new CopyOnWriteArrayList<Entry>();
     }
 
+    public void buildFilterChain(IoFilterChain chain) throws Exception {
+        for (Iterator i = entries.iterator(); i.hasNext(); ) {
+            Entry e = (Entry) i.next();
+            chain.addLast(e.getName(), e.getFilter());
+        }
+    }
+
     /**
-     * @see IoFilterChain#getEntry(String)
+     * 根据过滤器名称获取过滤器
+     *
+     * @param name
+     * @return
      */
     public Entry getEntry(String name) {
-        for (Entry e: entries) {
+        for (Entry e : entries) {
             if (e.getName().equals(name)) {
                 return e;
             }
         }
-        
+
         return null;
     }
 
     /**
-     * @see IoFilterChain#get(String)
+     * 根据过滤器名称获取过滤器
+     *
+     * @param name
+     * @return
      */
     public IoFilter get(String name) {
         Entry e = getEntry(name);
@@ -90,14 +105,18 @@ public class DefaultIoFilterChainBuilder implements IoFilterChainBuilder,
     }
 
     /**
-     * @see IoFilterChain#getAll()
+     * 获取所有的过滤器
+     *
+     * @return
      */
     public List<Entry> getAll() {
         return new ArrayList<Entry>(entries);
     }
 
     /**
-     * @see IoFilterChain#getAllReversed()
+     * 将所有的过滤器顺序反转然后返回
+     *
+     * @return
      */
     public List<Entry> getAllReversed() {
         List<Entry> result = getAll();
@@ -106,17 +125,23 @@ public class DefaultIoFilterChainBuilder implements IoFilterChainBuilder,
     }
 
     /**
-     * @see IoFilterChain#contains(String)
+     * 是否包含指定名称的过滤器
+     *
+     * @param name
+     * @return
      */
     public boolean contains(String name) {
         return getEntry(name) != null;
     }
 
     /**
-     * @see IoFilterChain#contains(IoFilter)
+     * 判断过滤器链中，是否存在该过滤器
+     *
+     * @param filter
+     * @return
      */
     public boolean contains(IoFilter filter) {
-        for (Iterator i = entries.iterator(); i.hasNext();) {
+        for (Iterator i = entries.iterator(); i.hasNext(); ) {
             Entry e = (Entry) i.next();
             if (e.getFilter() == filter) {
                 return true;
@@ -127,10 +152,13 @@ public class DefaultIoFilterChainBuilder implements IoFilterChainBuilder,
     }
 
     /**
-     * @see IoFilterChain#contains(Class)
+     * 判断过滤器链中是否包含指定类型的过滤
+     *
+     * @param filterType
+     * @return
      */
     public boolean contains(Class<? extends IoFilter> filterType) {
-        for (Iterator i = entries.iterator(); i.hasNext();) {
+        for (Iterator i = entries.iterator(); i.hasNext(); ) {
             Entry e = (Entry) i.next();
             if (filterType.isAssignableFrom(e.getFilter().getClass())) {
                 return true;
@@ -141,27 +169,36 @@ public class DefaultIoFilterChainBuilder implements IoFilterChainBuilder,
     }
 
     /**
-     * @see IoFilterChain#addFirst(String, IoFilter)
+     * 添加一个过滤器到过滤器链的最开始位置
+     *
+     * @param name
+     * @param filter
      */
     public synchronized void addFirst(String name, IoFilter filter) {
         register(0, new EntryImpl(name, filter));
     }
 
     /**
-     * @see IoFilterChain#addLast(String, IoFilter)
+     * 添加一个过滤器到过滤器链的最后位置
+     *
+     * @param name
+     * @param filter
      */
     public synchronized void addLast(String name, IoFilter filter) {
         register(entries.size(), new EntryImpl(name, filter));
     }
 
     /**
-     * @see IoFilterChain#addBefore(String, String, IoFilter)
+     * 将过滤器添加到指定过滤器的前面
+     *
+     * @param baseName
+     * @param name
+     * @param filter
      */
-    public synchronized void addBefore(String baseName, String name,
-            IoFilter filter) {
+    public synchronized void addBefore(String baseName, String name, IoFilter filter) {
         checkBaseName(baseName);
 
-        for (ListIterator<Entry> i = entries.listIterator(); i.hasNext();) {
+        for (ListIterator<Entry> i = entries.listIterator(); i.hasNext(); ) {
             Entry base = i.next();
             if (base.getName().equals(baseName)) {
                 register(i.previousIndex(), new EntryImpl(name, filter));
@@ -171,13 +208,16 @@ public class DefaultIoFilterChainBuilder implements IoFilterChainBuilder,
     }
 
     /**
-     * @see IoFilterChain#addAfter(String, String, IoFilter)
+     * 将过滤器添加到指定过滤器的后面
+     *
+     * @param baseName
+     * @param name
+     * @param filter
      */
-    public synchronized void addAfter(String baseName, String name,
-            IoFilter filter) {
+    public synchronized void addAfter(String baseName, String name, IoFilter filter) {
         checkBaseName(baseName);
 
-        for (ListIterator<Entry> i = entries.listIterator(); i.hasNext();) {
+        for (ListIterator<Entry> i = entries.listIterator(); i.hasNext(); ) {
             Entry base = i.next();
             if (base.getName().equals(baseName)) {
                 register(i.nextIndex(), new EntryImpl(name, filter));
@@ -187,14 +227,17 @@ public class DefaultIoFilterChainBuilder implements IoFilterChainBuilder,
     }
 
     /**
-     * @see IoFilterChain#remove(String)
+     * 移除过滤器
+     *
+     * @param name
+     * @return
      */
     public synchronized IoFilter remove(String name) {
         if (name == null) {
             throw new NullPointerException("name");
         }
 
-        for (ListIterator<Entry> i = entries.listIterator(); i.hasNext();) {
+        for (ListIterator<Entry> i = entries.listIterator(); i.hasNext(); ) {
             Entry e = i.next();
             if (e.getName().equals(name)) {
                 entries.remove(i.previousIndex());
@@ -206,17 +249,32 @@ public class DefaultIoFilterChainBuilder implements IoFilterChainBuilder,
     }
 
     /**
-     * @see IoFilterChain#clear()
+     * 移除所有过滤器
+     *
+     * @throws Exception
      */
     public synchronized void clear() throws Exception {
         entries.clear();
     }
 
-    public void buildFilterChain(IoFilterChain chain) throws Exception {
-        for (Iterator i = entries.iterator(); i.hasNext();) {
-            Entry e = (Entry) i.next();
-            chain.addLast(e.getName(), e.getFilter());
+    private void checkBaseName(String baseName) {
+        if (baseName == null) {
+            throw new NullPointerException("baseName");
         }
+
+        if (!contains(baseName)) {
+            throw new IllegalArgumentException("Unknown filter name: "
+                    + baseName);
+        }
+    }
+
+    private void register(int index, Entry e) {
+        if (contains(e.getName())) {
+            throw new IllegalArgumentException(
+                    "Other filter is using the same name: " + e.getName());
+        }
+
+        entries.add(index, e);
     }
 
     public String toString() {
@@ -225,7 +283,7 @@ public class DefaultIoFilterChainBuilder implements IoFilterChainBuilder,
 
         boolean empty = true;
 
-        for (Iterator i = entries.iterator(); i.hasNext();) {
+        for (Iterator i = entries.iterator(); i.hasNext(); ) {
             Entry e = (Entry) i.next();
             if (!empty) {
                 buf.append(", ");
@@ -255,26 +313,6 @@ public class DefaultIoFilterChainBuilder implements IoFilterChainBuilder,
             ret.addLast(e.getName(), e.getFilter());
         }
         return ret;
-    }
-
-    private void checkBaseName(String baseName) {
-        if (baseName == null) {
-            throw new NullPointerException("baseName");
-        }
-        
-        if (!contains(baseName)) {
-            throw new IllegalArgumentException("Unknown filter name: "
-                    + baseName);
-        }
-    }
-
-    private void register(int index, Entry e) {
-        if (contains(e.getName())) {
-            throw new IllegalArgumentException(
-                    "Other filter is using the same name: " + e.getName());
-        }
-
-        entries.add(index, e);
     }
 
     private static class EntryImpl implements Entry {

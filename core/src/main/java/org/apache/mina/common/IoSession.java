@@ -61,7 +61,9 @@ public interface IoSession {
     IoServiceConfig getServiceConfig();
 
     /**
-     * Returns the {@link IoHandler} which handles this session.
+     * session生命周期的回调处理器
+     *
+     * @return
      */
     IoHandler getHandler();
 
@@ -76,20 +78,40 @@ public interface IoSession {
     IoFilterChain getFilterChain();
 
     /**
-     * Writes the specified <code>message</code> to remote peer.  This
-     * operation is asynchronous; {@link IoHandler#messageSent(IoSession, Object)}
-     * will be invoked when the message is actually sent to remote peer.
-     * You can also wait for the returned {@link WriteFuture} if you want
-     * to wait for the message actually written.
+     * 往客户端回写一个消息
+     *
+     * @param message
+     * @return
      */
     WriteFuture write(Object message);
 
+
     /**
-     * Closes this session immediately.  This operation is asynthronous.
-     * Wait for the returned {@link CloseFuture} if you want to wait for
-     * the session actually closed.
+     * Returns <code>true</code> if this session is connected with remote peer.
+     */
+    boolean isConnected();
+
+    /**
+     * 关闭session
+     *
+     * @return
      */
     CloseFuture close();
+
+    /**
+     * Returns <code>true</tt> if and only if this session is being closed
+     * (but not disconnected yet) or is closed.
+     */
+    boolean isClosing();
+
+    /**
+     * Returns the {@link CloseFuture} of this session.  This method returns
+     * the same instance whenever user calls it.
+     */
+    CloseFuture getCloseFuture();
+
+
+
 
     /**
      * Returns an attachment of this session.
@@ -116,7 +138,7 @@ public interface IoSession {
     /**
      * Sets a user-defined attribute.
      *
-     * @param key the key of the attribute
+     * @param key   the key of the attribute
      * @param value the value of the attribute
      * @return The old value of the attribute.  <tt>null</tt> if it is new.
      */
@@ -150,46 +172,33 @@ public interface IoSession {
      */
     Set<String> getAttributeKeys();
 
+
+
+
     /**
      * Returns transport type of this session.
      */
     TransportType getTransportType();
 
-    /**
-     * Returns <code>true</code> if this session is connected with remote peer.
-     */
-    boolean isConnected();
 
     /**
-     * Returns <code>true</tt> if and only if this session is being closed
-     * (but not disconnected yet) or is closed.
-     */
-    boolean isClosing();
-
-    /**
-     * Returns the {@link CloseFuture} of this session.  This method returns
-     * the same instance whenever user calls it.
-     */
-    CloseFuture getCloseFuture();
-
-    /**
-     * Returns the socket address of remote peer.
+     * 获取客户端地址
+     *
+     * @return
      */
     SocketAddress getRemoteAddress();
 
     /**
-     * Returns the socket address of local machine which is associated with this
-     * session.
+     * 获取创建socket的本地地址，即服务端地址
+     *
+     * @return
      */
     SocketAddress getLocalAddress();
 
     /**
-     * Returns the socket address of the {@link IoService} listens to to manage
-     * this session.  If this session is managed by {@link IoAcceptor}, it
-     * returns the {@link SocketAddress} which is specified as a parameter of
-     * {@link IoAcceptor#bind(SocketAddress, IoHandler)}.  If this session is
-     * managed by {@link IoConnector}, this method returns the same address with
-     * that of {@link #getRemoteAddress()}.
+     * 获取服务端地址
+     *
+     * @return
      */
     SocketAddress getServiceAddress();
 
