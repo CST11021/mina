@@ -34,13 +34,13 @@ import org.apache.mina.common.support.BaseIoSessionConfig;
 import org.apache.mina.transport.vmpipe.support.VmPipe;
 
 /**
- * Binds the specified {@link IoHandler} to the specified
- * {@link VmPipeAddress}.
+ * 将指定的{@link IoHandler}绑定到指定的{@link VmPipeAddress}。
  *
  * @author The Apache Directory Project (mina-dev@directory.apache.org)
  * @version $Rev$, $Date$
  */
 public class VmPipeAcceptor extends BaseIoAcceptor {
+
     static final Map<SocketAddress, VmPipe> boundHandlers = new HashMap<SocketAddress, VmPipe>();
 
     private static final IoSessionConfig CONFIG = new BaseIoSessionConfig() {
@@ -52,8 +52,7 @@ public class VmPipeAcceptor extends BaseIoAcceptor {
         }
     };
 
-    public void bind(SocketAddress address, IoHandler handler,
-            IoServiceConfig config) throws IOException {
+    public void bind(SocketAddress address, IoHandler handler, IoServiceConfig config) throws IOException {
         if (handler == null)
             throw new NullPointerException("handler");
         if (address != null && !(address instanceof VmPipeAddress))

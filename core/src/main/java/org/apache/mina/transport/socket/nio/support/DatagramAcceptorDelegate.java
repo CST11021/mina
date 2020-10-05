@@ -58,8 +58,8 @@ import org.apache.mina.util.NamePreservingRunnable;
  * @author The Apache Directory Project (mina-dev@directory.apache.org)
  * @version $Rev$, $Date$
  */
-public class DatagramAcceptorDelegate extends BaseIoAcceptor implements
-        IoAcceptor, DatagramService {
+public class DatagramAcceptorDelegate extends BaseIoAcceptor implements IoAcceptor, DatagramService {
+
     private static final AtomicInteger nextId = new AtomicInteger();
 
     private final Object lock = new Object();
@@ -76,10 +76,11 @@ public class DatagramAcceptorDelegate extends BaseIoAcceptor implements
 
     private final Map<SocketAddress, DatagramChannel> channels = new ConcurrentHashMap<SocketAddress, DatagramChannel>();
 
+    /** 用于启动服务的请求队列 */
     private final Queue<RegistrationRequest> registerQueue = new ConcurrentLinkedQueue<RegistrationRequest>();
-
+    /** 用于关闭服务的请求队列 */
     private final Queue<CancellationRequest> cancelQueue = new ConcurrentLinkedQueue<CancellationRequest>();
-
+    /** 用于回收session的队列 */
     private final Queue<DatagramSessionImpl> flushingSessions = new ConcurrentLinkedQueue<DatagramSessionImpl>();
 
     private Worker worker;
@@ -95,8 +96,16 @@ public class DatagramAcceptorDelegate extends BaseIoAcceptor implements
         defaultConfig.getSessionConfig().setReuseAddress(true);
     }
 
-    public void bind(SocketAddress address, IoHandler handler,
-            IoServiceConfig config) throws IOException {
+    /**
+     * 启动服务（开始监听客户端请求）
+     *
+     * @param address
+     * @param handler
+     * @param config
+     * @throws IOException
+     */
+    public void bind(SocketAddress address, IoHandler handler, IoServiceConfig config) throws IOException {
+        // 参数校验
         if (handler == null)
             throw new NullPointerException("handler");
         if (config == null) {
@@ -104,12 +113,9 @@ public class DatagramAcceptorDelegate extends BaseIoAcceptor implements
         }
 
         if (address != null && !(address instanceof InetSocketAddress))
-            throw new IllegalArgumentException("Unexpected address type: "
-                    + address.getClass());
+            throw new IllegalArgumentException("Unexpected address type: " + address.getClass());
 
-        RegistrationRequest request = new RegistrationRequest(address, handler,
-                config);
-        
+        RegistrationRequest request = new RegistrationRequest(address, handler, config);
         synchronized (lock) {
             startupWorker();
             registerQueue.add(request);
@@ -127,11 +133,15 @@ public class DatagramAcceptorDelegate extends BaseIoAcceptor implements
         }
 
         if (request.exception != null) {
-            throw (IOException) new IOException("Failed to bind")
-                    .initCause(request.exception);
+            throw (IOException) new IOException("Failed to bind").initCause(request.exception);
         }
     }
 
+    /**
+     * 断开所有客户端的连接，并关闭服务
+     *
+     * @param address
+     */
     public void unbind(SocketAddress address) {
         if (address == null)
             throw new NullPointerException("address");
@@ -147,7 +157,7 @@ public class DatagramAcceptorDelegate extends BaseIoAcceptor implements
                 // conclude that nothing is bound to the selector.
                 throw new IllegalArgumentException("Address not bound: " + address);
             }
-    
+
             cancelQueue.add(request);
             selector.wakeup();
         }
@@ -167,6 +177,9 @@ public class DatagramAcceptorDelegate extends BaseIoAcceptor implements
         }
     }
 
+    /**
+     * 取消绑定此接受者绑定的所有地址
+     */
     public void unbindAll() {
         List<SocketAddress> addresses = new ArrayList<SocketAddress>(channels
                 .keySet());
@@ -176,9 +189,15 @@ public class DatagramAcceptorDelegate extends BaseIoAcceptor implements
         }
     }
 
+    /**
+     * 创建session
+     *
+     * @param remoteAddress     客户端地址
+     * @param localAddress      服务端地址
+     * @return
+     */
     @Override
-    public IoSession newSession(SocketAddress remoteAddress,
-            SocketAddress localAddress) {
+    public IoSession newSession(SocketAddress remoteAddress, SocketAddress localAddress) {
         if (remoteAddress == null) {
             throw new NullPointerException("remoteAddress");
         }
@@ -189,34 +208,26 @@ public class DatagramAcceptorDelegate extends BaseIoAcceptor implements
         Selector selector = this.selector;
         DatagramChannel ch = channels.get(localAddress);
         if (selector == null || ch == null) {
-            throw new IllegalArgumentException("Unknown localAddress: "
-                    + localAddress);
+            throw new IllegalArgumentException("Unknown localAddress: " + localAddress);
         }
 
         SelectionKey key = ch.keyFor(selector);
         if (key == null) {
-            throw new IllegalArgumentException("Unknown localAddress: "
-                    + localAddress);
+            throw new IllegalArgumentException("Unknown localAddress: " + localAddress);
         }
 
         RegistrationRequest req = (RegistrationRequest) key.attachment();
         IoSession session;
+        // 获取session回收器
         IoSessionRecycler sessionRecycler = getSessionRecycler(req);
         synchronized (sessionRecycler) {
+            // 如果有session在等待被回收，则返回等待回收的session，否则创建并返回一个新的session，新的session也会放到回收器里
             session = sessionRecycler.recycle(localAddress, remoteAddress);
             if (session != null) {
                 return session;
             }
 
-            // If a new session needs to be created.
-            // Note that the local address is the service address in the
-            // acceptor side, and I didn't call getLocalSocketAddress().
-            // This avoids strange cases where getLocalSocketAddress() on the
-            // underlying socket would return an IPv6 address while the
-            // specified service address is an IPv4 address.
-            DatagramSessionImpl datagramSession = new DatagramSessionImpl(
-                    wrapper, this, req.config, ch, req.handler, req.address,
-                    req.address);
+            DatagramSessionImpl datagramSession = new DatagramSessionImpl(wrapper, this, req.config, ch, req.handler, req.address, req.address);
             datagramSession.setRemoteAddress(remoteAddress);
             datagramSession.setSelectionKey(key);
 
@@ -225,7 +236,9 @@ public class DatagramAcceptorDelegate extends BaseIoAcceptor implements
         }
 
         try {
+            // 创建session的过滤器链
             buildFilterChain(req, session);
+            // 触发session的fireSessionCreated事件
             getListeners().fireSessionCreated(session);
         } catch (Throwable t) {
             ExceptionMonitor.getInstance().exceptionCaught(t);
@@ -234,6 +247,12 @@ public class DatagramAcceptorDelegate extends BaseIoAcceptor implements
         return session;
     }
 
+    /**
+     * 获取session回收器
+     *
+     * @param req
+     * @return
+     */
     private IoSessionRecycler getSessionRecycler(RegistrationRequest req) {
         IoSessionRecycler sessionRecycler;
         if (req.config instanceof DatagramServiceConfig) {
@@ -250,11 +269,16 @@ public class DatagramAcceptorDelegate extends BaseIoAcceptor implements
         return super.getListeners();
     }
 
-    private void buildFilterChain(RegistrationRequest req, IoSession session)
-            throws Exception {
+    /**
+     * 设置Session的过滤器链
+     *
+     * @param req
+     * @param session
+     * @throws Exception
+     */
+    private void buildFilterChain(RegistrationRequest req, IoSession session) throws Exception {
         this.getFilterChainBuilder().buildFilterChain(session.getFilterChain());
-        req.config.getFilterChainBuilder().buildFilterChain(
-                session.getFilterChain());
+        req.config.getFilterChainBuilder().buildFilterChain(session.getFilterChain());
         req.config.getThreadModel().buildFilterChain(session.getFilterChain());
     }
 
@@ -280,8 +304,7 @@ public class DatagramAcceptorDelegate extends BaseIoAcceptor implements
             if (worker == null) {
                 selector = Selector.open();
                 worker = new Worker();
-                executor.execute(
-                        new NamePreservingRunnable(worker, "DatagramAcceptor-" + id));
+                executor.execute(new NamePreservingRunnable(worker, "DatagramAcceptor-" + id));
             }
         }
     }
@@ -298,6 +321,12 @@ public class DatagramAcceptorDelegate extends BaseIoAcceptor implements
     public void closeSession(DatagramSessionImpl session) {
     }
 
+    /**
+     * 将session放到flushingSessions队列中，等待清理
+     *
+     * @param session
+     * @return
+     */
     private boolean scheduleFlush(DatagramSessionImpl session) {
         if (session.setScheduledForFlush(true)) {
             flushingSessions.add(session);
@@ -308,32 +337,35 @@ public class DatagramAcceptorDelegate extends BaseIoAcceptor implements
     }
 
     private class Worker implements Runnable {
+
         public void run() {
             Selector selector = DatagramAcceptorDelegate.this.selector;
-            for (;;) {
+            for (; ; ) {
                 try {
                     int nKeys = selector.select();
 
+                    // 创建socket并绑定到指定的端口，开始监听来自客户端的请求
                     registerNew();
 
                     if (nKeys > 0) {
+                        // 监听通道事件，接收并处理客户端请求和发送response数据
                         processReadySessions(selector.selectedKeys());
                     }
 
+                    // 释放session
                     flushSessions();
+
+                    // 从cancelQueue获取CancellationRequest，并注销Channel，当服务注销时，会将注销请求放到cancelQueue队列中
                     cancelKeys();
 
                     if (selector.keys().isEmpty()) {
                         synchronized (lock) {
-                            if (selector.keys().isEmpty()
-                                    && registerQueue.isEmpty()
-                                    && cancelQueue.isEmpty()) {
+                            if (selector.keys().isEmpty() && registerQueue.isEmpty() && cancelQueue.isEmpty()) {
                                 worker = null;
                                 try {
                                     selector.close();
                                 } catch (IOException e) {
-                                    ExceptionMonitor.getInstance()
-                                            .exceptionCaught(e);
+                                    ExceptionMonitor.getInstance().exceptionCaught(e);
                                 } finally {
                                     DatagramAcceptorDelegate.this.selector = null;
                                 }
@@ -352,8 +384,14 @@ public class DatagramAcceptorDelegate extends BaseIoAcceptor implements
                 }
             }
         }
+
     }
 
+    /**
+     * 监听通道事件，接收并处理客户端请求和发送response数据
+     *
+     * @param keys
+     */
     private void processReadySessions(Set<SelectionKey> keys) {
         Iterator<SelectionKey> it = keys.iterator();
         while (it.hasNext()) {
@@ -364,10 +402,13 @@ public class DatagramAcceptorDelegate extends BaseIoAcceptor implements
 
             RegistrationRequest req = (RegistrationRequest) key.attachment();
             try {
+                // 获取来自客户端的请求数据
                 if (key.isReadable()) {
+                    // 读取客户端的请求数据，并触发session的fireMessageReceived事件，处理读取的客户端请求
                     readSession(ch, req);
                 }
 
+                // 将response给客户端的请求数据flush掉
                 if (key.isWritable()) {
                     for (Object o : getManagedSessions(req.address)) {
                         scheduleFlush((DatagramSessionImpl) o);
@@ -379,16 +420,21 @@ public class DatagramAcceptorDelegate extends BaseIoAcceptor implements
         }
     }
 
-    private void readSession(DatagramChannel channel, RegistrationRequest req)
-            throws Exception {
-        ByteBuffer readBuf = ByteBuffer
-                .allocate(((DatagramSessionConfig) req.config
-                        .getSessionConfig()).getReceiveBufferSize());
+    /**
+     * 读取客户端的请求数据，并触发session的fireMessageReceived事件，处理读取的客户端请求
+     *
+     * @param channel
+     * @param req
+     * @throws Exception
+     */
+    private void readSession(DatagramChannel channel, RegistrationRequest req) throws Exception {
+        // 用于保存来自客户端的请求数据
+        ByteBuffer readBuf = ByteBuffer.allocate(((DatagramSessionConfig) req.config.getSessionConfig()).getReceiveBufferSize());
         try {
             SocketAddress remoteAddress = channel.receive(readBuf.buf());
             if (remoteAddress != null) {
-                DatagramSessionImpl session = (DatagramSessionImpl) newSession(
-                        remoteAddress, req.address);
+
+                DatagramSessionImpl session = (DatagramSessionImpl) newSession(remoteAddress, req.address);
 
                 readBuf.flip();
 
@@ -397,18 +443,24 @@ public class DatagramAcceptorDelegate extends BaseIoAcceptor implements
                 newBuf.flip();
 
                 session.increaseReadBytes(newBuf.remaining());
+
+                // 触发session的fireMessageReceived事件，处理读取的客户端请求
                 session.getFilterChain().fireMessageReceived(session, newBuf);
             }
         } finally {
+            // 释放客户端请求的缓存数据
             readBuf.release();
         }
     }
 
+    /**
+     * flush session
+     */
     private void flushSessions() {
         if (flushingSessions.size() == 0)
             return;
 
-        for (;;) {
+        for (; ; ) {
             DatagramSessionImpl session = flushingSessions.poll();
 
             if (session == null)
@@ -445,34 +497,34 @@ public class DatagramAcceptorDelegate extends BaseIoAcceptor implements
         int writtenBytes = 0;
         int maxWrittenBytes = ((DatagramSessionConfig) session.getConfig()).getSendBufferSize() << 1;
         try {
-            for (;;) {
+            for (; ; ) {
                 WriteRequest req = writeRequestQueue.peek();
-    
+
                 if (req == null)
                     break;
-    
+
                 ByteBuffer buf = (ByteBuffer) req.getMessage();
                 if (buf.remaining() == 0) {
                     // pop and fire event
                     writeRequestQueue.poll();
-    
+
                     buf.reset();
-                    
+
                     if (!buf.hasRemaining()) {
                         session.increaseWrittenMessages();
                     }
                     session.getFilterChain().fireMessageSent(session, req);
                     continue;
                 }
-    
+
                 SocketAddress destination = req.getDestination();
                 if (destination == null) {
                     destination = session.getRemoteAddress();
                 }
-    
+
                 int localWrittenBytes = ch.send(buf.buf(), destination);
                 writtenBytes += localWrittenBytes;
-    
+
                 if (localWrittenBytes == 0 || writtenBytes >= maxWrittenBytes) {
                     // Kernel buffer is full or wrote too much
                     key.interestOps(key.interestOps() | SelectionKey.OP_WRITE);
@@ -480,9 +532,9 @@ public class DatagramAcceptorDelegate extends BaseIoAcceptor implements
                 } else {
                     // pop and fire event
                     writeRequestQueue.poll();
-    
+
                     buf.reset();
-                    
+
                     if (!buf.hasRemaining()) {
                         session.increaseWrittenMessages();
                     }
@@ -493,16 +545,19 @@ public class DatagramAcceptorDelegate extends BaseIoAcceptor implements
         } finally {
             session.increaseWrittenBytes(writtenBytes);
         }
-        
+
         return true;
     }
 
+    /**
+     * 创建socket并绑定到指定的端口，开始监听来自客户端的请求
+     */
     private void registerNew() {
         if (registerQueue.isEmpty())
             return;
 
         Selector selector = this.selector;
-        for (;;) {
+        for (; ; ) {
             RegistrationRequest req = registerQueue.poll();
 
             if (req == null)
@@ -510,7 +565,10 @@ public class DatagramAcceptorDelegate extends BaseIoAcceptor implements
 
             DatagramChannel ch = null;
             try {
+                // 开启Channel
                 ch = DatagramChannel.open();
+
+                // 获取Session配置
                 DatagramSessionConfig cfg;
                 if (req.config.getSessionConfig() instanceof DatagramSessionConfig) {
                     cfg = (DatagramSessionConfig) req.config.getSessionConfig();
@@ -518,26 +576,30 @@ public class DatagramAcceptorDelegate extends BaseIoAcceptor implements
                     cfg = getDefaultConfig().getSessionConfig();
                 }
 
+                // 设置Channel
                 ch.socket().setReuseAddress(cfg.isReuseAddress());
                 ch.socket().setBroadcast(cfg.isBroadcast());
                 ch.socket().setReceiveBufferSize(cfg.getReceiveBufferSize());
                 ch.socket().setSendBufferSize(cfg.getSendBufferSize());
-
                 if (ch.socket().getTrafficClass() != cfg.getTrafficClass()) {
                     ch.socket().setTrafficClass(cfg.getTrafficClass());
                 }
-
                 ch.configureBlocking(false);
+
+                // 将socket绑定到地址上
                 ch.socket().bind(req.address);
                 if (req.address == null || req.address.getPort() == 0) {
-                    req.address = (InetSocketAddress) ch.socket()
-                            .getLocalSocketAddress();
+                    req.address = (InetSocketAddress) ch.socket().getLocalSocketAddress();
                 }
+
+                // 将socket绑定到selector上，并开始监听客户端请求
                 ch.register(selector, SelectionKey.OP_READ, req);
+
+                // address和channel的映射关系
                 channels.put(req.address, ch);
 
-                getListeners().fireServiceActivated(this, req.address,
-                        req.handler, req.config);
+                // 触发服务激活事件
+                getListeners().fireServiceActivated(this, req.address, req.handler, req.config);
             } catch (Throwable t) {
                 req.exception = t;
             } finally {
@@ -558,12 +620,15 @@ public class DatagramAcceptorDelegate extends BaseIoAcceptor implements
         }
     }
 
+    /**
+     * 从cancelQueue获取CancellationRequest，并注销Channel，当服务注销时，会将注销请求放到cancelQueue队列中
+     */
     private void cancelKeys() {
         if (cancelQueue.isEmpty())
             return;
 
         Selector selector = this.selector;
-        for (;;) {
+        for (; ; ) {
             CancellationRequest request = cancelQueue.poll();
 
             if (request == null) {
@@ -575,14 +640,14 @@ public class DatagramAcceptorDelegate extends BaseIoAcceptor implements
             // close the channel
             try {
                 if (ch == null) {
-                    request.exception = new IllegalArgumentException(
-                            "Address not bound: " + request.address);
+                    request.exception = new IllegalArgumentException("Address not bound: " + request.address);
                 } else {
                     SelectionKey key = ch.keyFor(selector);
                     request.registrationRequest = (RegistrationRequest) key
                             .attachment();
                     key.cancel();
-                    selector.wakeup(); // wake up again to trigger thread death
+                    // wake up again to trigger thread death
+                    selector.wakeup();
                     ch.disconnect();
                     ch.close();
                 }
@@ -622,7 +687,7 @@ public class DatagramAcceptorDelegate extends BaseIoAcceptor implements
         private boolean done;
 
         private RegistrationRequest(SocketAddress address, IoHandler handler,
-                IoServiceConfig config) {
+                                    IoServiceConfig config) {
             this.address = (InetSocketAddress) address;
             this.handler = handler;
             this.config = config;

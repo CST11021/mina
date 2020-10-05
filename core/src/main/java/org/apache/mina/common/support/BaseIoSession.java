@@ -93,6 +93,7 @@ public abstract class BaseIoSession implements IoSession {
 
     private long readMessages;
 
+    /** 表示使用该会话对象向客户端会写响应数据的次数（可以理解为该会话处理了多少次请求） */
     private long writtenMessages;
 
     /** 最后一次读取客户端请求数据的时间 */
@@ -102,6 +103,7 @@ public abstract class BaseIoSession implements IoSession {
     private long lastWriteTime;
 
 
+    /** 统计空闲次数： */
     private int idleCountForBoth;
     private int idleCountForRead;
     private int idleCountForWrite;

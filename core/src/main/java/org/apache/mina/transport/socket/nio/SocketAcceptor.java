@@ -49,7 +49,7 @@ import org.apache.mina.util.NamePreservingRunnable;
 import org.apache.mina.util.NewThreadExecutor;
 
 /**
- * {@link IoAcceptor} for socket transport (TCP/IP).
+ * {@link IoAcceptor}用于套接字传输（TCP/IP）。
  *
  * @author The Apache Directory Project (mina-dev@directory.apache.org)
  * @version $Rev: 389042 $, $Date: 2006-03-27 07:49:41Z $
@@ -281,7 +281,7 @@ public class SocketAcceptor extends BaseIoAcceptor {
                 // 设置该选项：public void setResuseAddress(boolean on)throws SocketException
                 // 读取该选项 public void getResuseAddress(boolean on)throws SocketException
                 // 当接受方通过Socket的close()方法关闭Socket时，如果网络上还有发送到这个Socket的数据，那么底层的Socket不会立刻释放本地端口，而是会等待一段时间，确保收到了网络上发送过来的延迟数据，然再释放该端口。Socket接受到延迟数据后，不会对这些数据做任何处理。Socket接受延迟数据的目的是，确保这些数据不会被其他碰巧绑定到同样端口的新进程接收到。
-                // 客户程序一般采用随机端口，因此会出现两个客户端程序绑定到同样端口的可能性不大。许多服务器都使用固定的端口。当服务器进程关闭后，有可能它的端口还会被占用一段时间，如果此时立刻在同一主机上重启服务器程序，由于端口已经被占用，使得服务器无法绑定到该端口，启动失败。为了确保一个进程被关闭后，及时它还没有释放该端口，同一个主机上的其他进程还可以立刻重用该端口，可以调用Socket的setResuseAddress(true)方法：
+                // 客户程序一般采用随机端口，因此会出现两个客户端程序绑定到同样端口的可能性不大。许多服务器都使用固定的端口。当服务器进程关闭后，有可能它的端口还会被占用一段时间，如果此时立刻在同一主机上重启服务器程序，由于端口已经被占用，使得服务器无法绑定到该端口，启动失败。为了确保一个进程被关闭后，即使它还没有释放该端口，同一个主机上的其他进程还可以立刻重用该端口，可以调用Socket的setResuseAddress(true)方法：
                 //
                 // if(!socket.getResuseAddress())
                 //     socket.setResuseAddress(true);
@@ -486,9 +486,16 @@ public class SocketAcceptor extends BaseIoAcceptor {
                     RegistrationRequest req = (RegistrationRequest) key.attachment();
                     SocketSessionImpl session = new SocketSessionImpl(SocketAcceptor.this, nextProcessor(), getListeners(), req.config, ch, req.handler, req.address);
 
-                    // 添加过滤器链
+                    // 将相关的过滤器添加session的过滤器链中，注意：这里有三种类型的过滤器：
+                    // 1、Server实例本身的过滤器；
+                    // 2、IoServiceConfig配置的过滤器；
+                    // 3、ThreadModel过滤器
+
+                    // getFilterChainBuilder()仅获取Server配置的过滤器，session创建时候，会初始化好过滤器链第一次过滤器和最后一个过滤器，这里是将Service配置的过滤器添加到Session的过滤器链中
                     getFilterChainBuilder().buildFilterChain(session.getFilterChain());
+                    // 将配置中的过滤器添加到session的过滤器链中
                     req.config.getFilterChainBuilder().buildFilterChain(session.getFilterChain());
+                    // 将ThreadModel过滤器添加到session的过滤器链中
                     req.config.getThreadModel().buildFilterChain(session.getFilterChain());
 
                     // 将会话交给processor处理

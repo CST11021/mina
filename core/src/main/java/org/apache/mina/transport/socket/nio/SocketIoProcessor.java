@@ -57,21 +57,24 @@ class SocketIoProcessor {
     /** 处理器执行线程的线程名 */
     private final String threadName;
 
+    /** 封装Processor处理器的执行逻辑 */
+    private Worker worker;
+
     /** 执行器，用于执行Worker */
     private final Executor executor;
 
-    /** 封装Processor处理器的执行逻辑 */
-    private Worker worker;
 
     private volatile Selector selector;
 
     private long lastIdleCheckTime = System.currentTimeMillis();
 
+    /** 当session创建时，会保存到该队列中 */
     private final Queue<SocketSessionImpl> newSessions = new ConcurrentLinkedQueue<SocketSessionImpl>();
 
+    /** 当读取完客户端的请求数据后，会将session放到该队列中 */
     private final Queue<SocketSessionImpl> removingSessions = new ConcurrentLinkedQueue<SocketSessionImpl>();
 
-    /** 当session向客户端发送响应数据后，会将session保存到该队列 */
+    /** 该队列存储的session表示，服务已经对处理过了客户端的请求，并将响应数据write到了session中，消费该队列是将Session中的响应数据进行flush（即将响应数据发送给客户端） */
     private final Queue<SocketSessionImpl> flushingSessions = new ConcurrentLinkedQueue<SocketSessionImpl>();
 
     private final Queue<SocketSessionImpl> trafficControllingSessions = new ConcurrentLinkedQueue<SocketSessionImpl>();
@@ -82,6 +85,12 @@ class SocketIoProcessor {
         this.executor = executor;
     }
 
+    /**
+     * 添加一个Session，并启动Worker线程处理Session：当有客户请求时，会创建一个Session然后调用该方法，交由Processor来管理session
+     *
+     * @param session
+     * @throws IOException
+     */
     void addNew(SocketSessionImpl session) throws IOException {
         newSessions.add(session);
         startupWorker();
@@ -92,6 +101,11 @@ class SocketIoProcessor {
         startupWorker();
     }
 
+    /**
+     * 启动Workder线程
+     *
+     * @throws IOException
+     */
     private void startupWorker() throws IOException {
         synchronized (lock) {
             if (worker == null) {
@@ -103,6 +117,11 @@ class SocketIoProcessor {
         }
     }
 
+    /**
+     * 将session放到flushingSessions队列中，便于后续将响应数据发给客户端
+     *
+     * @param session
+     */
     void flush(SocketSessionImpl session) {
         if (scheduleFlush(session)) {
             Selector selector = this.selector;
@@ -120,6 +139,11 @@ class SocketIoProcessor {
         }
     }
 
+    /**
+     * 将session放到移除队列中，当服务端向客户端发送响应数据后，会处理该session
+     *
+     * @param session
+     */
     private void scheduleRemove(SocketSessionImpl session) {
         removingSessions.add(session);
     }
@@ -159,7 +183,7 @@ class SocketIoProcessor {
                 ch.configureBlocking(false);
                 session.setSelectionKey(ch.register(selector, SelectionKey.OP_READ, session));
 
-                // AbstractIoFilterChain.CONNECT_FUTURE is cleared inside here in AbstractIoFilterChain.fireSessionOpened().
+                // 这里触发一次session创建事件回调
                 session.getServiceListeners().fireSessionCreated(session);
             } catch (IOException e) {
                 // Clear the AbstractIoFilterChain.CONNECT_FUTURE attribute
@@ -169,42 +193,12 @@ class SocketIoProcessor {
         }
     }
 
-    /**
-     * session处理完一次请求后，需要removingSessions队列移除，并触发fireSessionDestroyed()监听器方法
-     */
-    private void doRemove() {
-        for (; ; ) {
-            SocketSessionImpl session = removingSessions.poll();
-            if (session == null)
-                break;
-
-            SocketChannel ch = session.getChannel();
-            SelectionKey key = session.getSelectionKey();
-            // Retry later if session is not yet fully initialized.
-            // (In case that Session.close() is called before addSession() is processed)
-            if (key == null) {
-                scheduleRemove(session);
-                break;
-            }
-            // skip if channel is already closed
-            if (!key.isValid()) {
-                continue;
-            }
-
-            try {
-                key.cancel();
-                ch.close();
-            } catch (IOException e) {
-                session.getFilterChain().fireExceptionCaught(session, e);
-            } finally {
-                releaseWriteBuffers(session);
-                session.getServiceListeners().fireSessionDestroyed(session);
-            }
-        }
-    }
 
     /**
-     * 处理通道监听的事件：获取客户端的请求，并进行处理，再向客户端发送响应数据
+     * 处理通道监听的事件：
+     * 1、当监听的"读就绪事件"时，则读取Channel中客户端的请求数据，并触发过滤器的fireMessageReceived()事件回调
+     * 2、当监听的是可写状态时，将session放到flushingSessions队列中，后续的doFlush()方法，会轮询flushingSessions队列，处理session，向客户端回写响应数据
+     *
      *
      * @param selectedKeys
      */
@@ -217,7 +211,7 @@ class SocketIoProcessor {
                 read(session);
             }
 
-            // 想客户端发送响应数据
+            // 向客户端发送响应数据
             if (key.isWritable() && session.getTrafficMask().isWritable()) {
                 scheduleFlush(session);
             }
@@ -227,7 +221,7 @@ class SocketIoProcessor {
     }
 
     /**
-     * 从session中获取客户端的请求数据，并处理请求
+     * 从session中获取客户端的请求数据，并处理请求，这里的会调用过滤器的fireMessageReceived()
      *
      * @param session
      */
@@ -240,6 +234,7 @@ class SocketIoProcessor {
             int ret;
 
             try {
+                // read()方法返回的int值表示读了多少字节进Buffer里。如果返回的是-1，表示已经读到了流的末尾
                 while ((ret = ch.read(buf.buf())) > 0) {
                     readBytes += ret;
                 }
@@ -262,6 +257,7 @@ class SocketIoProcessor {
             }
 
             if (ret < 0) {
+                // 当读取完客户端的请求数据后，将session放到移除队列中
                 scheduleRemove(session);
             }
         } catch (Throwable e) {
@@ -269,26 +265,76 @@ class SocketIoProcessor {
                 scheduleRemove(session);
             session.getFilterChain().fireExceptionCaught(session, e);
         } finally {
+            // 读取完客户端的请求数据后，要释放缓存
             if (buf != null)
                 buf.release();
         }
     }
 
+    /**
+     * session处理完一次请求后，会从removingSessions队列中移除session，将session中的通道关闭，断开与客户端的连接，然后清除session的中保存的响应数据的缓存，并触发fireSessionDestroyed()监听器方法
+     */
+    private void doRemove() {
+        for (; ; ) {
+            SocketSessionImpl session = removingSessions.poll();
+            if (session == null)
+                break;
+
+            SocketChannel ch = session.getChannel();
+            SelectionKey key = session.getSelectionKey();
+            // 如果会话尚未完全初始化，请稍后重试
+            if (key == null) {
+                scheduleRemove(session);
+                break;
+            }
+
+            // 如果通道已经关闭，则跳过
+            if (!key.isValid()) {
+                continue;
+            }
+
+            // 关闭NIO的监听和通道
+            try {
+                key.cancel();
+                ch.close();
+            } catch (IOException e) {
+                session.getFilterChain().fireExceptionCaught(session, e);
+            } finally {
+                // 走到这里，已经向客户端发送完响应数据了，这里会释放session中保存的响应数据的缓存
+                releaseWriteBuffers(session);
+                // 触发session销毁的监听方法
+                session.getServiceListeners().fireSessionDestroyed(session);
+            }
+
+        }
+    }
+
+    /**
+     * 处理完一次请求后进行事件统计，并检查是否发生了WriteTimeout事件，如果发生了则触发一次fireExceptionCaught事件回调
+     */
     private void notifyIdleness() {
         // process idle sessions
         long currentTime = System.currentTimeMillis();
+        // 上一次空闲检查事件距离当前事件超过一秒
         if ((currentTime - lastIdleCheckTime) >= 1000) {
             lastIdleCheckTime = currentTime;
             Set<SelectionKey> keys = selector.keys();
             if (keys != null) {
                 for (SelectionKey key : keys) {
                     SocketSessionImpl session = (SocketSessionImpl) key.attachment();
+                    // 处理完一次请求后进行事件统计，并检查是否发生了WriteTimeout事件，如果发生了则触发一次fireExceptionCaught事件回调
                     notifyIdleness(session, currentTime);
                 }
             }
         }
     }
 
+    /**
+     * 处理完一次请求后进行事件统计，并检查是否发生了WriteTimeout事件，如果发生了则触发一次fireExceptionCaught事件回调
+     *
+     * @param session
+     * @param currentTime
+     */
     private void notifyIdleness(SocketSessionImpl session, long currentTime) {
         notifyIdleness0(
                 session,
@@ -314,23 +360,43 @@ class SocketIoProcessor {
                 Math.max(session.getLastWriteTime(), session.getLastIdleTime(IdleStatus.WRITER_IDLE))
         );
 
+        // 检查Session是否存在写超时情况：当前时间 - 上一次response时间，如果>=Session设置的响应超时时间，则触发fireExceptionCaught()回调方法，表示发生一次WriteTimeoutException异常
         notifyWriteTimeout(session, currentTime, session.getWriteTimeoutInMillis(), session.getLastWriteTime());
     }
 
+    /**
+     *
+     * @param session
+     * @param currentTime
+     * @param idleTime
+     * @param status
+     * @param lastIoTime
+     */
     private void notifyIdleness0(SocketSessionImpl session, long currentTime, long idleTime, IdleStatus status, long lastIoTime) {
         if (idleTime > 0 && lastIoTime != 0 && (currentTime - lastIoTime) >= idleTime) {
+            // 根据IdleStatus统计每个session的空闲状态
             session.increaseIdleCount(status);
+            // 触发空闲状态事件
             session.getFilterChain().fireSessionIdle(session, status);
         }
     }
 
+    /**
+     *
+     * @param session
+     * @param currentTime       当前时间
+     * @param writeTimeout      Session的响应超时时间
+     * @param lastIoTime        Session最后一次response的时间
+     */
     private void notifyWriteTimeout(SocketSessionImpl session, long currentTime, long writeTimeout, long lastIoTime) {
         SelectionKey key = session.getSelectionKey();
-        if (writeTimeout > 0 && (currentTime - lastIoTime) >= writeTimeout
+        // 当前时间 - 上一次response时间，如果>=Session设置的响应超时时间，则触发fireExceptionCaught()回调方法，表示发生一次WriteTimeoutException异常
+        if (writeTimeout > 0
+                && (currentTime - lastIoTime) >= writeTimeout
                 && key != null && key.isValid()
                 && (key.interestOps() & SelectionKey.OP_WRITE) != 0) {
-            session.getFilterChain().fireExceptionCaught(session,
-                    new WriteTimeoutException());
+
+            session.getFilterChain().fireExceptionCaught(session, new WriteTimeoutException());
         }
     }
 
@@ -344,15 +410,13 @@ class SocketIoProcessor {
                 break;
 
             session.setScheduledForFlush(false);
-
             if (!session.isConnected()) {
+                // 如果会话连接已经断开，则释放session中保存的响应数据的缓存
                 releaseWriteBuffers(session);
                 continue;
             }
 
             SelectionKey key = session.getSelectionKey();
-            // Retry later if session is not yet fully initialized.
-            // (In case that Session.write() is called before addSession() is processed)
             if (key == null) {
                 scheduleFlush(session);
                 break;
@@ -375,6 +439,11 @@ class SocketIoProcessor {
         }
     }
 
+    /**
+     * 当处理完请求（即向客户端发送完响应数据）后，会调用该方法释放session中保存的响应数据的缓存
+     *
+     * @param session
+     */
     private void releaseWriteBuffers(SocketSessionImpl session) {
         Queue<WriteRequest> writeRequestQueue = session.getWriteRequestQueue();
         WriteRequest req;
@@ -386,8 +455,7 @@ class SocketIoProcessor {
             } catch (IllegalStateException e) {
                 session.getFilterChain().fireExceptionCaught(session, e);
             } finally {
-                // The first unwritten empty buffer must be
-                // forwarded to the filter chain.
+                // buf中是否还有未读数据
                 if (buf.hasRemaining()) {
                     req.getFuture().setWritten(false);
                 } else {
@@ -440,6 +508,7 @@ class SocketIoProcessor {
                         session.increaseWrittenMessages();
                     }
 
+                    // 向客户端发送响应数据
                     session.getFilterChain().fireMessageSent(session, req);
                     continue;
                 }
@@ -477,19 +546,18 @@ class SocketIoProcessor {
                 break;
 
             SelectionKey key = session.getSelectionKey();
-            // Retry later if session is not yet fully initialized.
-            // (In case that Session.suspend??() or session.resume??() is called before addSession() is processed)
+            // 如果会话尚未完全初始化，请稍后重试。
             if (key == null) {
                 scheduleTrafficControl(session);
                 break;
             }
 
-            // skip if channel is already closed
+            // 如果通道已经关闭，则跳过
             if (!key.isValid()) {
                 continue;
             }
 
-            // The normal is OP_READ and, if there are write requests in the session's write queue, set OP_WRITE to trigger flushing.
+            // 正常情况是OP_READ，如果会话的写队列中有写请求，则将OP_WRITE设置为触发刷新。
             int ops = SelectionKey.OP_READ;
             Queue<WriteRequest> writeRequestQueue = session.getWriteRequestQueue();
             synchronized (writeRequestQueue) {
@@ -498,18 +566,24 @@ class SocketIoProcessor {
                 }
             }
 
-            // Now mask the preferred ops with the mask of the current session
+            // 现在，使用当前会话的遮罩遮盖首选操作
             int mask = session.getTrafficMask().getInterestOps();
             key.interestOps(ops & mask);
         }
     }
 
+    /**
+     * 1、从newSessions获取一个session，获取session中的通道，注册到Selector，并监听SelectionKey.OP_READ事件（开始监听来自客户端的请求）
+     *
+     */
     private class Worker implements Runnable {
+
         public void run() {
             Selector selector = SocketIoProcessor.this.selector;
             for (; ; ) {
                 try {
                     int nKeys = selector.select(1000);
+
                     // 从newSessions获取一个session，获取session中的通道，注册到Selector，并监听SelectionKey.OP_READ事件（开始监听来自客户端的请求）
                     doAddNew();
 
@@ -522,22 +596,23 @@ class SocketIoProcessor {
 
                     // session处理完一次请求后（即接收客户端请求，然后发起响应了之后）的后置处理动作
                     doFlush();
-                    // session处理完一次请求后，需要removingSessions队列移除，并触发fireSessionDestroyed()监听器方法
+
+                    // session处理完一次请求后，会从removingSessions队列中移除session，将session中的通道关闭，断开与客户端的连接，然后清除session的中保存的响应数据的缓存，并触发fireSessionDestroyed()监听器方法
                     doRemove();
 
+                    // 处理完一次请求后进行事件统计，并检查是否发生了WriteTimeout事件，如果发生了则触发一次fireExceptionCaught事件回调
                     notifyIdleness();
 
+                    // 如果监听的全部被移除（即服务关闭），则关闭selector，停止Workder线程
                     if (selector.keys().isEmpty()) {
                         synchronized (lock) {
-                            if (selector.keys().isEmpty()
-                                    && newSessions.isEmpty()) {
+                            if (selector.keys().isEmpty() && newSessions.isEmpty()) {
                                 worker = null;
 
                                 try {
                                     selector.close();
                                 } catch (IOException e) {
-                                    ExceptionMonitor.getInstance()
-                                            .exceptionCaught(e);
+                                    ExceptionMonitor.getInstance().exceptionCaught(e);
                                 } finally {
                                     selector = null;
                                 }
@@ -557,5 +632,6 @@ class SocketIoProcessor {
                 }
             }
         }
+
     }
 }

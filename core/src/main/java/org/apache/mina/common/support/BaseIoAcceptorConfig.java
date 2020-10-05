@@ -27,8 +27,9 @@ import org.apache.mina.common.IoAcceptorConfig;
  * @author The Apache Directory Project (mina-dev@directory.apache.org)
  * @version $Rev$, $Date$
  */
-public abstract class BaseIoAcceptorConfig extends BaseIoServiceConfig
-        implements IoAcceptorConfig {
+public abstract class BaseIoAcceptorConfig extends BaseIoServiceConfig implements IoAcceptorConfig {
+
+    /** 用于配置当服务关闭，是否将所有的客户端连接的session close掉 */
     private boolean disconnectOnUnbind = true;
 
     protected BaseIoAcceptorConfig() {

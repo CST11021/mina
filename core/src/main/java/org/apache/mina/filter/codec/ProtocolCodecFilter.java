@@ -40,14 +40,12 @@ import org.apache.mina.util.SessionLog;
  * @version $Rev$, $Date$
  */
 public class ProtocolCodecFilter extends IoFilterAdapter {
-    public static final String ENCODER = ProtocolCodecFilter.class.getName()
-            + ".encoder";
 
-    public static final String DECODER = ProtocolCodecFilter.class.getName()
-            + ".decoder";
+    public static final String ENCODER = ProtocolCodecFilter.class.getName() + ".encoder";
 
-    private static final String DECODER_OUT = ProtocolCodecFilter.class.getName()
-            + ".decoderOut";
+    public static final String DECODER = ProtocolCodecFilter.class.getName() + ".decoder";
+
+    private static final String DECODER_OUT = ProtocolCodecFilter.class.getName() + ".decoderOut";
 
     private static final Class<?>[] EMPTY_PARAMS = new Class[0];
 
@@ -62,8 +60,7 @@ public class ProtocolCodecFilter extends IoFilterAdapter {
         this.factory = factory;
     }
 
-    public ProtocolCodecFilter(final ProtocolEncoder encoder,
-            final ProtocolDecoder decoder) {
+    public ProtocolCodecFilter(final ProtocolEncoder encoder, final ProtocolDecoder decoder) {
         if (encoder == null) {
             throw new NullPointerException("encoder");
         }
@@ -82,9 +79,7 @@ public class ProtocolCodecFilter extends IoFilterAdapter {
         };
     }
 
-    public ProtocolCodecFilter(
-            final Class<? extends ProtocolEncoder> encoderClass,
-            final Class<? extends ProtocolDecoder> decoderClass) {
+    public ProtocolCodecFilter(final Class<? extends ProtocolEncoder> encoderClass, final Class<? extends ProtocolDecoder> decoderClass) {
         if (encoderClass == null) {
             throw new NullPointerException("encoderClass");
         }
@@ -124,25 +119,21 @@ public class ProtocolCodecFilter extends IoFilterAdapter {
     }
 
     @Override
-    public void onPreAdd(IoFilterChain parent, String name,
-            NextFilter nextFilter) throws Exception {
+    public void onPreAdd(IoFilterChain parent, String name, NextFilter nextFilter) throws Exception {
         if (parent.contains(ProtocolCodecFilter.class)) {
-            throw new IllegalStateException(
-                    "A filter chain cannot contain more than one ProtocolCodecFilter.");
+            throw new IllegalStateException("A filter chain cannot contain more than one ProtocolCodecFilter.");
         }
     }
 
     @Override
-    public void onPostRemove(IoFilterChain parent, String name,
-            NextFilter nextFilter) throws Exception {
+    public void onPostRemove(IoFilterChain parent, String name, NextFilter nextFilter) throws Exception {
         disposeEncoder(parent.getSession());
         disposeDecoder(parent.getSession());
         disposeDecoderOut(parent.getSession());
     }
 
     @Override
-    public void messageReceived(NextFilter nextFilter, IoSession session,
-            Object message) throws Exception {
+    public void messageReceived(NextFilter nextFilter, IoSession session, Object message) throws Exception {
         if (!(message instanceof ByteBuffer)) {
             nextFilter.messageReceived(session, message);
             return;
@@ -183,8 +174,7 @@ public class ProtocolCodecFilter extends IoFilterAdapter {
     }
 
     @Override
-    public void messageSent(NextFilter nextFilter, IoSession session,
-            Object message) throws Exception {
+    public void messageSent(NextFilter nextFilter, IoSession session, Object message) throws Exception {
         if (message instanceof HiddenByteBuffer) {
             return;
         }
@@ -198,8 +188,7 @@ public class ProtocolCodecFilter extends IoFilterAdapter {
     }
 
     @Override
-    public void filterWrite(NextFilter nextFilter, IoSession session,
-            WriteRequest writeRequest) throws Exception {
+    public void filterWrite(NextFilter nextFilter, IoSession session, WriteRequest writeRequest) throws Exception {
         Object message = writeRequest.getMessage();
         if (message instanceof ByteBuffer) {
             nextFilter.filterWrite(session, writeRequest);
@@ -228,8 +217,7 @@ public class ProtocolCodecFilter extends IoFilterAdapter {
     }
 
     @Override
-    public void sessionClosed(NextFilter nextFilter, IoSession session)
-            throws Exception {
+    public void sessionClosed(NextFilter nextFilter, IoSession session) throws Exception {
         // Call finishDecode() first when a connection is closed.
         ProtocolDecoder decoder = getDecoder(session);
         ProtocolDecoderOutput decoderOut = getDecoderOut(session, nextFilter);
@@ -255,8 +243,7 @@ public class ProtocolCodecFilter extends IoFilterAdapter {
     }
 
     private ProtocolEncoder getEncoder(IoSession session) throws Exception {
-        ProtocolEncoder encoder = (ProtocolEncoder) session
-                .getAttribute(ENCODER);
+        ProtocolEncoder encoder = (ProtocolEncoder) session.getAttribute(ENCODER);
         if (encoder == null) {
             encoder = factory.getEncoder();
             session.setAttribute(ENCODER, encoder);
@@ -264,8 +251,7 @@ public class ProtocolCodecFilter extends IoFilterAdapter {
         return encoder;
     }
 
-    private ProtocolEncoderOutputImpl getEncoderOut(IoSession session,
-            NextFilter nextFilter, WriteRequest writeRequest) {
+    private ProtocolEncoderOutputImpl getEncoderOut(IoSession session, NextFilter nextFilter, WriteRequest writeRequest) {
         return new ProtocolEncoderOutputImpl(session, nextFilter, writeRequest);
     }
 
@@ -279,8 +265,7 @@ public class ProtocolCodecFilter extends IoFilterAdapter {
         return decoder;
     }
 
-    private ProtocolDecoderOutput getDecoderOut(IoSession session,
-            NextFilter nextFilter) {
+    private ProtocolDecoderOutput getDecoderOut(IoSession session, NextFilter nextFilter) {
         ProtocolDecoderOutput out = (ProtocolDecoderOutput) session.getAttribute(DECODER_OUT);
         if (out == null) {
             out = new SimpleProtocolDecoderOutput(session, nextFilter);
@@ -348,8 +333,7 @@ public class ProtocolCodecFilter extends IoFilterAdapter {
         }
     }
 
-    private static class ProtocolEncoderOutputImpl extends
-            SimpleProtocolEncoderOutput {
+    private static class ProtocolEncoderOutputImpl extends SimpleProtocolEncoderOutput {
         private final IoSession session;
 
         private final NextFilter nextFilter;

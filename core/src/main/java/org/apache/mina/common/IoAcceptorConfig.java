@@ -26,15 +26,8 @@ package org.apache.mina.common;
  * @version $Rev$, $Date$
  */
 public interface IoAcceptorConfig extends IoServiceConfig {
-    /**
-     * Returns <tt>true</tt> if and only if all clients are disconnected
-     * when this acceptor unbinds the related local address.
-     */
-    boolean isDisconnectOnUnbind();
 
-    /**
-     * Sets whether all clients are disconnected when this acceptor unbinds the
-     * related local address.  The default value is <tt>true</tt>.
-     */
+    /** 用于配置当服务关闭，是否将所有的客户端连接的session close掉 */
+    boolean isDisconnectOnUnbind();
     void setDisconnectOnUnbind(boolean disconnectOnUnbind);
 }

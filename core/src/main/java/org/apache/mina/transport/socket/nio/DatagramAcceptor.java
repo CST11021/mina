@@ -27,12 +27,13 @@ import org.apache.mina.transport.socket.nio.support.DatagramAcceptorDelegate;
 import org.apache.mina.util.NewThreadExecutor;
 
 /**
- * {@link IoAcceptor} for datagram transport (UDP/IP).
+ * {@link IoAcceptor}用于数据报传输（UDP/IP）。
  *
  * @author The Apache Directory Project (mina-dev@directory.apache.org)
  * @version $Rev$, $Date$
  */
 public class DatagramAcceptor extends DelegatedIoAcceptor {
+
     /**
      * Creates a new instance using a NewThreadExecutor
      */
@@ -63,4 +64,5 @@ public class DatagramAcceptor extends DelegatedIoAcceptor {
     public void setDefaultConfig(DatagramAcceptorConfig defaultConfig) {
         ((DatagramAcceptorDelegate) delegate).setDefaultConfig(defaultConfig);
     }
+
 }

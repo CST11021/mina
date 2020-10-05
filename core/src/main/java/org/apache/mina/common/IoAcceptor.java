@@ -43,6 +43,8 @@ import java.net.SocketAddress;
  */
 public interface IoAcceptor extends IoService {
 
+    // 启动监听服务
+
     /**
      * 启动服务（开始监听客户端请求）
      *
@@ -51,7 +53,6 @@ public interface IoAcceptor extends IoService {
      * @throws IOException
      */
     void bind(SocketAddress address, IoHandler handler) throws IOException;
-
     /**
      * 启动服务（开始监听客户端请求）
      *
@@ -62,17 +63,20 @@ public interface IoAcceptor extends IoService {
      */
     void bind(SocketAddress address, IoHandler handler, IoServiceConfig config) throws IOException;
 
+    // 关闭监听服务
+
     /**
      * 断开所有客户端的连接，并关闭服务
      *
      * @param address
      */
     void unbind(SocketAddress address);
-
     /**
      * 取消绑定此接受者绑定的所有地址
      */
     void unbindAll();
+
+    // 创建session
 
     /**
      * 创建一个会话

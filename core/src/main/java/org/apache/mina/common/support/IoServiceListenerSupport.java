@@ -190,7 +190,7 @@ public class IoServiceListenerSupport {
                     .getServiceConfig());
         }
 
-        // Fire session events.
+        // 触发session事件
         session.getFilterChain().fireSessionCreated(session);
         session.getFilterChain().fireSessionOpened(session);
 
@@ -263,6 +263,7 @@ public class IoServiceListenerSupport {
             return;
         }
 
+        // 如果配置服务端关闭，连接不断开的话，则逃过session关闭操作
         if (!((IoAcceptorConfig) config).isDisconnectOnUnbind()) {
             return;
         }

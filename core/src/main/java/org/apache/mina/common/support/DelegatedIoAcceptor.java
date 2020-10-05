@@ -32,12 +32,10 @@ import org.apache.mina.common.IoServiceListener;
 import org.apache.mina.common.IoSession;
 
 /**
- * A delegated {@link IoAcceptor} that wraps the other {@link IoAcceptor}.
- *
- * @author The Apache Directory Project (mina-dev@directory.apache.org)
- * @version $Rev$, $Date$
+ * 委托的Acceptor：装饰器模式，
  */
 public class DelegatedIoAcceptor implements IoAcceptor {
+
     protected IoAcceptor delegate;
 
     /**
@@ -54,13 +52,11 @@ public class DelegatedIoAcceptor implements IoAcceptor {
         this.delegate = delegate;
     }
 
-    public void bind(SocketAddress address, IoHandler handler)
-            throws IOException {
+    public void bind(SocketAddress address, IoHandler handler) throws IOException {
         delegate.bind(address, handler);
     }
 
-    public void bind(SocketAddress address, IoHandler handler,
-            IoServiceConfig config) throws IOException {
+    public void bind(SocketAddress address, IoHandler handler, IoServiceConfig config) throws IOException {
         delegate.bind(address, handler, config);
     }
 
@@ -84,8 +80,7 @@ public class DelegatedIoAcceptor implements IoAcceptor {
         return delegate.getManagedSessions(serviceAddress);
     }
 
-    public IoSession newSession(SocketAddress remoteAddress,
-            SocketAddress localAddress) {
+    public IoSession newSession(SocketAddress remoteAddress, SocketAddress localAddress) {
         return delegate.newSession(remoteAddress, localAddress);
     }
 

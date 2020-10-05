@@ -38,6 +38,7 @@ import org.apache.mina.common.IoSession;
  * @version $Rev$, $Date$
  */
 public class DelegatedIoConnector implements IoConnector {
+
     protected IoConnector delegate;
 
     /**
@@ -58,19 +59,15 @@ public class DelegatedIoConnector implements IoConnector {
         return delegate.connect(address, handler);
     }
 
-    public ConnectFuture connect(SocketAddress address, IoHandler handler,
-            IoServiceConfig config) {
+    public ConnectFuture connect(SocketAddress address, IoHandler handler, IoServiceConfig config) {
         return delegate.connect(address, handler, config);
     }
 
-    public ConnectFuture connect(SocketAddress address,
-            SocketAddress localAddress, IoHandler handler) {
+    public ConnectFuture connect(SocketAddress address, SocketAddress localAddress, IoHandler handler) {
         return delegate.connect(address, localAddress, handler);
     }
 
-    public ConnectFuture connect(SocketAddress address,
-            SocketAddress localAddress, IoHandler handler,
-            IoServiceConfig config) {
+    public ConnectFuture connect(SocketAddress address, SocketAddress localAddress, IoHandler handler, IoServiceConfig config) {
         return delegate.connect(address, localAddress, handler, config);
     }
 

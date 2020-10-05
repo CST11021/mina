@@ -39,9 +39,7 @@ public abstract class BaseIoServiceConfig implements IoServiceConfig, Cloneable 
      */
     private IoFilterChainBuilder filterChainBuilder = new DefaultIoFilterChainBuilder();
 
-    /**
-     * The default thread model (initialized lazily).
-     */
+    /** 默认使用ExecutorThreadModel */
     private ThreadModel defaultThreadModel;
 
     /**
@@ -53,10 +51,20 @@ public abstract class BaseIoServiceConfig implements IoServiceConfig, Cloneable 
         super();
     }
 
+    /**
+     * 获取服务端的过滤器
+     *
+     * @return
+     */
     public IoFilterChainBuilder getFilterChainBuilder() {
         return filterChainBuilder;
     }
 
+    /**
+     * 设置服务端的过滤器
+     *
+     * @param builder
+     */
     public void setFilterChainBuilder(IoFilterChainBuilder builder) {
         if (builder == null) {
             builder = new DefaultIoFilterChainBuilder();
@@ -64,12 +72,16 @@ public abstract class BaseIoServiceConfig implements IoServiceConfig, Cloneable 
         filterChainBuilder = builder;
     }
 
+    /**
+     * 将过滤器转为DefaultIoFilterChainBuilder，如果Server配置的过滤器不是DefaultIoFilterChainBuilder的子类，则抛异常
+     *
+     * @return
+     */
     public DefaultIoFilterChainBuilder getFilterChain() {
         if (filterChainBuilder instanceof DefaultIoFilterChainBuilder) {
             return (DefaultIoFilterChainBuilder) filterChainBuilder;
         } else {
-            throw new IllegalStateException(
-                    "Current filter chain builder is not a DefaultIoFilterChainBuilder.");
+            throw new IllegalStateException("Current filter chain builder is not a DefaultIoFilterChainBuilder.");
         }
     }
 
@@ -82,8 +94,7 @@ public abstract class BaseIoServiceConfig implements IoServiceConfig, Cloneable 
 
     public void setThreadModel(ThreadModel threadModel) {
         if (threadModel == null) {
-            // We reuse the previous default model to prevent too much
-            // daemon threads are created.
+            // We reuse the previous default model to prevent too much daemon threads are created.
             threadModel = getDefaultThreadModel();
         }
         this.threadModel = threadModel;

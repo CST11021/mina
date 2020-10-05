@@ -39,6 +39,7 @@ import org.apache.mina.util.NamePreservingRunnable;
  * @version $Rev$, $Date$
  */
 public class ExecutorThreadModel implements ThreadModel {
+
     /**
      * Maps a service name to a PooledThreadModel instance.
      * Without this map, we might create extremely many thread pools that leads the system to
@@ -70,8 +71,10 @@ public class ExecutorThreadModel implements ThreadModel {
         return model;
     }
 
+    /** 作为过滤器执行器的线程名前缀 */
     private final String threadNamePrefix;
 
+    /** 用于执行过滤器的执行器 */
     private final ExecutorFilter defaultFilter;
 
     private ExecutorFilter filter = new ExecutorFilter();
@@ -81,9 +84,11 @@ public class ExecutorThreadModel implements ThreadModel {
 
         // Create the default filter
         defaultFilter = new ExecutorFilter();
-        ThreadPoolExecutor tpe = (ThreadPoolExecutor) defaultFilter
-                .getExecutor();
+        ThreadPoolExecutor tpe = (ThreadPoolExecutor) defaultFilter.getExecutor();
+
         final ThreadFactory originalThreadFactory = tpe.getThreadFactory();
+
+        // 用于创建线程的工厂
         ThreadFactory newThreadFactory = new ThreadFactory() {
             private final AtomicInteger threadId = new AtomicInteger(0);
 
@@ -130,4 +135,5 @@ public class ExecutorThreadModel implements ThreadModel {
     public void buildFilterChain(IoFilterChain chain) throws Exception {
         chain.addFirst(ExecutorThreadModel.class.getName(), filter);
     }
+
 }

@@ -61,12 +61,19 @@ public abstract class AbstractIoFilterChain implements IoFilterChain {
 
     private final IoSession session;
 
-    private final Map<String, Entry> name2entry = new HashMap<String, Entry>();
-
+    /** 表示第一个过滤器 */
     private final EntryImpl head;
 
+    /** 表示最后一个过滤器 */
     private final EntryImpl tail;
 
+    private final Map<String, Entry> name2entry = new HashMap<String, Entry>();
+
+    /**
+     * 创建第一个过滤器和最后一个过滤器
+     *
+     * @param session
+     */
     protected AbstractIoFilterChain(IoSession session) {
         if (session == null) {
             throw new NullPointerException("session");
@@ -118,15 +125,13 @@ public abstract class AbstractIoFilterChain implements IoFilterChain {
         register(tail.prevEntry, name, filter);
     }
 
-    public synchronized void addBefore(String baseName, String name,
-            IoFilter filter) {
+    public synchronized void addBefore(String baseName, String name, IoFilter filter) {
         EntryImpl baseEntry = checkOldName(baseName);
         checkAddable(name);
         register(baseEntry.prevEntry, name, filter);
     }
 
-    public synchronized void addAfter(String baseName, String name,
-            IoFilter filter) {
+    public synchronized void addAfter(String baseName, String name, IoFilter filter) {
         EntryImpl baseEntry = checkOldName(baseName);
         checkAddable(name);
         register(baseEntry, name, filter);
@@ -153,8 +158,7 @@ public abstract class AbstractIoFilterChain implements IoFilterChain {
         try {
             filter.onPreAdd(this, name, newEntry.getNextFilter());
         } catch (Exception e) {
-            throw new IoFilterLifeCycleException("onPreAdd(): " + name + ':'
-                    + filter + " in " + getSession(), e);
+            throw new IoFilterLifeCycleException("onPreAdd(): " + name + ':' + filter + " in " + getSession(), e);
         }
 
         prevEntry.nextEntry.prevEntry = newEntry;
@@ -276,8 +280,7 @@ public abstract class AbstractIoFilterChain implements IoFilterChain {
         callNextSessionIdle(head, session, status);
     }
 
-    private void callNextSessionIdle(Entry entry, IoSession session,
-            IdleStatus status) {
+    private void callNextSessionIdle(Entry entry, IoSession session, IdleStatus status) {
         try {
             entry.getFilter().sessionIdle(entry.getNextFilter(), session,
                     status);
@@ -286,6 +289,12 @@ public abstract class AbstractIoFilterChain implements IoFilterChain {
         }
     }
 
+    /**
+     * 当服务端接收到客户端消息时，调用该方法
+     *
+     * @param session
+     * @param message
+     */
     public void fireMessageReceived(IoSession session, Object message) {
         Entry head = this.head;
         callNextMessageReceived(head, session, message);
@@ -293,8 +302,7 @@ public abstract class AbstractIoFilterChain implements IoFilterChain {
 
     private void callNextMessageReceived(Entry entry, IoSession session, Object message) {
         try {
-            entry.getFilter().messageReceived(entry.getNextFilter(), session,
-                    message);
+            entry.getFilter().messageReceived(entry.getNextFilter(), session, message);
         } catch (Throwable e) {
             fireExceptionCaught(session, e);
         }
@@ -311,11 +319,9 @@ public abstract class AbstractIoFilterChain implements IoFilterChain {
         callNextMessageSent(head, session, request.getMessage());
     }
 
-    private void callNextMessageSent(Entry entry, IoSession session,
-            Object message) {
+    private void callNextMessageSent(Entry entry, IoSession session, Object message) {
         try {
-            entry.getFilter().messageSent(entry.getNextFilter(), session,
-                    message);
+            entry.getFilter().messageSent(entry.getNextFilter(), session, message);
         } catch (Throwable e) {
             fireExceptionCaught(session, e);
         }
@@ -336,8 +342,7 @@ public abstract class AbstractIoFilterChain implements IoFilterChain {
         }
     }
 
-    private void callNextExceptionCaught(Entry entry, IoSession session,
-            Throwable cause) {
+    private void callNextExceptionCaught(Entry entry, IoSession session, Throwable cause) {
         try {
             entry.getFilter().exceptionCaught(entry.getNextFilter(), session,
                     cause);
@@ -352,8 +357,7 @@ public abstract class AbstractIoFilterChain implements IoFilterChain {
         callPreviousFilterWrite(tail, session, writeRequest);
     }
 
-    private void callPreviousFilterWrite(Entry entry, IoSession session,
-            WriteRequest writeRequest) {
+    private void callPreviousFilterWrite(Entry entry, IoSession session, WriteRequest writeRequest) {
         try {
             entry.getFilter().filterWrite(entry.getNextFilter(), session,
                     writeRequest);
@@ -463,11 +467,22 @@ public abstract class AbstractIoFilterChain implements IoFilterChain {
         }
     }
 
+    /**
+     * 内部实现逻辑主要是{@link IoSession#write(Object)}方法的调用，向客户端回写响应数据
+     *
+     * @param session
+     * @param writeRequest
+     * @throws Exception
+     */
     protected abstract void doWrite(IoSession session, WriteRequest writeRequest) throws Exception;
 
     protected abstract void doClose(IoSession session) throws Exception;
 
+    /**
+     * 表示第一个过滤器
+     */
     private class HeadFilter extends IoFilterAdapter {
+
         public void sessionCreated(NextFilter nextFilter, IoSession session) {
             nextFilter.sessionCreated(session);
         }
@@ -496,21 +511,33 @@ public abstract class AbstractIoFilterChain implements IoFilterChain {
             nextFilter.messageSent(session, message);
         }
 
+        /**
+         * 内部实现逻辑主要是{@link IoSession#write(Object)}方法的调用，向客户端回写响应数据
+         *
+         * @param nextFilter
+         * @param session
+         * @param writeRequest
+         * @throws Exception
+         */
         public void filterWrite(NextFilter nextFilter, IoSession session, WriteRequest writeRequest) throws Exception {
             if (session.getTransportType().getEnvelopeType().isAssignableFrom(writeRequest.getMessage().getClass())) {
                 doWrite(session, writeRequest);
             } else {
-                throw new IllegalStateException("Write requests must be transformed to "
-                                + session.getTransportType().getEnvelopeType() + ": " + writeRequest);
+                throw new IllegalStateException("Write requests must be transformed to " + session.getTransportType().getEnvelopeType() + ": " + writeRequest);
             }
         }
 
         public void filterClose(NextFilter nextFilter, IoSession session) throws Exception {
             doClose(session);
         }
+
     }
 
+    /**
+     * 表示最后一个过滤器，其内部逻辑都委托给了IoHandler处理
+     */
     private static class TailFilter extends IoFilterAdapter {
+
         public void sessionCreated(NextFilter nextFilter, IoSession session) throws Exception {
             session.getHandler().sessionCreated(session);
         }
@@ -519,10 +546,8 @@ public abstract class AbstractIoFilterChain implements IoFilterChain {
             try {
                 session.getHandler().sessionOpened(session);
             } finally {
-                // Notify the related ConnectFuture
-                // if the session is created from SocketConnector.
-                ConnectFuture future = (ConnectFuture) session
-                        .removeAttribute(CONNECT_FUTURE);
+                // Notify the related ConnectFuture if the session is created from SocketConnector.
+                ConnectFuture future = (ConnectFuture) session.removeAttribute(CONNECT_FUTURE);
                 if (future != null) {
                     future.setSession(session);
                 }
@@ -538,8 +563,7 @@ public abstract class AbstractIoFilterChain implements IoFilterChain {
             }
         }
 
-        public void sessionIdle(NextFilter nextFilter, IoSession session,
-                IdleStatus status) throws Exception {
+        public void sessionIdle(NextFilter nextFilter, IoSession session, IdleStatus status) throws Exception {
             session.getHandler().sessionIdle(session, status);
         }
 
@@ -572,19 +596,27 @@ public abstract class AbstractIoFilterChain implements IoFilterChain {
         }
     }
 
+    /**
+     * 用于包装过滤器
+     */
     private class EntryImpl implements Entry {
+
+        /** 表示前一个过滤器 */
         private EntryImpl prevEntry;
 
+        /** 表示下一个过滤器 */
         private EntryImpl nextEntry;
 
+        /** 过滤器名称 */
         private final String name;
 
+        /** 被装饰的过滤器 */
         private final IoFilter filter;
 
+        /** filter指向的下一个过滤器 */
         private final NextFilter nextFilter;
 
-        private EntryImpl(EntryImpl prevEntry, EntryImpl nextEntry,
-                String name, IoFilter filter) {
+        private EntryImpl(EntryImpl prevEntry, EntryImpl nextEntry, String name, IoFilter filter) {
             if (filter == null) {
                 throw new NullPointerException("filter");
             }

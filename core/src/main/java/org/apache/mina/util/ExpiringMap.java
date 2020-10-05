@@ -33,35 +33,33 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * @author The Apache Directory Project (mina-dev@directory.apache.org)
  */
 public class ExpiringMap<K, V> implements Map<K, V> {
+
     public static final int DEFAULT_TIME_TO_LIVE = 60;
 
     public static final int DEFAULT_EXPIRATION_INTERVAL = 1;
 
     private static volatile int expirerCount = 1;
 
+    private final Expirer expirer;
+
     private final ConcurrentHashMap<K, ExpiringObject> delegate;
 
     private final CopyOnWriteArrayList<ExpirationListener> expirationListeners;
 
-    private final Expirer expirer;
+
 
     public ExpiringMap() {
         this(DEFAULT_TIME_TO_LIVE, DEFAULT_EXPIRATION_INTERVAL);
     }
-
     public ExpiringMap(int timeToLive) {
         this(timeToLive, DEFAULT_EXPIRATION_INTERVAL);
     }
-
     public ExpiringMap(int timeToLive, int expirationInterval) {
         this(new ConcurrentHashMap<K, ExpiringObject>(),
                 new CopyOnWriteArrayList<ExpirationListener>(), timeToLive,
                 expirationInterval);
     }
-
-    private ExpiringMap(ConcurrentHashMap<K, ExpiringObject> delegate,
-            CopyOnWriteArrayList<ExpirationListener> expirationListeners,
-            int timeToLive, int expirationInterval) {
+    private ExpiringMap(ConcurrentHashMap<K, ExpiringObject> delegate, CopyOnWriteArrayList<ExpirationListener> expirationListeners, int timeToLive, int expirationInterval) {
         this.delegate = delegate;
         this.expirationListeners = expirationListeners;
 
@@ -71,8 +69,7 @@ public class ExpiringMap<K, V> implements Map<K, V> {
     }
 
     public V put(K key, V value) {
-        ExpiringObject answer = delegate.put(key, new ExpiringObject(key,
-                value, System.currentTimeMillis()));
+        ExpiringObject answer = delegate.put(key, new ExpiringObject(key, value, System.currentTimeMillis()));
         if (answer == null) {
             return null;
         }
@@ -121,18 +118,8 @@ public class ExpiringMap<K, V> implements Map<K, V> {
         delegate.clear();
     }
 
-    @Override
-    public int hashCode() {
-        return delegate.hashCode();
-    }
-
     public Set<K> keySet() {
         return delegate.keySet();
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        return delegate.equals(obj);
     }
 
     public void putAll(Map<? extends K, ? extends V> inMap) {
@@ -153,8 +140,7 @@ public class ExpiringMap<K, V> implements Map<K, V> {
         expirationListeners.add(listener);
     }
 
-    public void removeExpirationListener(
-            ExpirationListener<? extends V> listener) {
+    public void removeExpirationListener(ExpirationListener<? extends V> listener) {
         expirationListeners.remove(listener);
     }
 
@@ -176,6 +162,16 @@ public class ExpiringMap<K, V> implements Map<K, V> {
 
     public void setTimeToLive(int timeToLive) {
         expirer.setTimeToLive(timeToLive);
+    }
+
+    @Override
+    public int hashCode() {
+        return delegate.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return delegate.equals(obj);
     }
 
     private class ExpiringObject {
@@ -238,10 +234,13 @@ public class ExpiringMap<K, V> implements Map<K, V> {
     }
 
     public class Expirer implements Runnable {
+
         private ReadWriteLock stateLock = new ReentrantReadWriteLock();
 
+        /** 表示Map缓存数据保存的最长时间，单位毫秒 */
         private long timeToLiveMillis;
 
+        /** 线程定时检查间隔时间，单位毫秒 */
         private long expirationIntervalMillis;
 
         private boolean running = false;
@@ -249,13 +248,14 @@ public class ExpiringMap<K, V> implements Map<K, V> {
         private final Thread expirerThread;
 
         public Expirer() {
-            expirerThread = new Thread(this, "ExpiringMapExpirer-"
-                    + (expirerCount++));
+            expirerThread = new Thread(this, "ExpiringMapExpirer-" + (expirerCount++));
             expirerThread.setDaemon(true);
         }
 
         public void run() {
             while (running) {
+
+                // 移除超时的缓存对象，并触发监听
                 processExpires();
 
                 try {
@@ -265,6 +265,9 @@ public class ExpiringMap<K, V> implements Map<K, V> {
             }
         }
 
+        /**
+         * 移除超时的缓存对象，并触发监听
+         */
         private void processExpires() {
             long timeNow = System.currentTimeMillis();
 
@@ -275,9 +278,9 @@ public class ExpiringMap<K, V> implements Map<K, V> {
 
                 long timeIdle = timeNow - o.getLastAccessTime();
 
+                // 如果缓存对象的时间超时了，则移除缓存对象，并触发监听
                 if (timeIdle >= timeToLiveMillis) {
                     delegate.remove(o.getKey());
-
                     for (ExpirationListener<V> listener : expirationListeners) {
                         listener.expired(o.getValue());
                     }
@@ -371,7 +374,6 @@ public class ExpiringMap<K, V> implements Map<K, V> {
                 stateLock.readLock().unlock();
             }
         }
-
         public void setExpirationInterval(long expirationInterval) {
             stateLock.writeLock().lock();
 

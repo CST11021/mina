@@ -33,31 +33,22 @@ public interface IoServiceConfig extends Cloneable {
     IoSessionConfig getSessionConfig();
 
     /**
-     * Returns the {@link IoFilterChainBuilder} which will modify the
-     * {@link IoFilterChain} of all {@link IoSession}s which is created
-     * with this configuration.
-     * The default value is an empty {@link DefaultIoFilterChainBuilder}.
+     * 获取Server配置的过滤链，便于后续将Server的过滤器添加到Session中
+     *
+     * @return
      */
     IoFilterChainBuilder getFilterChainBuilder();
 
     /**
-     * Sets the {@link IoFilterChainBuilder} which will modify the
-     * {@link IoFilterChain} of all {@link IoSession}s which is created
-     * with this configuration.
-     * If you specify <tt>null</tt> this property will be set to
-     * an empty {@link DefaultIoFilterChainBuilder}.
+     * 设置服务的过滤器
+     *
+     * @param builder
      */
     void setFilterChainBuilder(IoFilterChainBuilder builder);
-
     /**
-     * A shortcut for <tt>( ( DefaultIoFilterChainBuilder ) </tt>{@link #getFilterChainBuilder()}<tt> )</tt>.
-     * Please note that the returned object is not a <b>real</b> {@link IoFilterChain}
-     * but a {@link DefaultIoFilterChainBuilder}.  Modifying the returned builder
-     * won't affect the existing {@link IoSession}s at all, because
-     * {@link IoFilterChainBuilder}s affect only newly created {@link IoSession}s.
+     * 将过滤器转为DefaultIoFilterChainBuilder，如果Server配置的过滤器不是DefaultIoFilterChainBuilder的子类，则抛异常
      *
-     * @throws IllegalStateException if the current {@link IoFilterChainBuilder} is
-     *                               not a {@link DefaultIoFilterChainBuilder}
+     * @return
      */
     DefaultIoFilterChainBuilder getFilterChain();
 

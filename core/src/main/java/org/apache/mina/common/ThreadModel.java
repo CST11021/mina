@@ -20,11 +20,8 @@
 package org.apache.mina.common;
 
 /**
- * Represents a thread model of an {@link IoService}.  There's no essential
- * difference from {@link IoFilterChainBuilder}.  The only difference is that
- * {@link ThreadModel} is executed later than the {@link IoFilterChainBuilder}
- * you specified.  However, please don't abuse this internal behavior; it can
- * change.
+ * 该接口实例主要用于执行过滤器，组装过滤器链的时候，会将该接口实例作为第一个过滤器，从而开始执行过滤器链中的过滤器，可以将ThreadModel理解为一个线程池服务，
+ * 一个服务实例共享一个ThreadModel，ThreadModel内部使用线程池实现，服务端处理客户端请求，是通过hreadModel中的线程池来处理的
  *
  * @author The Apache Directory Project (mina-dev@directory.apache.org)
  * @version $Rev$, $Date$

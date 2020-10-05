@@ -53,10 +53,13 @@ class SocketSessionImpl extends BaseIoSession {
 
     private final SocketSessionConfig config = new SessionConfigImpl();
 
+    /** 管理该会话的Processor处理器 */
     private final SocketIoProcessor ioProcessor;
 
+    /** 每个会话都有对应过滤器链，用于处理客户端请求 */
     private final SocketFilterChain filterChain;
 
+    /** 该会话与客户端通信的Channel */
     private final SocketChannel ch;
 
     private final Queue<WriteRequest> writeRequestQueue;
@@ -73,6 +76,7 @@ class SocketSessionImpl extends BaseIoSession {
     /** 用于接收客户端请求的服务端ip和端口 */
     private final SocketAddress serviceAddress;
 
+    /** 服务启动关闭的监听方法、请求创建和销毁的监听方法 */
     private final IoServiceListenerSupport serviceListeners;
 
     /** 表示该会话订阅的NIO事件 */
@@ -157,20 +161,6 @@ class SocketSessionImpl extends BaseIoSession {
         return handler;
     }
 
-    @Override
-    protected void close0() {
-        filterChain.fireFilterClose(this);
-    }
-
-    Queue<WriteRequest> getWriteRequestQueue() {
-        return writeRequestQueue;
-    }
-
-    @Override
-    protected void write0(WriteRequest writeRequest) {
-        filterChain.fireFilterWrite(this, writeRequest);
-    }
-
     public TransportType getTransportType() {
         return TransportType.SOCKET;
     }
@@ -187,13 +177,30 @@ class SocketSessionImpl extends BaseIoSession {
         return serviceAddress;
     }
 
+    int getReadBufferSize() {
+        return readBufferSize;
+    }
+
+    Queue<WriteRequest> getWriteRequestQueue() {
+        return writeRequestQueue;
+    }
+
+
+
+
+    @Override
+    protected void close0() {
+        filterChain.fireFilterClose(this);
+    }
+
+    @Override
+    protected void write0(WriteRequest writeRequest) {
+        filterChain.fireFilterWrite(this, writeRequest);
+    }
+
     @Override
     protected void updateTrafficMask() {
         this.ioProcessor.updateTrafficMask(this);
-    }
-
-    int getReadBufferSize() {
-        return readBufferSize;
     }
 
     void increaseReadBufferSize() {

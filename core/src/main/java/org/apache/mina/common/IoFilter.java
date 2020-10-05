@@ -29,10 +29,9 @@ import org.apache.mina.filter.ReferenceCountingIoFilter;
 public interface IoFilter {
 
     /**
-     * Invoked by {@link ReferenceCountingIoFilter} when this filter
-     * is added to a {@link IoFilterChain} at the first time, so you can
-     * initialize shared resources.  Please note that this method is never
-     * called if you don't wrap a filter with {@link ReferenceCountingIoFilter}.
+     * 过滤器的初始化方法
+     *
+     * @throws Exception
      */
     void init() throws Exception;
 
@@ -44,16 +43,15 @@ public interface IoFilter {
      */
     void destroy() throws Exception;
 
+    // 添加和移除过滤器扩展方法
+
     /**
-     * Invoked before this filter is added to the specified <tt>parent</tt>.
-     * Please note that this method can be invoked more than once if
-     * this filter is added to more than one parents.  This method is not
-     * invoked before {@link #init()} is invoked.
+     * 添加一个过滤器到链之前会调用该方法
      *
-     * @param parent     the parent who called this method
-     * @param name       the name assigned to this filter
-     * @param nextFilter the {@link NextFilter} for this filter.  You can reuse
-     *                   this object until this filter is removed from the chain.
+     * @param parent
+     * @param name
+     * @param nextFilter
+     * @throws Exception
      */
     void onPreAdd(IoFilterChain parent, String name, NextFilter nextFilter) throws Exception;
 
@@ -84,10 +82,9 @@ public interface IoFilter {
     void onPreRemove(IoFilterChain parent, String name, NextFilter nextFilter) throws Exception;
 
     /**
-     * Invoked after this filter is removed from the specified <tt>parent</tt>.
-     * Please note that this method can be invoked more than once if
-     * this filter is removed from more than one parents.
-     * This method is always invoked before {@link #destroy()} is invoked.
+     * 从指定的父级删除此过滤器后调用该方法
+     * 请注意，如果从多个父级中删除此过滤器，则可以多次调用此方法。
+     * 始终在调用{@link #destroy()}之前调用此方法。
      *
      * @param parent     the parent who called this method
      * @param name       the name assigned to this filter
@@ -96,8 +93,17 @@ public interface IoFilter {
      */
     void onPostRemove(IoFilterChain parent, String name, NextFilter nextFilter) throws Exception;
 
+
+    // session相关的事件方法
+
     /**
+     * 当session被创建时，从Session获取过滤器链，然后调用每个过滤器的sessionCreated方法，如：{@link IoSession#getFilterChain()#sessionCreated(NextFilter, IoSession)}
+     *
      * Filters {@link IoHandler#sessionCreated(IoSession)} event.
+     *
+     * @param nextFilter
+     * @param session
+     * @throws Exception
      */
     void sessionCreated(NextFilter nextFilter, IoSession session) throws Exception;
 
@@ -112,26 +118,22 @@ public interface IoFilter {
     void sessionClosed(NextFilter nextFilter, IoSession session) throws Exception;
 
     /**
-     * Filters {@link IoHandler#sessionIdle(IoSession, IdleStatus)}
-     * event.
+     * Filters {@link IoHandler#sessionIdle(IoSession, IdleStatus)} event.
      */
     void sessionIdle(NextFilter nextFilter, IoSession session, IdleStatus status) throws Exception;
 
     /**
-     * Filters {@link IoHandler#exceptionCaught(IoSession, Throwable)}
-     * event.
+     * Filters {@link IoHandler#exceptionCaught(IoSession, Throwable)} event.
      */
     void exceptionCaught(NextFilter nextFilter, IoSession session, Throwable cause) throws Exception;
 
     /**
-     * Filters {@link IoHandler#messageReceived(IoSession, Object)}
-     * event.
+     * Filters {@link IoHandler#messageReceived(IoSession, Object)} event.
      */
     void messageReceived(NextFilter nextFilter, IoSession session, Object message) throws Exception;
 
     /**
-     * Filters {@link IoHandler#messageSent(IoSession, Object)}
-     * event.
+     * Filters {@link IoHandler#messageSent(IoSession, Object)} event.
      */
     void messageSent(NextFilter nextFilter, IoSession session, Object message) throws Exception;
 
@@ -141,9 +143,18 @@ public interface IoFilter {
     void filterClose(NextFilter nextFilter, IoSession session) throws Exception;
 
     /**
-     * Filters {@link IoSession#write(Object)} method invocation.
+     * 内部实现逻辑主要是{@link IoSession#write(Object)}方法的调用，向客户端回写响应数据
+     *
+     * @param nextFilter
+     * @param session
+     * @param writeRequest
+     * @throws Exception
      */
     void filterWrite(NextFilter nextFilter, IoSession session, WriteRequest writeRequest) throws Exception;
+
+
+
+
 
     /**
      * Represents the next {@link IoFilter} in {@link IoFilterChain}.
@@ -196,9 +207,10 @@ public interface IoFilter {
     }
 
     /**
-     * Represents write request fired by {@link IoSession#write(Object)}.
+     * 表示由{@link IoSession#write(Object)}触发的写请求
      */
     public static class WriteRequest {
+
         private static final WriteFuture UNUSED_FUTURE = new WriteFuture() {
             public boolean isWritten() {
                 return false;
@@ -267,8 +279,7 @@ public interface IoFilter {
          * @param destination the destination of the message.  This property will be
          *                    ignored unless the transport supports it.
          */
-        public WriteRequest(Object message, WriteFuture future,
-                            SocketAddress destination) {
+        public WriteRequest(Object message, WriteFuture future, SocketAddress destination) {
             if (message == null) {
                 throw new NullPointerException("message");
             }
@@ -310,4 +321,5 @@ public interface IoFilter {
             return message.toString();
         }
     }
+
 }

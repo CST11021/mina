@@ -32,22 +32,16 @@ import org.apache.mina.transport.socket.nio.support.DatagramSessionConfigImpl;
  * @author The Apache Directory Project (mina-dev@directory.apache.org)
  * @version $Rev$, $Date$
  */
-public class DatagramAcceptorConfig extends BaseIoAcceptorConfig implements
-        DatagramServiceConfig {
+public class DatagramAcceptorConfig extends BaseIoAcceptorConfig implements DatagramServiceConfig {
+
     private static final IoSessionRecycler DEFAULT_RECYCLER = new ExpiringSessionRecycler();
 
-    /**
-     * Current session recycler
-     */
+    /** session回收器 */
     private IoSessionRecycler sessionRecycler = DEFAULT_RECYCLER;
 
+    /** session相关配置 */
     private DatagramSessionConfig sessionConfig = new DatagramSessionConfigImpl();
 
-    /**
-     * Creates a new instance.
-     *
-     * @throws RuntimeIOException if failed to get the default configuration
-     */
     public DatagramAcceptorConfig() {
         super();
         sessionConfig.setReuseAddress(true);
@@ -61,7 +55,6 @@ public class DatagramAcceptorConfig extends BaseIoAcceptorConfig implements
         return sessionRecycler;
     }
 
-    // FIXME There can be a problem if a user changes the recycler after the service is activated.
     public void setSessionRecycler(IoSessionRecycler sessionRecycler) {
         if (sessionRecycler == null) {
             sessionRecycler = DEFAULT_RECYCLER;

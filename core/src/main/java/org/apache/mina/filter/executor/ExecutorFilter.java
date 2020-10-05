@@ -6,16 +6,16 @@
  *  to you under the Apache License, Version 2.0 (the
  *  "License"); you may not use this file except in compliance
  *  with the License.  You may obtain a copy of the License at
- *  
+ *
  *    http://www.apache.org/licenses/LICENSE-2.0
- *  
+ *
  *  Unless required by applicable law or agreed to in writing,
  *  software distributed under the License is distributed on an
  *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
  *  KIND, either express or implied.  See the License for the
  *  specific language governing permissions and limitations
- *  under the License. 
- *  
+ *  under the License.
+ *
  */
 package org.apache.mina.filter.executor;
 
@@ -45,22 +45,16 @@ import org.slf4j.LoggerFactory;
  * @version $Rev: 350169 $, $Date: 2005-12-01 00:17:41 -0500 (Thu, 01 Dec 2005) $
  */
 public class ExecutorFilter extends IoFilterAdapter {
+
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
+    /** 用于执行过滤器的线程池，corePoolSize：16， maximumPoolSize：16，keepAliveTime：16s */
     private final Executor executor;
 
-    /**
-     * Creates a new instace with the default thread pool implementation
-     * (<tt>new ThreadPoolExecutor(16, 16, 60, TimeUnit.SECONDS, new LinkedBlockingQueue() )</tt>).
-     */
-    public ExecutorFilter() {
-        this(new ThreadPoolExecutor(16, 16, 60, TimeUnit.SECONDS,
-                new LinkedBlockingQueue<Runnable>()));
-    }
 
-    /**
-     * Creates a new instance with the specified <tt>executor</tt>.
-     */
+    public ExecutorFilter() {
+        this(new ThreadPoolExecutor(16, 16, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>()));
+    }
     public ExecutorFilter(Executor executor) {
         if (executor == null) {
             throw new NullPointerException("executor");
@@ -70,14 +64,30 @@ public class ExecutorFilter extends IoFilterAdapter {
     }
 
     /**
-     * Returns the underlying {@link Executor} instance this filter uses.
+     * 获取用于执行过滤器的线程池
+     *
+     * @return
      */
     public Executor getExecutor() {
         return executor;
     }
 
-    private void fireEvent(NextFilter nextFilter, IoSession session,
-            EventType type, Object data) {
+
+    public void sessionCreated(NextFilter nextFilter, IoSession session) {
+        nextFilter.sessionCreated(session);
+    }
+
+    public void filterWrite(NextFilter nextFilter, IoSession session, WriteRequest writeRequest) {
+        nextFilter.filterWrite(session, writeRequest);
+    }
+
+    public void filterClose(NextFilter nextFilter, IoSession session) throws Exception {
+        nextFilter.filterClose(session);
+    }
+
+
+
+    private void fireEvent(NextFilter nextFilter, IoSession session, EventType type, Object data) {
         Event event = new Event(type, nextFilter, data);
         SessionBuffer buf = SessionBuffer.getSessionBuffer(session);
 
@@ -102,9 +112,83 @@ public class ExecutorFilter extends IoFilterAdapter {
         }
     }
 
+    public void sessionOpened(NextFilter nextFilter, IoSession session) {
+        fireEvent(nextFilter, session, EventType.OPENED, null);
+    }
+
+    public void sessionClosed(NextFilter nextFilter, IoSession session) {
+        fireEvent(nextFilter, session, EventType.CLOSED, null);
+    }
+
+    public void sessionIdle(NextFilter nextFilter, IoSession session, IdleStatus status) {
+        fireEvent(nextFilter, session, EventType.IDLE, status);
+    }
+
+    public void exceptionCaught(NextFilter nextFilter, IoSession session, Throwable cause) {
+        fireEvent(nextFilter, session, EventType.EXCEPTION, cause);
+    }
+
+    public void messageReceived(NextFilter nextFilter, IoSession session, Object message) {
+        fireEvent(nextFilter, session, EventType.RECEIVED, message);
+    }
+
+    public void messageSent(NextFilter nextFilter, IoSession session, Object message) {
+        fireEvent(nextFilter, session, EventType.SENT, message);
+    }
+
+
+
+
+
+    protected void processEvent(NextFilter nextFilter, IoSession session, EventType type, Object data) {
+        if (type == EventType.RECEIVED) {
+            nextFilter.messageReceived(session, data);
+        } else if (type == EventType.SENT) {
+            nextFilter.messageSent(session, data);
+        } else if (type == EventType.EXCEPTION) {
+            nextFilter.exceptionCaught(session, (Throwable) data);
+        } else if (type == EventType.IDLE) {
+            nextFilter.sessionIdle(session, (IdleStatus) data);
+        } else if (type == EventType.OPENED) {
+            nextFilter.sessionOpened(session);
+        } else if (type == EventType.CLOSED) {
+            nextFilter.sessionClosed(session);
+        }
+    }
+
+    private class ProcessEventsRunnable implements Runnable {
+        private final SessionBuffer buffer;
+
+        ProcessEventsRunnable(SessionBuffer buffer) {
+            this.buffer = buffer;
+        }
+
+        public void run() {
+            while (true) {
+                Event event;
+
+                synchronized (buffer.eventQueue) {
+                    event = buffer.eventQueue.poll();
+
+                    if (event == null) {
+                        buffer.processingCompleted = true;
+                        break;
+                    }
+                }
+
+                processEvent(event.getNextFilter(), buffer.session, event
+                        .getType(), event.getData());
+            }
+
+            if (logger.isDebugEnabled()) {
+                logger.debug("Exiting since queue is empty for "
+                        + buffer.session.getRemoteAddress());
+            }
+        }
+    }
+
     private static class SessionBuffer {
-        private static final String KEY = SessionBuffer.class.getName()
-                + ".KEY";
+        private static final String KEY = SessionBuffer.class.getName() + ".KEY";
 
         private static SessionBuffer getSessionBuffer(IoSession session) {
             synchronized (session) {
@@ -179,96 +263,6 @@ public class ExecutorFilter extends IoFilterAdapter {
 
         public EventType getType() {
             return type;
-        }
-    }
-
-    public void sessionCreated(NextFilter nextFilter, IoSession session) {
-        nextFilter.sessionCreated(session);
-    }
-
-    public void sessionOpened(NextFilter nextFilter, IoSession session) {
-        fireEvent(nextFilter, session, EventType.OPENED, null);
-    }
-
-    public void sessionClosed(NextFilter nextFilter, IoSession session) {
-        fireEvent(nextFilter, session, EventType.CLOSED, null);
-    }
-
-    public void sessionIdle(NextFilter nextFilter, IoSession session,
-            IdleStatus status) {
-        fireEvent(nextFilter, session, EventType.IDLE, status);
-    }
-
-    public void exceptionCaught(NextFilter nextFilter, IoSession session,
-            Throwable cause) {
-        fireEvent(nextFilter, session, EventType.EXCEPTION, cause);
-    }
-
-    public void messageReceived(NextFilter nextFilter, IoSession session,
-            Object message) {
-        fireEvent(nextFilter, session, EventType.RECEIVED, message);
-    }
-
-    public void messageSent(NextFilter nextFilter, IoSession session,
-            Object message) {
-        fireEvent(nextFilter, session, EventType.SENT, message);
-    }
-
-    protected void processEvent(NextFilter nextFilter, IoSession session,
-            EventType type, Object data) {
-        if (type == EventType.RECEIVED) {
-            nextFilter.messageReceived(session, data);
-        } else if (type == EventType.SENT) {
-            nextFilter.messageSent(session, data);
-        } else if (type == EventType.EXCEPTION) {
-            nextFilter.exceptionCaught(session, (Throwable) data);
-        } else if (type == EventType.IDLE) {
-            nextFilter.sessionIdle(session, (IdleStatus) data);
-        } else if (type == EventType.OPENED) {
-            nextFilter.sessionOpened(session);
-        } else if (type == EventType.CLOSED) {
-            nextFilter.sessionClosed(session);
-        }
-    }
-
-    public void filterWrite(NextFilter nextFilter, IoSession session,
-            WriteRequest writeRequest) {
-        nextFilter.filterWrite(session, writeRequest);
-    }
-
-    public void filterClose(NextFilter nextFilter, IoSession session)
-            throws Exception {
-        nextFilter.filterClose(session);
-    }
-
-    private class ProcessEventsRunnable implements Runnable {
-        private final SessionBuffer buffer;
-
-        ProcessEventsRunnable(SessionBuffer buffer) {
-            this.buffer = buffer;
-        }
-
-        public void run() {
-            while (true) {
-                Event event;
-
-                synchronized (buffer.eventQueue) {
-                    event = buffer.eventQueue.poll();
-
-                    if (event == null) {
-                        buffer.processingCompleted = true;
-                        break;
-                    }
-                }
-
-                processEvent(event.getNextFilter(), buffer.session, event
-                        .getType(), event.getData());
-            }
-
-            if (logger.isDebugEnabled()) {
-                logger.debug("Exiting since queue is empty for "
-                        + buffer.session.getRemoteAddress());
-            }
         }
     }
 }

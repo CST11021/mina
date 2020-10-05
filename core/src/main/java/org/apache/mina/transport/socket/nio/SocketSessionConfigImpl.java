@@ -40,8 +40,8 @@ import org.apache.mina.common.support.BaseIoSessionConfig;
  * @author The Apache Directory Project (mina-dev@directory.apache.org)
  * @version $Rev$, $Date$
  */
-public class SocketSessionConfigImpl extends BaseIoSessionConfig implements
-        SocketSessionConfig {
+public class SocketSessionConfigImpl extends BaseIoSessionConfig implements SocketSessionConfig {
+
     private static Map<InetSocketAddress, InetAddress> TEST_ADDRESSES = new LinkedHashMap<InetSocketAddress, InetAddress>();
 
     private static boolean SET_RECEIVE_BUFFER_SIZE_AVAILABLE = false;
@@ -132,8 +132,7 @@ public class SocketSessionConfigImpl extends BaseIoSessionConfig implements
         }
     }
 
-    private static boolean initializeDefaultSocketParameters(
-            InetSocketAddress bindAddress, InetAddress connectAddress) {
+    private static boolean initializeDefaultSocketParameters(InetSocketAddress bindAddress, InetAddress connectAddress) {
         ServerSocket ss = null;
         Socket socket = null;
 
@@ -170,8 +169,7 @@ public class SocketSessionConfigImpl extends BaseIoSessionConfig implements
         }
     }
 
-    private static void initializeDefaultSocketParameters(Socket socket)
-            throws SocketException {
+    private static void initializeDefaultSocketParameters(Socket socket) throws SocketException {
         DEFAULT_REUSE_ADDRESS = socket.getReuseAddress();
         DEFAULT_RECEIVE_BUFFER_SIZE = socket.getReceiveBufferSize();
         DEFAULT_SEND_BUFFER_SIZE = socket.getSendBufferSize();

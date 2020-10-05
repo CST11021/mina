@@ -163,9 +163,10 @@ public interface IoFilterChain {
     public void fireSessionIdle(IoSession session, IdleStatus status);
 
     /**
-     * Fires a {@link #fireMessageReceived(IoSession, Object)} event.  Most users don't need to
-     * call this method at all.  Please use this method only when you implement a new transport
-     * or fire a virtual event.
+     * 当服务端接收到客户端消息时，调用该方法
+     *
+     * @param session
+     * @param message
      */
     public void fireMessageReceived(IoSession session, Object message);
 

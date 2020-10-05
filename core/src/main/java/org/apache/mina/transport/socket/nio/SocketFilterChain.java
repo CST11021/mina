@@ -36,16 +36,22 @@ import org.apache.mina.common.support.AbstractIoFilterChain;
 class SocketFilterChain extends AbstractIoFilterChain {
 
     SocketFilterChain(IoSession parent) {
+        // 父类中初始化第一个和最后一个过滤器，并构造成链
         super(parent);
     }
 
+    /**
+     * 从Session获取响应数据（即服务端返回给客户端的数据），然后通过Processor来执行flush操作
+     *
+     * @param session
+     * @param writeRequest
+     */
     @Override
     protected void doWrite(IoSession session, WriteRequest writeRequest) {
         SocketSessionImpl s = (SocketSessionImpl) session;
         Queue<WriteRequest> writeRequestQueue = s.getWriteRequestQueue();
 
-        // SocketIoProcessor.doFlush() will reset it after write is finished
-        // because the buffer will be passed with messageSent event.
+        // SocketIoProcessor.doFlush() will reset it after write is finished because the buffer will be passed with messageSent event.
         ByteBuffer buffer = (ByteBuffer) writeRequest.getMessage();
         buffer.mark();
 
@@ -59,6 +65,7 @@ class SocketFilterChain extends AbstractIoFilterChain {
         writeRequestQueue.add(writeRequest);
 
         if (session.getTrafficMask().isWritable()) {
+            // flush 响应数据的操作，最终委托给Processor处理器
             s.getIoProcessor().flush(s);
         }
     }

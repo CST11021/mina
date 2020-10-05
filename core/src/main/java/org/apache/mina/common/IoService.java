@@ -30,32 +30,28 @@ import java.util.Set;
  */
 public interface IoService {
 
-    /**
-     * Adds an {@link IoServiceListener} that listens any events related with
-     * this service.
-     */
-    void addListener(IoServiceListener listener);
+    // 服务绑定和配置
 
     /**
-     * Removed an existing {@link IoServiceListener} that listens any events
-     * related with this service.
+     * Returns the default configuration which is used when you didn't specify
+     * any configuration.
      */
-    void removeListener(IoServiceListener listener);
-
-    /**
-     * Returns all {@link SocketAddress}es this service is managing.
-     * If this service is an {@link IoAcceptor}, a set of bind addresses will
-     * be returned.  If this service is an {@link IoConnector}, a set of remote
-     * addresses will be returned.
-     */
-    Set<SocketAddress> getManagedServiceAddresses();
-
+    IoServiceConfig getDefaultConfig();
     /**
      * Returns <tt>true</tt> if this service is managing the specified <tt>serviceAddress</tt>.
      * If this service is an {@link IoAcceptor}, <tt>serviceAddress</tt> is a bind address.
      * If this service is an {@link IoConnector}, <tt>serviceAddress</tt> is a remote address.
      */
     boolean isManaged(SocketAddress serviceAddress);
+    /**
+     * Returns all {@link SocketAddress}es this service is managing.
+     * If this service is an {@link IoAcceptor}, a set of bind addresses will be returned.
+     * If this service is an {@link IoConnector}, a set of remote addresses will be returned.
+     */
+    Set<SocketAddress> getManagedServiceAddresses();
+
+
+    // 获取session集合
 
     /**
      * Returns all sessions with the specified remote or local address,
@@ -72,11 +68,20 @@ public interface IoService {
      */
     Set<IoSession> getManagedSessions(SocketAddress serviceAddress);
 
+
+    // 添加和移除监听
+
     /**
-     * Returns the default configuration which is used when you didn't specify
-     * any configuration.
+     * 添加监听器：监听Server启动/关闭和请求创建/销毁的监听
+     *
+     * @param listener
      */
-    IoServiceConfig getDefaultConfig();
+    void addListener(IoServiceListener listener);
+    void removeListener(IoServiceListener listener);
+
+
+
+    // 过滤器相关
 
     /**
      * 获取过滤器链的Builder，该Builder用于创建过滤器链
@@ -84,14 +89,12 @@ public interface IoService {
      * @return
      */
     IoFilterChainBuilder getFilterChainBuilder();
-
     /**
      * 过滤器链的Builder，该Builder用于创建过滤器链
      *
      * @param builder
      */
     void setFilterChainBuilder(IoFilterChainBuilder builder);
-
     /**
      * 获取过滤器链的Builder，该Builder用于创建过滤器链
      *

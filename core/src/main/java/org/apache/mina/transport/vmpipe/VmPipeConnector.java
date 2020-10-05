@@ -40,13 +40,13 @@ import org.apache.mina.transport.vmpipe.support.VmPipeSessionImpl;
 import org.apache.mina.util.AnonymousSocketAddress;
 
 /**
- * Connects to {@link IoHandler}s which is bound on the specified
- * {@link VmPipeAddress}.
+ * 连接到绑定到指定的{@link VmPipeAddress}上的{@link IoHandler}。
  *
  * @author The Apache Directory Project (mina-dev@directory.apache.org)
  * @version $Rev$, $Date$
  */
 public class VmPipeConnector extends BaseIoConnector {
+
     private static final IoSessionConfig CONFIG = new BaseIoSessionConfig() {
     };
 
@@ -62,14 +62,11 @@ public class VmPipeConnector extends BaseIoConnector {
     public VmPipeConnector() {
     }
 
-    public ConnectFuture connect(SocketAddress address, IoHandler handler,
-            IoServiceConfig config) {
+    public ConnectFuture connect(SocketAddress address, IoHandler handler, IoServiceConfig config) {
         return connect(address, null, handler, config);
     }
 
-    public ConnectFuture connect(SocketAddress address,
-            SocketAddress localAddress, IoHandler handler,
-            IoServiceConfig config) {
+    public ConnectFuture connect(SocketAddress address, SocketAddress localAddress, IoHandler handler, IoServiceConfig config) {
         if (address == null)
             throw new NullPointerException("address");
         if (handler == null)
