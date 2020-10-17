@@ -37,16 +37,16 @@ import org.apache.mina.common.IoSession;
  * @version $Rev$, $Date$
  */
 public interface ProtocolDecoder {
+
     /**
-     * Decodes binary or protocol-specific content into higher-level message objects.
-     * MINA invokes {@link #decode(IoSession, ByteBuffer, ProtocolDecoderOutput)}
-     * method with read data, and then the decoder implementation puts decoded
-     * messages into {@link ProtocolDecoderOutput}.
-     * 
-     * @throws Exception if the read data violated protocol specification
+     * 通过ProtocolDecoderOutput将缓冲区的字节转为ByteBuffer对应的对象，每个buffer都会指定反序列化后对象类型
+     *
+     * @param session
+     * @param in
+     * @param out
+     * @throws Exception
      */
-    void decode(IoSession session, ByteBuffer in, ProtocolDecoderOutput out)
-            throws Exception;
+    void decode(IoSession session, ByteBuffer in, ProtocolDecoderOutput out) throws Exception;
 
     /**
      * Invoked when the specified <tt>session</tt> is closed.  This method is useful
@@ -57,8 +57,7 @@ public interface ProtocolDecoder {
      * 
      * @throws Exception if the read data violated protocol specification
      */
-    void finishDecode(IoSession session, ProtocolDecoderOutput out)
-            throws Exception;
+    void finishDecode(IoSession session, ProtocolDecoderOutput out) throws Exception;
 
     /**
      * Releases all resources related with this decoder.
@@ -66,4 +65,5 @@ public interface ProtocolDecoder {
      * @throws Exception if failed to dispose all resources
      */
     void dispose(IoSession session) throws Exception;
+
 }

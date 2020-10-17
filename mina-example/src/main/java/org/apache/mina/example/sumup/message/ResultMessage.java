@@ -28,8 +28,10 @@ package org.apache.mina.example.sumup.message;
 public class ResultMessage extends AbstractMessage {
     private static final long serialVersionUID = 7371210248110219946L;
 
+    /** 服务端返回的状态，表示本次调用是否成功 */
     private boolean ok;
 
+    /** 服务端返回的统计数值 */
     private int value;
 
     public ResultMessage() {

@@ -95,9 +95,7 @@ import org.apache.mina.common.IoSession;
  */
 public abstract class CumulativeProtocolDecoder extends ProtocolDecoderAdapter {
 
-    private static final String BUFFER = CumulativeProtocolDecoder.class
-            .getName()
-            + ".Buffer";
+    private static final String BUFFER = CumulativeProtocolDecoder.class.getName() + ".Buffer";
 
     /**
      * Creates a new instance.
@@ -106,22 +104,20 @@ public abstract class CumulativeProtocolDecoder extends ProtocolDecoderAdapter {
     }
 
     /**
-     * Cumulates content of <tt>in</tt> into internal buffer and forwards
-     * decoding request to {@link #doDecode(IoSession, ByteBuffer, ProtocolDecoderOutput)}.
-     * <tt>doDecode()</tt> is invoked repeatedly until it returns <tt>false</tt>
-     * and the cumulative buffer is compacted after decoding ends.
-     * 
-     * @throws IllegalStateException if your <tt>doDecode()</tt> returned
-     *                               <tt>true</tt> not consuming the cumulative buffer.
+     * 通过ProtocolDecoderOutput将缓冲区的字节转为ByteBuffer对应的对象，每个buffer都会指定反序列化后对象类型
+     *
+     * @param session
+     * @param in
+     * @param out
+     * @throws Exception
      */
-    public void decode(IoSession session, ByteBuffer in,
-            ProtocolDecoderOutput out) throws Exception {
+    public void decode(IoSession session, ByteBuffer in, ProtocolDecoderOutput out) throws Exception {
         boolean usingSessionBuffer = true;
         ByteBuffer buf = (ByteBuffer) session.getAttribute(BUFFER);
-        // If we have a session buffer, append data to that; otherwise
-        // use the buffer read from the network directly.
+        // 如果我们有一个会话缓冲区，则将数据附加到该缓冲区；否则，直接使用从网络读取的缓冲区。
         if (buf != null) {
             buf.put(in);
+            // 将一个处于存数据状态的缓冲区变为一个处于准备取数据的状态
             buf.flip();
         } else {
             buf = in;
@@ -130,13 +126,14 @@ public abstract class CumulativeProtocolDecoder extends ProtocolDecoderAdapter {
 
         for (;;) {
             int oldPos = buf.position();
+            // 通过ProtocolDecoderOutput将缓冲区的字节转为ByteBuffer对应的对象，每个buffer都会指定反序列化后对象类型
             boolean decoded = doDecode(session, buf, out);
             if (decoded) {
                 if (buf.position() == oldPos) {
-                    throw new IllegalStateException(
-                            "doDecode() can't return true when buffer is not consumed.");
+                    throw new IllegalStateException("doDecode() can't return true when buffer is not consumed.");
                 }
 
+                // 如果没有数据了，则结束循环
                 if (!buf.hasRemaining()) {
                     break;
                 }
@@ -160,18 +157,15 @@ public abstract class CumulativeProtocolDecoder extends ProtocolDecoderAdapter {
     }
 
     /**
-     * Implement this method to consume the specified cumulative buffer and
-     * decode its content into message(s). 
-     *  
-     * @param in the cumulative buffer
-     * @return <tt>true</tt> if and only if there's more to decode in the buffer
-     *         and you want to have <tt>doDecode</tt> method invoked again.
-     *         Return <tt>false</tt> if remaining data is not enough to decode,
-     *         then this method will be invoked again when more data is cumulated.
-     * @throws Exception if cannot decode <tt>in</tt>.
+     * 通过ProtocolDecoderOutput将缓冲区的字节转为ByteBuffer对应的对象，每个buffer都会指定反序列化后对象类型
+     *
+     * @param session
+     * @param in
+     * @param out
+     * @return
+     * @throws Exception
      */
-    protected abstract boolean doDecode(IoSession session, ByteBuffer in,
-            ProtocolDecoderOutput out) throws Exception;
+    protected abstract boolean doDecode(IoSession session, ByteBuffer in, ProtocolDecoderOutput out) throws Exception;
 
     /**
      * Releases the cumulative buffer used by the specified <tt>session</tt>.

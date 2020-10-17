@@ -37,7 +37,7 @@ public interface IoFuture {
     Object getLock();
 
     /**
-     * Wait for the asynchronous operation to end.
+     * 等待异步操作结束
      */
     void join();
 

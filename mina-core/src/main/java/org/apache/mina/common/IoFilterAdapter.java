@@ -73,6 +73,14 @@ public class IoFilterAdapter implements IoFilter {
         nextFilter.messageSent(session, message);
     }
 
+    /**
+     * 当session.write方法被调用时，会调用该方法
+     *
+     * @param nextFilter
+     * @param session
+     * @param writeRequest
+     * @throws Exception
+     */
     public void filterWrite(NextFilter nextFilter, IoSession session, WriteRequest writeRequest) throws Exception {
         nextFilter.filterWrite(session, writeRequest);
     }

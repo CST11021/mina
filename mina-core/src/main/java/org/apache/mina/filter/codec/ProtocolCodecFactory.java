@@ -20,26 +20,25 @@
 package org.apache.mina.filter.codec;
 
 /**
- * Provides {@link ProtocolEncoder} and {@link ProtocolDecoder} which translates
- * binary or protocol specific data into message object and vice versa.
- * <p>
- * Please refer to
- * <a href="../../../../../xref-examples/org/apache/mina/examples/reverser/ReverseProtocolProvider.html"><code>ReverserProtocolProvider</code></a>
- * example.
+ * 用于创建编解码器的工厂
  *  
  * @author The Apache Directory Project (mina-dev@directory.apache.org)
  * @version $Rev$, $Date$
  */
 public interface ProtocolCodecFactory {
     /**
-     * Returns a new (or reusable) instance of {@link ProtocolEncoder} which
-     * encodes message objects into binary or protocol-specific data.
+     * 获取编码器
+     *
+     * @return
+     * @throws Exception
      */
     ProtocolEncoder getEncoder() throws Exception;
 
     /**
-     * Returns a new (or reusable) instance of {@link ProtocolDecoder} which
-     * decodes binary or protocol-specific data into message objects.
+     * 获取解码器
+     *
+     * @return
+     * @throws Exception
      */
     ProtocolDecoder getDecoder() throws Exception;
 }

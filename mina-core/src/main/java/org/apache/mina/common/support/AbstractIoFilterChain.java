@@ -352,15 +352,20 @@ public abstract class AbstractIoFilterChain implements IoFilterChain {
         }
     }
 
+    /**
+     *
+     * @param session
+     * @param writeRequest
+     */
     public void fireFilterWrite(IoSession session, WriteRequest writeRequest) {
         Entry tail = this.tail;
+        // 调用下一个过滤器
         callPreviousFilterWrite(tail, session, writeRequest);
     }
 
     private void callPreviousFilterWrite(Entry entry, IoSession session, WriteRequest writeRequest) {
         try {
-            entry.getFilter().filterWrite(entry.getNextFilter(), session,
-                    writeRequest);
+            entry.getFilter().filterWrite(entry.getNextFilter(), session, writeRequest);
         } catch (Throwable e) {
             writeRequest.getFuture().setWritten(false);
             fireExceptionCaught(session, e);

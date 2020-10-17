@@ -48,7 +48,13 @@ public class Client {
     /** 将此设置为false可使用对象序列化而不是自定义编解码器 */
     private static final boolean USE_CUSTOM_CODEC = true;
 
+    /**
+     *
+     * @param args
+     * @throws Throwable
+     */
     public static void main(String[] args) throws Throwable {
+        args = new String[] {"1", "2", "3"};
         if (args.length == 0) {
             System.out.println("Please specify the list of any integers");
             return;
@@ -69,22 +75,16 @@ public class Client {
         SocketConnectorConfig cfg = new SocketConnectorConfig();
         cfg.setConnectTimeout(CONNECT_TIMEOUT);
         if (USE_CUSTOM_CODEC) {
-            cfg.getFilterChain().addLast("codec",
-                    new ProtocolCodecFilter(new SumUpProtocolCodecFactory(false)));
+            cfg.getFilterChain().addLast("codec", new ProtocolCodecFilter(new SumUpProtocolCodecFactory(false)));
         } else {
-            cfg.getFilterChain().addLast("codec",
-                    new ProtocolCodecFilter(new ObjectSerializationCodecFactory()));
+            cfg.getFilterChain().addLast("codec", new ProtocolCodecFilter(new ObjectSerializationCodecFactory()));
         }
         cfg.getFilterChain().addLast("logger", new LoggingFilter());
 
         IoSession session;
         for (;;) {
             try {
-                ConnectFuture future = connector.connect(
-                        new InetSocketAddress(HOSTNAME, PORT),
-                        new ClientSessionHandler(values),
-                        cfg
-                );
+                ConnectFuture future = connector.connect(new InetSocketAddress(HOSTNAME, PORT), new ClientSessionHandler(values), cfg);
 
                 future.join();
                 session = future.getSession();

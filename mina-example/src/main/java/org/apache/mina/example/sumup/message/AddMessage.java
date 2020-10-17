@@ -26,8 +26,10 @@ package org.apache.mina.example.sumup.message;
  * @version $Rev$, $Date$
  */
 public class AddMessage extends AbstractMessage {
+
     private static final long serialVersionUID = -940833727168119141L;
 
+    /** 本次要累加的数值 */
     private int value;
 
     public AddMessage() {

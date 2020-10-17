@@ -23,13 +23,13 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintWriter;
 
 /**
- * A delimiter which is appended to the end of a text line, such as
- * <tt>CR/LF</tt>.
+ * 附加到文本行末尾的定界符，例如CR / LF
  *
  * @author The Apache Directory Project (mina-dev@directory.apache.org)
  * @version $Rev$, $Date$
  */
 public class LineDelimiter {
+
     /**
      * the line delimiter constant of the current O/S.
      */
@@ -42,27 +42,16 @@ public class LineDelimiter {
         DEFAULT = new LineDelimiter(new String(bout.toByteArray()));
     }
 
-    /**
-     * A special line delimiter which is used for auto-detection of
-     * EOL in {@link TextLineDecoder}.  If this delimiter is used,
-     * {@link TextLineDecoder} will consider both  <tt>'\r'</tt> and
-     * <tt>'\n'</tt> as a delimiter. 
-     */
+    /** 一种特殊的行定界符，用于在{@link TextLineDecoder}中自动检测EOL如果，使用此定界符，{@link TextLineDecoder}将同时将'\r'和'\n'视为定界符。*/
     public static final LineDelimiter AUTO = new LineDelimiter("");
 
-    /**
-     * The line delimiter constant of UNIX (<tt>"\n"</tt>)
-     */
+    /** UNIX的行定界符常量 ("\n") */
     public static final LineDelimiter UNIX = new LineDelimiter("\n");
 
-    /**
-     * The line delimiter constant of MS Windows/DOS (<tt>"\r\n"</tt>)
-     */
+    /** MS Windows / DOS的行定界符常量 ("\r\n") */
     public static final LineDelimiter WINDOWS = new LineDelimiter("\r\n");
 
-    /**
-     * The line delimiter constant of Mac OS (<tt>"\r"</tt>)
-     */
+    /** Mac OS的行定界符常数 ("\r") */
     public static final LineDelimiter MAC = new LineDelimiter("\r");
 
     private final String value;
@@ -110,4 +99,5 @@ public class LineDelimiter {
         }
         return buf.toString();
     }
+
 }

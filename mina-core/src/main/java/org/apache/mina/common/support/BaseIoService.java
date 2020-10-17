@@ -38,7 +38,6 @@ public abstract class BaseIoService implements IoService {
 
     /** 用于管理所有的Service监听器 */
     private final IoServiceListenerSupport listeners;
-
     /** 用于创建过滤器链的builder */
     private IoFilterChainBuilder filterChainBuilder = new DefaultIoFilterChainBuilder();
 
@@ -63,7 +62,6 @@ public abstract class BaseIoService implements IoService {
             throw new IllegalStateException("Current filter chain builder is not a DefaultIoFilterChainBuilder.");
         }
     }
-
     /**
      * 获取过滤器链的Builder，该Builder用于创建过滤器链
      *
@@ -72,7 +70,6 @@ public abstract class BaseIoService implements IoService {
     public IoFilterChainBuilder getFilterChainBuilder() {
         return filterChainBuilder;
     }
-
     /**
      * 过滤器链的Builder，该Builder用于创建过滤器链
      *
@@ -86,7 +83,7 @@ public abstract class BaseIoService implements IoService {
     }
 
 
-    // 监听器
+    // 监听器相关接口
 
     /**
      * 获取IoServiceListener管理器
@@ -96,7 +93,6 @@ public abstract class BaseIoService implements IoService {
     protected IoServiceListenerSupport getListeners() {
         return listeners;
     }
-
     /**
      * 添加IoServiceListener
      *
@@ -105,7 +101,6 @@ public abstract class BaseIoService implements IoService {
     public void addListener(IoServiceListener listener) {
         getListeners().add(listener);
     }
-
     /**
      * 移除IoServiceListener
      *

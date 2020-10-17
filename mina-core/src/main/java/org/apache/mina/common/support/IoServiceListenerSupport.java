@@ -53,14 +53,10 @@ public class IoServiceListenerSupport {
     /** 保存所有的监听器 */
     private final List<IoServiceListener> listeners = new CopyOnWriteArrayList<IoServiceListener>();
 
-    /**
-     * Tracks managed <tt>serviceAddress</tt>es.
-     */
+    /** Tracks managed <tt>serviceAddress</tt>es. */
     private final Set<SocketAddress> managedServiceAddresses = new CopyOnWriteArraySet<SocketAddress>();
 
-    /**
-     * Tracks managed sesssions with <tt>serviceAddress</tt> as a key.
-     */
+    /** Tracks managed sesssions with <tt>serviceAddress</tt> as a key. */
     private final ConcurrentMap<SocketAddress, Set<IoSession>> managedSessions = new ConcurrentHashMap<SocketAddress, Set<IoSession>>();
 
 
@@ -70,6 +66,7 @@ public class IoServiceListenerSupport {
     public IoServiceListenerSupport() {
     }
 
+    // 添加和移除监听
 
     public void add(IoServiceListener listener) {
         listeners.add(listener);
@@ -78,15 +75,12 @@ public class IoServiceListenerSupport {
         listeners.remove(listener);
     }
 
-
-
     public boolean isManaged(SocketAddress serviceAddress) {
         return managedServiceAddresses.contains(serviceAddress);
     }
     public Set<SocketAddress> getManagedServiceAddresses() {
         return Collections.unmodifiableSet(managedServiceAddresses);
     }
-
 
     /**
      * 获取服务器的所有会话
@@ -106,6 +100,10 @@ public class IoServiceListenerSupport {
         }
     }
 
+
+
+
+    // 服务创建、关闭的监听接口
 
     /**
      * 当服务启动时，调用该方法
@@ -154,6 +152,12 @@ public class IoServiceListenerSupport {
             disconnectSessions(serviceAddress, config);
         }
     }
+
+
+
+
+
+    // session（连接）创建、端口、销毁的监听接口
 
     /**
      * 当session被创建时，调用该方法

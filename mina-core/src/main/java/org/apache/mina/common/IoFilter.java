@@ -143,7 +143,7 @@ public interface IoFilter {
     void filterClose(NextFilter nextFilter, IoSession session) throws Exception;
 
     /**
-     * 内部实现逻辑主要是{@link IoSession#write(Object)}方法的调用，向客户端回写响应数据
+     * 当session.write方法被调用时，会调用该方法
      *
      * @param nextFilter
      * @param session
@@ -249,10 +249,12 @@ public interface IoFilter {
             }
         };
 
+        /** 发送的消息 */
         private final Object message;
 
         private final WriteFuture future;
 
+        /** 消息发送的目标地址 */
         private final SocketAddress destination;
 
         /**

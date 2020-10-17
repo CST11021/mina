@@ -55,28 +55,23 @@ public class Main {
             addSSLSupport(chain);
         }
 
-        chain.addLast("codec", new ProtocolCodecFilter(
-                new TextLineCodecFactory()));
+        chain.addLast("codec", new ProtocolCodecFilter(new TextLineCodecFactory()));
 
         addLogger(chain);
 
         // Bind
-        acceptor.bind(new InetSocketAddress(PORT), new ChatProtocolHandler(),
-                config);
+        acceptor.bind(new InetSocketAddress(PORT), new ChatProtocolHandler(), config);
 
         System.out.println("Listening on port " + PORT);
     }
 
-    private static void addSSLSupport(DefaultIoFilterChainBuilder chain)
-            throws Exception {
-        SSLFilter sslFilter = new SSLFilter(BogusSSLContextFactory
-                .getInstance(true));
+    private static void addSSLSupport(DefaultIoFilterChainBuilder chain) throws Exception {
+        SSLFilter sslFilter = new SSLFilter(BogusSSLContextFactory.getInstance(true));
         chain.addLast("sslFilter", sslFilter);
         System.out.println("SSL ON");
     }
 
-    private static void addLogger(DefaultIoFilterChainBuilder chain)
-            throws Exception {
+    private static void addLogger(DefaultIoFilterChainBuilder chain) throws Exception {
         chain.addLast("logger", new LoggingFilter());
         System.out.println("Logging ON");
     }

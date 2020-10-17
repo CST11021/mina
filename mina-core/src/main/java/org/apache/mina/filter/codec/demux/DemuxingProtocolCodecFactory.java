@@ -6,16 +6,16 @@
  *  to you under the Apache License, Version 2.0 (the
  *  "License"); you may not use this file except in compliance
  *  with the License.  You may obtain a copy of the License at
- *  
+ *
  *    http://www.apache.org/licenses/LICENSE-2.0
- *  
+ *
  *  Unless required by applicable law or agreed to in writing,
  *  software distributed under the License is distributed on an
  *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
  *  KIND, either express or implied.  See the License for the
  *  specific language governing permissions and limitations
- *  under the License. 
- *  
+ *  under the License.
+ *
  */
 package org.apache.mina.filter.codec.demux;
 
@@ -41,8 +41,8 @@ import org.apache.mina.util.IdentityHashSet;
  * {@link MessageEncoder}s and {@link MessageDecoder}s.
  * {@link ProtocolEncoder} and {@link ProtocolDecoder} this factory
  * returns demultiplex incoming messages and buffers to
- * appropriate {@link MessageEncoder}s and {@link MessageDecoder}s. 
- * 
+ * appropriate {@link MessageEncoder}s and {@link MessageDecoder}s.
+ *
  * <h2>Disposing resources acquired by {@link MessageEncoder} and {@link MessageDecoder}</h2>
  * <p>
  * Make your {@link MessageEncoder} and {@link MessageDecoder} to put all
@@ -53,14 +53,14 @@ import org.apache.mina.util.IdentityHashSet;
  * We didn't provide any <tt>dispose</tt> method for {@link MessageEncoder} and {@link MessageDecoder}
  * because they can give you a big performance penalty in case you have a lot of
  * message types to handle.
- * 
+ *
  * @author The Apache Directory Project (mina-dev@directory.apache.org)
  * @version $Rev$, $Date$
- * 
  * @see MessageEncoder
  * @see MessageDecoder
  */
 public class DemuxingProtocolCodecFactory implements ProtocolCodecFactory {
+
     private MessageDecoderFactory[] decoderFactories = new MessageDecoderFactory[0];
 
     private MessageEncoderFactory[] encoderFactories = new MessageEncoderFactory[0];
@@ -133,6 +133,7 @@ public class DemuxingProtocolCodecFactory implements ProtocolCodecFactory {
         this.decoderFactories = newDecoderFactories;
     }
 
+
     public ProtocolEncoder getEncoder() throws Exception {
         return new ProtocolEncoderImpl();
     }
@@ -145,7 +146,7 @@ public class DemuxingProtocolCodecFactory implements ProtocolCodecFactory {
      * Implement this method to release all resources acquired to perform
      * encoding and decoding messages for the specified <tt>session</tt>.
      * By default, this method does nothing.
-     * 
+     *
      * @param session the session that requires resource deallocation now
      */
     protected void disposeCodecResources(IoSession session) {
@@ -178,7 +179,7 @@ public class DemuxingProtocolCodecFactory implements ProtocolCodecFactory {
         }
 
         public void encode(IoSession session, Object message,
-                ProtocolEncoderOutput out) throws Exception {
+                           ProtocolEncoderOutput out) throws Exception {
             Class<?> type = message.getClass();
             MessageEncoder encoder = findEncoder(type);
             if (encoder == null) {
@@ -199,7 +200,7 @@ public class DemuxingProtocolCodecFactory implements ProtocolCodecFactory {
         }
 
         private MessageEncoder findEncoder(Class<?> type,
-                Set<Class<?>> triedClasses) {
+                                           Set<Class<?>> triedClasses) {
             MessageEncoder encoder;
 
             if (triedClasses.contains(type))
@@ -244,7 +245,7 @@ public class DemuxingProtocolCodecFactory implements ProtocolCodecFactory {
 
         @Override
         protected boolean doDecode(IoSession session, ByteBuffer in,
-                ProtocolDecoderOutput out) throws Exception {
+                                   ProtocolDecoderOutput out) throws Exception {
             if (currentDecoder == null) {
                 MessageDecoder[] decoders = this.decoders;
                 int undecodables = 0;
@@ -327,8 +328,7 @@ public class DemuxingProtocolCodecFactory implements ProtocolCodecFactory {
         }
     }
 
-    private static class SingletonMessageEncoderFactory implements
-            MessageEncoderFactory {
+    private static class SingletonMessageEncoderFactory implements MessageEncoderFactory {
         private final MessageEncoder encoder;
 
         private SingletonMessageEncoderFactory(MessageEncoder encoder) {
@@ -343,8 +343,7 @@ public class DemuxingProtocolCodecFactory implements ProtocolCodecFactory {
         }
     }
 
-    private static class SingletonMessageDecoderFactory implements
-            MessageDecoderFactory {
+    private static class SingletonMessageDecoderFactory implements MessageDecoderFactory {
         private final MessageDecoder decoder;
 
         private SingletonMessageDecoderFactory(MessageDecoder decoder) {
@@ -359,8 +358,7 @@ public class DemuxingProtocolCodecFactory implements ProtocolCodecFactory {
         }
     }
 
-    private static class DefaultConstructorMessageEncoderFactory implements
-            MessageEncoderFactory {
+    private static class DefaultConstructorMessageEncoderFactory implements MessageEncoderFactory {
         private final Class<?> encoderClass;
 
         private DefaultConstructorMessageEncoderFactory(Class<?> encoderClass) {
@@ -380,8 +378,7 @@ public class DemuxingProtocolCodecFactory implements ProtocolCodecFactory {
         }
     }
 
-    private static class DefaultConstructorMessageDecoderFactory implements
-            MessageDecoderFactory {
+    private static class DefaultConstructorMessageDecoderFactory implements MessageDecoderFactory {
         private final Class<?> decoderClass;
 
         private DefaultConstructorMessageDecoderFactory(Class<?> decoderClass) {

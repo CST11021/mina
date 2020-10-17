@@ -36,9 +36,11 @@ import org.apache.mina.filter.codec.ProtocolDecoderOutput;
  * @version $Rev$, $Date$
  */
 public class ObjectSerializationDecoder extends CumulativeProtocolDecoder {
+
     private final ClassLoader classLoader;
 
-    private int maxObjectSize = 1048576; // 1MB
+    /** 对象的最大限制：1MB */
+    private int maxObjectSize = 1048576;
 
     /**
      * Creates a new instance with the {@link ClassLoader} of
@@ -47,7 +49,6 @@ public class ObjectSerializationDecoder extends CumulativeProtocolDecoder {
     public ObjectSerializationDecoder() {
         this(Thread.currentThread().getContextClassLoader());
     }
-
     /**
      * Creates a new instance with the specified {@link ClassLoader}.
      */
@@ -83,8 +84,16 @@ public class ObjectSerializationDecoder extends CumulativeProtocolDecoder {
         this.maxObjectSize = maxObjectSize;
     }
 
-    protected boolean doDecode(IoSession session, ByteBuffer in,
-            ProtocolDecoderOutput out) throws Exception {
+    /**
+     * 通过ProtocolDecoderOutput将缓冲区的字节转为ByteBuffer对应的对象，每个buffer都会指定反序列化后对象类型
+     *
+     * @param session
+     * @param in the cumulative buffer
+     * @param out
+     * @return
+     * @throws Exception
+     */
+    protected boolean doDecode(IoSession session, ByteBuffer in, ProtocolDecoderOutput out) throws Exception {
         if (!in.prefixedDataAvailable(4, maxObjectSize)) {
             return false;
         }

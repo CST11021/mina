@@ -34,17 +34,28 @@ import org.apache.mina.util.SessionLog;
  * @version $Rev$, $Date$
  */
 public class ServerSessionHandler extends IoHandlerAdapter {
+
+    /**
+     * 建立连接时，初始化统计值为0
+     *
+     * @param session
+     */
     public void sessionOpened(IoSession session) {
-        // set idle time to 60 seconds
+        // 将空闲时间设置为60秒
         session.setIdleTime(IdleStatus.BOTH_IDLE, 60);
 
-        // initial sum is zero
+        // 初始总和为零
         session.setAttachment(new Integer(0));
     }
 
+    /**
+     * 当接收到客户端请求时，将统一数字累加并返回
+     *
+     * @param session
+     * @param message
+     */
     public void messageReceived(IoSession session, Object message) {
-        // client only sends AddMessage. otherwise, we will have to identify
-        // its type using instanceof operator.
+        // 客户端仅发送AddMessage。否则，我们将不得不使用instanceof运算符识别其类型。
         AddMessage am = (AddMessage) message;
 
         // add the value to the current sum.
@@ -54,7 +65,8 @@ public class ServerSessionHandler extends IoHandlerAdapter {
         if (expectedSum > Integer.MAX_VALUE || expectedSum < Integer.MIN_VALUE) {
             // if the sum overflows or underflows, return error message
             ResultMessage rm = new ResultMessage();
-            rm.setSequence(am.getSequence()); // copy sequence
+            // copy sequence
+            rm.setSequence(am.getSequence());
             rm.setOk(false);
             session.write(rm);
         } else {
@@ -64,16 +76,24 @@ public class ServerSessionHandler extends IoHandlerAdapter {
 
             // return the result message
             ResultMessage rm = new ResultMessage();
-            rm.setSequence(am.getSequence()); // copy sequence
+            // copy sequence
+            rm.setSequence(am.getSequence());
             rm.setOk(true);
             rm.setValue(sum);
             session.write(rm);
         }
     }
 
+    /**
+     * 当连接进入空闲状态时调用
+     *
+     * @param session
+     * @param status
+     * @throws Exception
+     */
     public void sessionIdle(IoSession session, IdleStatus status) {
         SessionLog.info(session, "Disconnecting the idle.");
-        // disconnect an idle client
+        // 断开空闲的客户端
         session.close();
     }
 
@@ -81,4 +101,5 @@ public class ServerSessionHandler extends IoHandlerAdapter {
         // close the connection on exceptional situation
         session.close();
     }
+
 }

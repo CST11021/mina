@@ -28,18 +28,17 @@ package org.apache.mina.filter.codec;
  * @version $Rev$, $Date$
  */
 public interface ProtocolDecoderOutput {
+
     /**
-     * Callback for {@link ProtocolDecoder} to generate decoded messages.
-     * {@link ProtocolDecoder} must call {@link #write(Object)} for each
-     * decoded messages.
+     * 通过ProtocolDecoder生成解码的消息后，通过该方法将数据转为对象
      * 
      * @param message the decoded message
      */
     void write(Object message);
 
     /**
-     * Flushes all messages you wrote via {@link #write(Object)} to
-     * the next filter.
+     * 将您通过{@link #write(Object)}编写的所有消息刷新到下一个过滤器。
      */
     void flush();
+
 }

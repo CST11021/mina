@@ -38,7 +38,7 @@ import org.apache.mina.transport.socket.nio.SocketAcceptorConfig;
 public class Server {
     private static final int SERVER_PORT = 8080;
 
-    // Set this to false to use object serialization instead of custom codec.
+    /** 是否使用自定义的编解码器 */
     private static final boolean USE_CUSTOM_CODEC = true;
 
     public static void main(String[] args) throws Throwable {
@@ -48,21 +48,14 @@ public class Server {
         SocketAcceptorConfig cfg = new SocketAcceptorConfig();
         cfg.setReuseAddress(true);
         if (USE_CUSTOM_CODEC) {
-            cfg.getFilterChain()
-                    .addLast(
-                            "codec",
-                            new ProtocolCodecFilter(
-                                    new SumUpProtocolCodecFactory(true)));
+            cfg.getFilterChain().addLast("codec", new ProtocolCodecFilter(new SumUpProtocolCodecFactory(true)));
         } else {
-            cfg.getFilterChain().addLast(
-                    "codec",
-                    new ProtocolCodecFilter(
-                            new ObjectSerializationCodecFactory()));
+            cfg.getFilterChain().addLast("codec", new ProtocolCodecFilter(new ObjectSerializationCodecFactory()));
         }
         cfg.getFilterChain().addLast("logger", new LoggingFilter());
 
-        acceptor.bind(new InetSocketAddress(SERVER_PORT),
-                new ServerSessionHandler(), cfg);
+        // 绑定端口，启动服务，开始监听来自客户端的请求
+        acceptor.bind(new InetSocketAddress(SERVER_PORT), new ServerSessionHandler(), cfg);
 
         System.out.println("Listening on port " + SERVER_PORT);
     }

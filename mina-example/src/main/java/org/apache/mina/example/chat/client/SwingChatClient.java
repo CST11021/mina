@@ -257,6 +257,7 @@ public class SwingChatClient extends JFrame implements Callback {
         }
     }
 
+
     public void connected() {
     }
 
@@ -283,9 +284,12 @@ public class SwingChatClient extends JFrame implements Callback {
         append(message + "\n");
     }
 
+
+
     public static void main(String[] args) {
         SwingChatClient client = new SwingChatClient();
         client.pack();
         client.setVisible(true);
     }
+
 }

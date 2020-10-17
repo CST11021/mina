@@ -28,6 +28,8 @@ import java.io.Serializable;
  * @version $Rev$, $Date$
  */
 public abstract class AbstractMessage implements Serializable {
+
+    /** 消息序列化（消息ID） */
     private int sequence;
 
     public int getSequence() {

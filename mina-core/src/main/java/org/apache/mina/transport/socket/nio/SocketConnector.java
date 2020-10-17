@@ -45,12 +45,13 @@ import org.apache.mina.util.NamePreservingRunnable;
 import org.apache.mina.util.NewThreadExecutor;
 
 /**
- * {@link IoConnector} for socket transport (TCP/IP).
+ * 用于套接字传输（TCP/IP）
  *
  * @author The Apache Directory Project (mina-dev@directory.apache.org)
  * @version $Rev: 389042 $, $Date: 2006-03-27 07:49:41Z $
  */
 public class SocketConnector extends BaseIoConnector {
+
     private static final AtomicInteger nextId = new AtomicInteger();
 
     private final Object lock = new Object();
@@ -75,7 +76,8 @@ public class SocketConnector extends BaseIoConnector {
 
     private int processorDistributor = 0;
 
-    private int workerTimeout = 60; // 1 min.
+    // 1 min.
+    private int workerTimeout = 60;
 
     /**
      * Create a connector with a single processing thread using a NewThreadExecutor
@@ -83,7 +85,6 @@ public class SocketConnector extends BaseIoConnector {
     public SocketConnector() {
         this(1, new NewThreadExecutor());
     }
-
     /**
      * Create a connector with the desired number of processing threads
      *
@@ -92,8 +93,7 @@ public class SocketConnector extends BaseIoConnector {
      */
     public SocketConnector(int processorCount, Executor executor) {
         if (processorCount < 1) {
-            throw new IllegalArgumentException(
-                    "Must have at least one processor");
+            throw new IllegalArgumentException("Must have at least one processor");
         }
 
         this.executor = executor;
@@ -101,63 +101,36 @@ public class SocketConnector extends BaseIoConnector {
         ioProcessors = new SocketIoProcessor[processorCount];
 
         for (int i = 0; i < processorCount; i++) {
-            ioProcessors[i] = new SocketIoProcessor(
-                    "SocketConnectorIoProcessor-" + id + "." + i, executor);
+            ioProcessors[i] = new SocketIoProcessor("SocketConnectorIoProcessor-" + id + "." + i, executor);
         }
     }
 
-    /**
-     * How many seconds to keep the connection thread alive between connection requests
-     *
-     * @return the number of seconds to keep connection thread alive.
-     *         0 means that the connection thread will terminate immediately
-     *         when there's no connection to make.
-     */
-    public int getWorkerTimeout() {
-        return workerTimeout;
-    }
 
     /**
-     * Set how many seconds the connection worker thread should remain alive once idle before terminating itself.
+     * 创建客户端并连接到指定服务
      *
-     * @param workerTimeout the number of seconds to keep thread alive.
-     *                      Must be >=0.  If 0 is specified, the connection
-     *                      worker thread will terminate immediately when
-     *                      there's no connection to make.
+     * @param address   服务端地址
+     * @param handler   客户端的会话事件处理器
+     * @param config    服务配置
+     * @return
      */
-    public void setWorkerTimeout(int workerTimeout) {
-        if (workerTimeout < 0) {
-            throw new IllegalArgumentException("Must be >= 0");
-        }
-        this.workerTimeout = workerTimeout;
-    }
-
-    public ConnectFuture connect(SocketAddress address, IoHandler handler,
-            IoServiceConfig config) {
+    public ConnectFuture connect(SocketAddress address, IoHandler handler, IoServiceConfig config) {
         return connect(address, null, handler, config);
     }
-
-    public ConnectFuture connect(SocketAddress address,
-            SocketAddress localAddress, IoHandler handler,
-            IoServiceConfig config) {
+    public ConnectFuture connect(SocketAddress address, SocketAddress localAddress, IoHandler handler, IoServiceConfig config) {
+        // 参数校验
         if (address == null) {
             throw new NullPointerException("address");
         }
         if (handler == null) {
             throw new NullPointerException("handler");
         }
-
         if (!(address instanceof InetSocketAddress)) {
-            throw new IllegalArgumentException("Unexpected address type: "
-                    + address.getClass());
+            throw new IllegalArgumentException("Unexpected address type: " + address.getClass());
         }
-
-        if (localAddress != null
-                && !(localAddress instanceof InetSocketAddress)) {
-            throw new IllegalArgumentException(
-                    "Unexpected local address type: " + localAddress.getClass());
+        if (localAddress != null && !(localAddress instanceof InetSocketAddress)) {
+            throw new IllegalArgumentException("Unexpected local address type: " + localAddress.getClass());
         }
-
         if (config == null) {
             config = getDefaultConfig();
         }
@@ -166,13 +139,37 @@ public class SocketConnector extends BaseIoConnector {
         boolean success = false;
         try {
             ch = SocketChannel.open();
+            // 设置该选项：public void setResuseAddress(boolean on)throws SocketException
+            // 读取该选项 public void getResuseAddress(boolean on)throws SocketException
+            // 当接受方通过Socket的close()方法关闭Socket时，如果网络上还有发送到这个Socket的数据，那么底层的Socket不会立刻释放本地端口，而是会等待一段时间，确保收到了网络上发送过来的延迟数据，然再释放该端口。Socket接受到延迟数据后，不会对这些数据做任何处理。Socket接受延迟数据的目的是，确保这些数据不会被其他碰巧绑定到同样端口的新进程接收到。
+            // 客户程序一般采用随机端口，因此会出现两个客户端程序绑定到同样端口的可能性不大。许多服务器都使用固定的端口。当服务器进程关闭后，有可能它的端口还会被占用一段时间，如果此时立刻在同一主机上重启服务器程序，由于端口已经被占用，使得服务器无法绑定到该端口，启动失败。为了确保一个进程被关闭后，即使它还没有释放该端口，同一个主机上的其他进程还可以立刻重用该端口，可以调用Socket的setResuseAddress(true)方法：
+            //
+            // if(!socket.getResuseAddress())
+            //     socket.setResuseAddress(true);
+            //
+            // 值得注意的是：socket.setResuseAddress(true)方法必须在Socket还没有绑定到一个本地端口之前调用，否则执行socket.setResuseAddress(true)方法无效
+            // 因此必须按照以下方法创建Socket对象，然后在连接远程服务器：
+            //
+            // Socket socket=new Socket();//此时socket端口未绑定本地端口，并且未连接远程服务器
+            // socket.setReuseAddress(true);
+            // SocketAddress socketAddress=new InetSocketAddress("remotehost",8000);
+            // socket.connect(socketAddress);
+            //
+            // //或者
+            // Socket socket=new Socket();//此时socket端口未绑定本地端口，并且未连接远程服务器
+            // socket.setReuseAddress(true);
+            // socketAddress localAddr=new InetSocketAddress("localhost",9000);
+            //
+            // socketAddress remoteAddr=new InetSocketAddress("remotehost",8000);
+            // socket.bind(localAddr);//与本地端口绑定
+            // socket.connect(remoteAddr);//连接远程服务器
+            //
+            // 此外，两个共用同一个端口的进程必须都调用socket.setReuseAddress(true)放方法才能使得一个进程关闭Socket后，另一个进程的Socket能够立刻重用相同的端口。
             ch.socket().setReuseAddress(true);
 
-            // Receive buffer size must be set BEFORE the socket is connected
-            // in order for the TCP window to be sized accordingly
+            // 必须在连接套接字之前设置接收缓冲区的大小，以便相应地调整TCP窗口的大小
             if (config instanceof SocketConnectorConfig) {
-                int receiveBufferSize =
-                    ((SocketSessionConfig) config.getSessionConfig()).getReceiveBufferSize();
+                int receiveBufferSize = ((SocketSessionConfig) config.getSessionConfig()).getReceiveBufferSize();
                 if (receiveBufferSize > 65535) {
                     ch.socket().setReceiveBufferSize(receiveBufferSize);
                 }
@@ -204,6 +201,8 @@ public class SocketConnector extends BaseIoConnector {
             }
         }
 
+
+        // 创建连接服务端的请求
         ConnectionRequest request = new ConnectionRequest(ch, handler, config);
         synchronized (lock) {
             try {
@@ -224,9 +223,36 @@ public class SocketConnector extends BaseIoConnector {
 
         return request;
     }
-
     public SocketConnectorConfig getDefaultConfig() {
         return defaultConfig;
+    }
+
+
+
+
+    /**
+     * How many seconds to keep the connection thread alive between connection requests
+     *
+     * @return the number of seconds to keep connection thread alive.
+     *         0 means that the connection thread will terminate immediately
+     *         when there's no connection to make.
+     */
+    public int getWorkerTimeout() {
+        return workerTimeout;
+    }
+    /**
+     * Set how many seconds the connection worker thread should remain alive once idle before terminating itself.
+     *
+     * @param workerTimeout the number of seconds to keep thread alive.
+     *                      Must be >=0.  If 0 is specified, the connection
+     *                      worker thread will terminate immediately when
+     *                      there's no connection to make.
+     */
+    public void setWorkerTimeout(int workerTimeout) {
+        if (workerTimeout < 0) {
+            throw new IllegalArgumentException("Must be >= 0");
+        }
+        this.workerTimeout = workerTimeout;
     }
 
     /**
@@ -252,6 +278,9 @@ public class SocketConnector extends BaseIoConnector {
         }
     }
 
+    /**
+     * 从队列中获取一个连接请求，并注册通道的OP_CONNECT事件
+     */
     private void registerNew() {
         if (connectQueue.isEmpty()) {
             return;
@@ -260,7 +289,6 @@ public class SocketConnector extends BaseIoConnector {
         Selector selector = this.selector;
         for (;;) {
             ConnectionRequest req = connectQueue.poll();
-
             if (req == null) {
                 break;
             }
@@ -279,6 +307,11 @@ public class SocketConnector extends BaseIoConnector {
         }
     }
 
+    /**
+     * 创建session
+     *
+     * @param keys
+     */
     private void processSessions(Set<SelectionKey> keys) {
         for (SelectionKey key : keys) {
             if (!key.isConnectable()) {
@@ -335,28 +368,22 @@ public class SocketConnector extends BaseIoConnector {
         }
     }
 
-    private void newSession(SocketChannel ch, IoHandler handler,
-            IoServiceConfig config, ConnectFuture connectFuture)
-            throws IOException {
+    private void newSession(SocketChannel ch, IoHandler handler, IoServiceConfig config, ConnectFuture connectFuture) throws IOException {
         SocketSessionImpl session = new SocketSessionImpl(this,
-                nextProcessor(), getListeners(), config, ch, handler, ch
-                        .socket().getRemoteSocketAddress());
+                nextProcessor(), getListeners(), config, ch, handler, ch.socket().getRemoteSocketAddress());
+
         try {
             getFilterChainBuilder().buildFilterChain(session.getFilterChain());
-            config.getFilterChainBuilder().buildFilterChain(
-                    session.getFilterChain());
+            config.getFilterChainBuilder().buildFilterChain(session.getFilterChain());
             config.getThreadModel().buildFilterChain(session.getFilterChain());
         } catch (Throwable e) {
-            throw (IOException) new IOException("Failed to create a session.")
-                    .initCause(e);
+            throw (IOException) new IOException("Failed to create a session.").initCause(e);
         }
 
-        // Set the ConnectFuture of the specified session, which will be
-        // removed and notified by AbstractIoFilterChain eventually.
-        session.setAttribute(AbstractIoFilterChain.CONNECT_FUTURE,
-                connectFuture);
+        // 设置指定会话的ConnectFuture，它将最终由AbstractIoFilterChain删除并通知
+        session.setAttribute(AbstractIoFilterChain.CONNECT_FUTURE, connectFuture);
 
-        // Forward the remaining process to the SocketIoProcessor.
+        // 将剩余的进程转发到SocketIoProcessor
         session.getIoProcessor().addNew(session);
     }
 
@@ -377,6 +404,7 @@ public class SocketConnector extends BaseIoConnector {
                 try {
                     int nKeys = selector.select(1000);
 
+                    // 从队列中获取一个连接请求，并注册通道的OP_CONNECT事件
                     registerNew();
 
                     if (nKeys > 0) {
@@ -394,8 +422,7 @@ public class SocketConnector extends BaseIoConnector {
                                     try {
                                         selector.close();
                                     } catch (IOException e) {
-                                        ExceptionMonitor.getInstance()
-                                                .exceptionCaught(e);
+                                        ExceptionMonitor.getInstance().exceptionCaught(e);
                                     } finally {
                                         SocketConnector.this.selector = null;
                                     }

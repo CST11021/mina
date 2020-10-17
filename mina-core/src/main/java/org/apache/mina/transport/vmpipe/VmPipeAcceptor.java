@@ -52,12 +52,18 @@ public class VmPipeAcceptor extends BaseIoAcceptor {
         }
     };
 
+    /**
+     * 启动服务（开始监听客户端请求）
+     *
+     * @param address
+     * @param handler
+     * @throws IOException
+     */
     public void bind(SocketAddress address, IoHandler handler, IoServiceConfig config) throws IOException {
         if (handler == null)
             throw new NullPointerException("handler");
         if (address != null && !(address instanceof VmPipeAddress))
             throw new IllegalArgumentException("address must be VmPipeAddress.");
-
         if (config == null) {
             config = getDefaultConfig();
         }
@@ -74,8 +80,7 @@ public class VmPipeAcceptor extends BaseIoAcceptor {
                 throw new IOException("Address already bound: " + address);
             }
 
-            boundHandlers.put(address, new VmPipe(this,
-                    (VmPipeAddress) address, handler, config, getListeners()));
+            boundHandlers.put(address, new VmPipe(this, (VmPipeAddress) address, handler, config, getListeners()));
         }
 
         getListeners().fireServiceActivated(this, address, handler, config);

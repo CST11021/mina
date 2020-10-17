@@ -27,12 +27,13 @@ package org.apache.mina.common;
  * @version $Rev$, $Date$
  */
 public interface ByteBufferAllocator {
+
     /**
-     * Returns the buffer which is capable of the specified size.
-     * 
-     * @param capacity the capacity of the buffer
-     * @param direct <tt>true</tt> to get a direct buffer,
-     *               <tt>false</tt> to get a heap buffer.
+     * 为什么要提供两种方式呢？这与Java的内存使用机制有关。第一种分配方式产生的内存开销是在JVM中的，而另外一种的分配方式产生的开销在JVM之外，以就是系统级的内存分配。当Java程序接收到外部传来的数据时，首先是被系统内存所获取，然后在由系统内存复制复制到JVM内存中供Java程序使用。所以在另外一种分配方式中，能够省去复制这一步操作，效率上会有所提高。可是系统级内存的分配比起JVM内存的分配要耗时得多，所以并非不论什么时候allocateDirect的操作效率都是最高的。
+     *
+     * @param capacity  缓存的大小
+     * @param direct    是否直接使用内核缓存
+     * @return
      */
     ByteBuffer allocate(int capacity, boolean direct);
 

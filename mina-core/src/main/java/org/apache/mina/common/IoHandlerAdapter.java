@@ -41,6 +41,13 @@ public class IoHandlerAdapter implements IoHandler {
     public void sessionClosed(IoSession session) throws Exception {
     }
 
+    /**
+     * 当连接进入空闲状态时调用
+     *
+     * @param session
+     * @param status
+     * @throws Exception
+     */
     public void sessionIdle(IoSession session, IdleStatus status)
             throws Exception {
     }

@@ -35,6 +35,7 @@ import org.apache.mina.filter.codec.ProtocolEncoder;
  * @version $Rev$, $Date$
  */
 public class TextLineCodecFactory implements ProtocolCodecFactory {
+
     private final TextLineEncoder encoder;
 
     private final TextLineDecoder decoder;

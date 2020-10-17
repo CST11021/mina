@@ -69,8 +69,7 @@ public class ObjectSerializationEncoder extends ProtocolEncoderAdapter {
         this.maxObjectSize = maxObjectSize;
     }
 
-    public void encode(IoSession session, Object message,
-            ProtocolEncoderOutput out) throws Exception {
+    public void encode(IoSession session, Object message, ProtocolEncoderOutput out) throws Exception {
         if (!(message instanceof Serializable)) {
             throw new NotSerializableException();
         }
@@ -82,9 +81,7 @@ public class ObjectSerializationEncoder extends ProtocolEncoderAdapter {
         int objectSize = buf.position() - 4;
         if (objectSize > maxObjectSize) {
             buf.release();
-            throw new IllegalArgumentException(
-                    "The encoded object is too big: " + objectSize + " (> "
-                            + maxObjectSize + ')');
+            throw new IllegalArgumentException("The encoded object is too big: " + objectSize + " (> " + maxObjectSize + ')');
         }
 
         buf.flip();

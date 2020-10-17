@@ -31,10 +31,9 @@ import org.apache.mina.common.WriteFuture;
  * @version $Rev$, $Date$
  */
 public interface ProtocolEncoderOutput {
+
     /**
-     * Callback for {@link ProtocolEncoder} to generate encoded
-     * {@link ByteBuffer}s. {@link ProtocolEncoder} must call
-     * {@link #write(ByteBuffer)} for each encoded message.
+     * 回调{@link ProtocolEncoder}以生成编码的{@link ByteBuffer}, {@link ProtocolEncoder}必须为每个已编码的消息调用{@link #write(ByteBuffer)}。
      * 
      * @param buf the buffer which contains encoded data
      */

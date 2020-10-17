@@ -32,6 +32,7 @@ import org.apache.mina.transport.vmpipe.VmPipeAddress;
  * @version $Rev$, $Date$
  */
 public class VmPipe {
+
     private final VmPipeAcceptor acceptor;
 
     private final VmPipeAddress address;

@@ -51,6 +51,7 @@ public class ProtocolCodecFilter extends IoFilterAdapter {
 
     private static final ByteBuffer EMPTY_BUFFER = ByteBuffer.wrap(new byte[0]);
 
+    /** 编解码协议工厂类，用于获取编解码器 */
     private final ProtocolCodecFactory factory;
 
     public ProtocolCodecFilter(ProtocolCodecFactory factory) {
@@ -118,6 +119,14 @@ public class ProtocolCodecFilter extends IoFilterAdapter {
         };
     }
 
+    /**
+     * 一个过滤器不能添加两次
+     *
+     * @param parent
+     * @param name
+     * @param nextFilter
+     * @throws Exception
+     */
     @Override
     public void onPreAdd(IoFilterChain parent, String name, NextFilter nextFilter) throws Exception {
         if (parent.contains(ProtocolCodecFilter.class)) {
@@ -125,6 +134,16 @@ public class ProtocolCodecFilter extends IoFilterAdapter {
         }
     }
 
+    /**
+     * 从指定的父级删除此过滤器后调用该方法
+     * 请注意，如果从多个父级中删除此过滤器，则可以多次调用此方法。
+     * 始终在调用{@link #destroy()}之前调用此方法。
+     *
+     * @param parent     the parent who called this method
+     * @param name       the name assigned to this filter
+     * @param nextFilter the {@link NextFilter} for this filter.  You can reuse
+     *                   this object until this filter is removed from the chain.
+     */
     @Override
     public void onPostRemove(IoFilterChain parent, String name, NextFilter nextFilter) throws Exception {
         disposeEncoder(parent.getSession());
@@ -134,18 +153,22 @@ public class ProtocolCodecFilter extends IoFilterAdapter {
 
     @Override
     public void messageReceived(NextFilter nextFilter, IoSession session, Object message) throws Exception {
+        // ProtocolCodecFilter是编解码过滤器，如果消息不是字节缓冲区，则不需要编解码
         if (!(message instanceof ByteBuffer)) {
             nextFilter.messageReceived(session, message);
             return;
         }
 
         ByteBuffer in = (ByteBuffer) message;
+        // 从session获取解码器，如果session没有解码器，则创建建一个
         ProtocolDecoder decoder = getDecoder(session);
+        // ProtocolDecoderOutput用于将字节反序列化为对象实例
         ProtocolDecoderOutput decoderOut = getDecoderOut(session, nextFilter);
 
         int oldPos = in.position();
         try {
             synchronized (decoderOut) {
+                // 通过ProtocolDecoderOutput将缓冲区的字节转为ByteBuffer对应的对象，每个buffer都会指定反序列化后对象类型
                 decoder.decode(session, in, decoderOut);
             }
         } catch (Throwable t) {
@@ -187,6 +210,14 @@ public class ProtocolCodecFilter extends IoFilterAdapter {
         nextFilter.messageSent(session, ((MessageByteBuffer) message).message);
     }
 
+    /**
+     * 当session.write方法被调用时，会调用该方法
+     *
+     * @param nextFilter
+     * @param session
+     * @param writeRequest
+     * @throws Exception
+     */
     @Override
     public void filterWrite(NextFilter nextFilter, IoSession session, WriteRequest writeRequest) throws Exception {
         Object message = writeRequest.getMessage();
@@ -196,15 +227,17 @@ public class ProtocolCodecFilter extends IoFilterAdapter {
         }
 
         ProtocolEncoder encoder = getEncoder(session);
-        ProtocolEncoderOutputImpl encoderOut = getEncoderOut(session,
-                nextFilter, writeRequest);
+        ProtocolEncoderOutputImpl encoderOut = getEncoderOut(session, nextFilter, writeRequest);
 
         try {
+            // 如果消息还没转成字节缓冲区的话，需要将其序列化为字节缓冲区，然后通过ProtocolEncoderOutputImpl#doFlush方法，将编码后的字节缓冲区封装为HiddenByteBuffer放到WriteRequest中，从而继续后续的过滤器
             encoder.encode(session, message, encoderOut);
-            encoderOut.flush();
+
             nextFilter.filterWrite(session, new WriteRequest(
                     new MessageByteBuffer(writeRequest.getMessage()),
-                    writeRequest.getFuture(), writeRequest.getDestination()));
+                    writeRequest.getFuture(),
+                    writeRequest.getDestination()
+            ));
         } catch (Throwable t) {
             ProtocolEncoderException pee;
             if (t instanceof ProtocolEncoderException) {
@@ -255,9 +288,15 @@ public class ProtocolCodecFilter extends IoFilterAdapter {
         return new ProtocolEncoderOutputImpl(session, nextFilter, writeRequest);
     }
 
+    /**
+     * 从session获取解码器，如果session没有解码器，则创建建一个并返回
+     *
+     * @param session
+     * @return
+     * @throws Exception
+     */
     private ProtocolDecoder getDecoder(IoSession session) throws Exception {
-        ProtocolDecoder decoder = (ProtocolDecoder) session
-                .getAttribute(DECODER);
+        ProtocolDecoder decoder = (ProtocolDecoder) session.getAttribute(DECODER);
         if (decoder == null) {
             decoder = factory.getDecoder();
             session.setAttribute(DECODER, decoder);
@@ -274,9 +313,13 @@ public class ProtocolCodecFilter extends IoFilterAdapter {
         return out;
     }
 
+    /**
+     * 从session获取编码器并销毁
+     *
+     * @param session
+     */
     private void disposeEncoder(IoSession session) {
-        ProtocolEncoder encoder = (ProtocolEncoder) session
-                .removeAttribute(ENCODER);
+        ProtocolEncoder encoder = (ProtocolEncoder) session.removeAttribute(ENCODER);
         if (encoder == null) {
             return;
         }
@@ -284,14 +327,17 @@ public class ProtocolCodecFilter extends IoFilterAdapter {
         try {
             encoder.dispose(session);
         } catch (Throwable t) {
-            SessionLog.warn(session, "Failed to dispose: "
-                    + encoder.getClass().getName() + " (" + encoder + ')');
+            SessionLog.warn(session, "Failed to dispose: " + encoder.getClass().getName() + " (" + encoder + ')');
         }
     }
 
+    /**
+     * 从session获取解码器并销毁
+     *
+     * @param session
+     */
     private void disposeDecoder(IoSession session) {
-        ProtocolDecoder decoder = (ProtocolDecoder) session
-                .removeAttribute(DECODER);
+        ProtocolDecoder decoder = (ProtocolDecoder) session.removeAttribute(DECODER);
         if (decoder == null) {
             return;
         }
@@ -299,8 +345,7 @@ public class ProtocolCodecFilter extends IoFilterAdapter {
         try {
             decoder.dispose(session);
         } catch (Throwable t) {
-            SessionLog.warn(session, "Falied to dispose: "
-                    + decoder.getClass().getName() + " (" + decoder + ')');
+            SessionLog.warn(session, "Falied to dispose: " + decoder.getClass().getName() + " (" + decoder + ')');
         }
     }
     
@@ -333,6 +378,9 @@ public class ProtocolCodecFilter extends IoFilterAdapter {
         }
     }
 
+    /**
+     * 该类的作用是将编码后的字节缓冲区封装为HiddenByteBuffer放到WriteRequest中，从而继续后续的过滤器动作
+     */
     private static class ProtocolEncoderOutputImpl extends SimpleProtocolEncoderOutput {
         private final IoSession session;
 
@@ -340,19 +388,22 @@ public class ProtocolCodecFilter extends IoFilterAdapter {
 
         private final WriteRequest writeRequest;
 
-        ProtocolEncoderOutputImpl(IoSession session, NextFilter nextFilter,
-                WriteRequest writeRequest) {
+        ProtocolEncoderOutputImpl(IoSession session, NextFilter nextFilter, WriteRequest writeRequest) {
             this.session = session;
             this.nextFilter = nextFilter;
             this.writeRequest = writeRequest;
         }
 
+        /**
+         * 调用下一个过滤器的filterWrite()方法
+         *
+         * @param buf
+         * @return
+         */
         @Override
         protected WriteFuture doFlush(ByteBuffer buf) {
             WriteFuture future = new DefaultWriteFuture(session);
-            nextFilter.filterWrite(session, new WriteRequest(
-                    new HiddenByteBuffer(buf), future, writeRequest
-                            .getDestination()));
+            nextFilter.filterWrite(session, new WriteRequest(new HiddenByteBuffer(buf), future, writeRequest.getDestination()));
             return future;
         }
     }

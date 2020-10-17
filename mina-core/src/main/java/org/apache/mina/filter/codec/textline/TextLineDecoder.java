@@ -36,15 +36,17 @@ import org.apache.mina.filter.codec.ProtocolDecoderOutput;
  * @version $Rev$, $Date$,
  */
 public class TextLineDecoder implements ProtocolDecoder {
-    private static final String CONTEXT = TextLineDecoder.class.getName()
-            + ".context";
+
+    private static final String CONTEXT = TextLineDecoder.class.getName() + ".context";
 
     private final Charset charset;
 
+    /** 表示行末端的定界符 */
     private final LineDelimiter delimiter;
 
     private ByteBuffer delimBuf;
 
+    /** 设置要解码的行的最大允许大小，如果要解码的行的大小超出此值，则解码器将引发{@link BufferDataException}，默认值为1024（1KB） */
     private int maxLineLength = 1024;
 
     /**
@@ -54,7 +56,6 @@ public class TextLineDecoder implements ProtocolDecoder {
     public TextLineDecoder() {
         this(Charset.defaultCharset(), LineDelimiter.AUTO);
     }
-
     /**
      * Creates a new instance with the spcified <tt>charset</tt>
      * and {@link LineDelimiter#AUTO} delimiter.
@@ -62,7 +63,6 @@ public class TextLineDecoder implements ProtocolDecoder {
     public TextLineDecoder(Charset charset) {
         this(charset, LineDelimiter.AUTO);
     }
-
     /**
      * Creates a new instance with the specified <tt>charset</tt>
      * and the specified <tt>delimiter</tt>.
@@ -79,33 +79,29 @@ public class TextLineDecoder implements ProtocolDecoder {
         this.delimiter = delimiter;
     }
 
-    /**
-     * Returns the allowed maximum size of the line to be decoded.
-     * If the size of the line to be decoded exceeds this value, the
-     * decoder will throw a {@link BufferDataException}.  The default
-     * value is <tt>1024</tt> (1KB).
-     */
+
+
     public int getMaxLineLength() {
         return maxLineLength;
     }
-
-    /**
-     * Sets the allowed maximum size of the line to be decoded.
-     * If the size of the line to be decoded exceeds this value, the
-     * decoder will throw a {@link BufferDataException}.  The default
-     * value is <tt>1024</tt> (1KB).
-     */
     public void setMaxLineLength(int maxLineLength) {
         if (maxLineLength <= 0) {
-            throw new IllegalArgumentException("maxLineLength: "
-                    + maxLineLength);
+            throw new IllegalArgumentException("maxLineLength: " + maxLineLength);
         }
 
         this.maxLineLength = maxLineLength;
     }
 
-    public void decode(IoSession session, ByteBuffer in,
-            ProtocolDecoderOutput out) throws Exception {
+    /**
+     * 通过ProtocolDecoderOutput将缓冲区的字节转为ByteBuffer对应的对象，每个buffer都会指定反序列化后对象类型
+     *
+     * @param session
+     * @param in
+     * @param out
+     * @throws Exception
+     */
+    public void decode(IoSession session, ByteBuffer in, ProtocolDecoderOutput out) throws Exception {
+
         Context ctx = getContext(session);
 
         if (LineDelimiter.AUTO.equals(delimiter)) {
@@ -115,17 +111,7 @@ public class TextLineDecoder implements ProtocolDecoder {
         }
     }
 
-    private Context getContext(IoSession session) {
-        Context ctx = (Context) session.getAttribute(CONTEXT);
-        if (ctx == null) {
-            ctx = new Context();
-            session.setAttribute(CONTEXT, ctx);
-        }
-        return ctx;
-    }
-
-    public void finishDecode(IoSession session, ProtocolDecoderOutput out)
-            throws Exception {
+    public void finishDecode(IoSession session, ProtocolDecoderOutput out) throws Exception {
     }
 
     public void dispose(IoSession session) throws Exception {
@@ -136,8 +122,7 @@ public class TextLineDecoder implements ProtocolDecoder {
         }
     }
 
-    private void decodeAuto(Context ctx, ByteBuffer in, ProtocolDecoderOutput out)
-            throws CharacterCodingException {
+    private void decodeAuto(Context ctx, ByteBuffer in, ProtocolDecoderOutput out) throws CharacterCodingException {
 
         int matchCount = ctx.getMatchCount();
         
@@ -149,8 +134,7 @@ public class TextLineDecoder implements ProtocolDecoder {
             boolean matched = false;
             switch (b) {
             case '\r':
-                // Might be Mac, but we don't auto-detect Mac EOL
-                // to avoid confusion.
+                // 可能是Mac，但我们不会自动检测Mac EOL以免造成混淆
                 matchCount++;
                 break;
             case '\n':
@@ -185,8 +169,7 @@ public class TextLineDecoder implements ProtocolDecoder {
                 } else {
                     int overflowPosition = ctx.getOverflowPosition();
                     ctx.reset();
-                    throw new BufferDataException(
-                            "Line is too long: " + overflowPosition);
+                    throw new BufferDataException("Line is too long: " + overflowPosition);
                 }
 
                 oldPos = pos;
@@ -201,12 +184,11 @@ public class TextLineDecoder implements ProtocolDecoder {
         ctx.setMatchCount(matchCount);
     }
 
-    private void decodeNormal(Context ctx, ByteBuffer in, ProtocolDecoderOutput out)
-            throws CharacterCodingException {
+    private void decodeNormal(Context ctx, ByteBuffer in, ProtocolDecoderOutput out) throws CharacterCodingException {
 
         int matchCount = ctx.getMatchCount();
         
-        // Convert delimiter to ByteBuffer if not done yet.
+        // 如果尚未将定界符转换为ByteBuffer
         if (delimBuf == null) {
             ByteBuffer tmp = ByteBuffer.allocate(2).setAutoExpand(true);
             tmp.putString(delimiter.getValue(), charset.newEncoder());
@@ -265,7 +247,17 @@ public class TextLineDecoder implements ProtocolDecoder {
         ctx.setMatchCount(matchCount);
     }
 
+    private Context getContext(IoSession session) {
+        Context ctx = (Context) session.getAttribute(CONTEXT);
+        if (ctx == null) {
+            ctx = new Context();
+            session.setAttribute(CONTEXT, ctx);
+        }
+        return ctx;
+    }
+
     private class Context {
+
         private final CharsetDecoder decoder;
         private final ByteBuffer buf;
         private int matchCount = 0;

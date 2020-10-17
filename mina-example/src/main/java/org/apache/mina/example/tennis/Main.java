@@ -27,8 +27,7 @@ import org.apache.mina.transport.vmpipe.VmPipeAddress;
 import org.apache.mina.transport.vmpipe.VmPipeConnector;
 
 /**
- * (<b>Entry point</b>) An 'in-VM pipe' example which simulates a tennis game
- * between client and server.
+ * （入口点）“虚拟机内管道”示例，用于模拟客户端和服务器之间的网球比赛。
  * <ol>
  *   <li>Client connects to server</li>
  *   <li>At first, client sends {@link TennisBall} with TTL value '10'.</li>

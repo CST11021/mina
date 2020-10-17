@@ -35,6 +35,7 @@ import org.apache.mina.filter.codec.ProtocolDecoderOutput;
  *
  */
 public class SimpleProtocolDecoderOutput implements ProtocolDecoderOutput {
+
     private final NextFilter nextFilter;
 
     private final IoSession session;

@@ -144,8 +144,17 @@ public class PooledByteBufferAllocator implements ByteBufferAllocator {
         }
     }
 
+    /**
+     * 创建缓冲区
+     *
+     * @param capacity  缓存的大小
+     * @param direct    是否直接使用内核缓存
+     * @return
+     */
     public ByteBuffer allocate(int capacity, boolean direct) {
+        // 确保分配器没有销毁
         ensureNotDisposed();
+        //
         UnexpandableByteBuffer ubb = allocate0(capacity, direct);
         PooledByteBuffer buf = allocateContainer();
         buf.init(ubb, true);
@@ -157,8 +166,7 @@ public class PooledByteBufferAllocator implements ByteBufferAllocator {
     }
 
     private UnexpandableByteBuffer allocate0(int capacity, boolean direct) {
-        ExpiringStack[] bufferStacks = direct ? directBufferStacks
-                : heapBufferStacks;
+        ExpiringStack[] bufferStacks = direct ? directBufferStacks : heapBufferStacks;
         int idx = getBufferStackIndex(bufferStacks, capacity);
         ExpiringStack stack = bufferStacks[idx];
 
@@ -168,9 +176,8 @@ public class PooledByteBufferAllocator implements ByteBufferAllocator {
         }
 
         if (buf == null) {
-            java.nio.ByteBuffer nioBuf = direct ? java.nio.ByteBuffer
-                    .allocateDirect(MINIMUM_CAPACITY << idx)
-                    : java.nio.ByteBuffer.allocate(MINIMUM_CAPACITY << idx);
+            java.nio.ByteBuffer nioBuf = direct ?
+                    java.nio.ByteBuffer.allocateDirect(MINIMUM_CAPACITY << idx) : java.nio.ByteBuffer.allocate(MINIMUM_CAPACITY << idx);
             buf = new UnexpandableByteBuffer(nioBuf);
         }
 
@@ -207,18 +214,19 @@ public class PooledByteBufferAllocator implements ByteBufferAllocator {
             targetSize <<= 1;
             stackIdx++;
             if (stackIdx >= bufferStacks.length) {
-                throw new IllegalArgumentException("Buffer size is too big: "
-                        + size);
+                throw new IllegalArgumentException("Buffer size is too big: " + size);
             }
         }
 
         return stackIdx;
     }
 
+    /**
+     * 确保分配器没有销毁
+     */
     private void ensureNotDisposed() {
         if (disposed) {
-            throw new IllegalStateException(
-                    "This allocator is disposed already.");
+            throw new IllegalStateException("This allocator is disposed already.");
         }
     }
 

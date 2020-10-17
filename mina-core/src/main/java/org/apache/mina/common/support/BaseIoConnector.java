@@ -26,13 +26,13 @@ import org.apache.mina.common.IoConnector;
 import org.apache.mina.common.IoHandler;
 
 /**
- * A base implementation of {@link IoConnector}.
+ * 客户端的顶级抽象类
  * 
  * @author The Apache Directory Project (mina-dev@directory.apache.org)
  * @version $Rev$, $Date$
  */
-public abstract class BaseIoConnector extends BaseIoService implements
-        IoConnector {
+public abstract class BaseIoConnector extends BaseIoService implements IoConnector {
+
     protected BaseIoConnector() {
     }
 
@@ -40,8 +40,7 @@ public abstract class BaseIoConnector extends BaseIoService implements
         return connect(address, handler, getDefaultConfig());
     }
 
-    public ConnectFuture connect(SocketAddress address,
-            SocketAddress localAddress, IoHandler handler) {
+    public ConnectFuture connect(SocketAddress address, SocketAddress localAddress, IoHandler handler) {
         return connect(address, localAddress, handler, getDefaultConfig());
     }
 }

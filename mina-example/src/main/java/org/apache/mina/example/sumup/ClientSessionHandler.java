@@ -33,6 +33,7 @@ import org.apache.mina.util.SessionLog;
  * @version $Rev$, $Date$
  */
 public class ClientSessionHandler extends IoHandlerAdapter {
+
     private final int[] values;
 
     private boolean finished;
@@ -45,6 +46,11 @@ public class ClientSessionHandler extends IoHandlerAdapter {
         return finished;
     }
 
+    /**
+     * 将value数组的值依次发送到服务端
+     *
+     * @param session
+     */
     public void sessionOpened(IoSession session) {
         // send summation requests
         for (int i = 0; i < values.length; i++) {
@@ -56,23 +62,21 @@ public class ClientSessionHandler extends IoHandlerAdapter {
     }
 
     public void messageReceived(IoSession session, Object message) {
-        // server only sends ResultMessage. otherwise, we will have to identify
-        // its type using instanceof operator.
+
         ResultMessage rm = (ResultMessage) message;
         if (rm.isOk()) {
-            // server returned OK code.
-            // if received the result message which has the last sequence
-            // number,
-            // it is time to disconnect.
+            // 如果收到的结果消息具有最后的序列号，则该断开连接了
             if (rm.getSequence() == values.length - 1) {
-                // print the sum and disconnect.
+                // 打印总和并断开连接
                 SessionLog.info(session, "The sum: " + rm.getValue());
+                System.out.println("The sum: " + rm.getValue());
                 session.close();
                 finished = true;
             }
         } else {
-            // seever returned error code because of overflow, etc.
+            // 由于溢出等原因，server返回了错误代码
             SessionLog.warn(session, "Server error, disconnecting...");
+            System.out.println("Server error, disconnecting...");
             session.close();
             finished = true;
         }

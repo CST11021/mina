@@ -52,19 +52,16 @@ public class ChatClientSupport {
         this.handler = handler;
     }
 
-    public boolean connect(SocketConnector connector, SocketAddress address,
-            boolean useSsl) {
+    public boolean connect(SocketConnector connector, SocketAddress address, boolean useSsl) {
         if (session != null && session.isConnected()) {
-            throw new IllegalStateException(
-                    "Already connected. Disconnect first.");
+            throw new IllegalStateException("Already connected. Disconnect first.");
         }
 
         try {
 
             SocketConnectorConfig config = new SocketConnectorConfig();
             if (useSsl) {
-                SSLContext sslContext = BogusSSLContextFactory
-                        .getInstance(false);
+                SSLContext sslContext = BogusSSLContextFactory.getInstance(false);
                 SSLFilter sslFilter = new SSLFilter(sslContext);
                 sslFilter.setUseClientMode(true);
                 config.getFilterChain().addLast("sslFilter", sslFilter);

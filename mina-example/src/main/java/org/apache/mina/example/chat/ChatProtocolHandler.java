@@ -36,18 +36,17 @@ import org.apache.mina.util.SessionLog;
  * @version $Rev$, $Date$
  */
 public class ChatProtocolHandler extends IoHandlerAdapter {
-    private Set<IoSession> sessions = Collections
-            .synchronizedSet(new HashSet<IoSession>());
 
-    private Set<String> users = Collections
-            .synchronizedSet(new HashSet<String>());
+    private Set<IoSession> sessions = Collections.synchronizedSet(new HashSet<IoSession>());
 
-    public void exceptionCaught(IoSession session, Throwable cause) {
-        SessionLog.error(session, "", cause);
-        // Close connection when unexpected exception is caught.
-        session.close();
-    }
+    private Set<String> users = Collections.synchronizedSet(new HashSet<String>());
 
+    /**
+     * 服务处理
+     *
+     * @param session
+     * @param message
+     */
     public void messageReceived(IoSession session, Object message) {
         String theMessage = (String) message;
         String[] result = theMessage.split(" ", 2);
@@ -60,50 +59,48 @@ public class ChatProtocolHandler extends IoHandlerAdapter {
 
             switch (command.toInt()) {
 
-            case ChatCommand.QUIT:
-                session.write("QUIT OK");
-                session.close();
-                break;
-            case ChatCommand.LOGIN:
+                case ChatCommand.QUIT:
+                    session.write("QUIT OK");
+                    session.close();
+                    break;
+                case ChatCommand.LOGIN:
 
-                if (user != null) {
-                    session.write("LOGIN ERROR user " + user
-                            + " already logged in.");
-                    return;
-                }
+                    if (user != null) {
+                        session.write("LOGIN ERROR user " + user + " already logged in.");
+                        return;
+                    }
 
-                if (result.length == 2) {
-                    user = result[1];
-                } else {
-                    session.write("LOGIN ERROR invalid login command.");
-                    return;
-                }
+                    if (result.length == 2) {
+                        user = result[1];
+                    } else {
+                        session.write("LOGIN ERROR invalid login command.");
+                        return;
+                    }
 
-                // check if the username is already used
-                if (users.contains(user)) {
-                    session.write("LOGIN ERROR the name " + user
-                            + " is already used.");
-                    return;
-                }
+                    // check if the username is already used
+                    if (users.contains(user)) {
+                        session.write("LOGIN ERROR the name " + user + " is already used.");
+                        return;
+                    }
 
-                sessions.add(session);
-                session.setAttribute("user", user);
+                    sessions.add(session);
+                    session.setAttribute("user", user);
 
-                // Allow all users
-                users.add(user);
-                session.write("LOGIN OK");
-                broadcast("The user " + user + " has joined the chat session.");
-                break;
+                    // Allow all users
+                    users.add(user);
+                    session.write("LOGIN OK");
+                    broadcast("The user " + user + " has joined the chat session.");
+                    break;
 
-            case ChatCommand.BROADCAST:
+                case ChatCommand.BROADCAST:
 
-                if (result.length == 2) {
-                    broadcast(user + ": " + result[1]);
-                }
-                break;
-            default:
-                SessionLog.info(session, "Unhandled command: " + command);
-                break;
+                    if (result.length == 2) {
+                        broadcast(user + ": " + result[1]);
+                    }
+                    break;
+                default:
+                    SessionLog.info(session, "Unhandled command: " + command);
+                    break;
             }
 
         } catch (IllegalArgumentException e) {
@@ -128,6 +125,12 @@ public class ChatProtocolHandler extends IoHandlerAdapter {
         users.remove(user);
         sessions.remove(session);
         broadcast("The user " + user + " has left the chat session.");
+    }
+
+    public void exceptionCaught(IoSession session, Throwable cause) {
+        SessionLog.error(session, "", cause);
+        // Close connection when unexpected exception is caught.
+        session.close();
     }
 
     public boolean isChatUser(String name) {

@@ -24,6 +24,8 @@ import java.util.Set;
 
 /**
  * 所有提供I/O服务和管理IoSession的服务，是IoAcceptor和IoConnector都实现了该接口
+ * IoAcceptor：是服务端的顶级接口
+ * IoConnector：是客户端的顶级接口
  *
  * @author The Apache Directory Project (mina-dev@directory.apache.org)
  * @version $Rev$, $Date$

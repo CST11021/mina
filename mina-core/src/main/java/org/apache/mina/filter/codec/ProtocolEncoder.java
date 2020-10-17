@@ -40,19 +40,15 @@ import org.apache.mina.common.IoSession;
 public interface ProtocolEncoder {
 
     /**
-     * Encodes higher-level message objects into binary or protocol-specific data.
-     * MINA invokes {@link #encode(IoSession, Object, ProtocolEncoderOutput)}
-     * method with message which is popped from the session write queue, and then
-     * the encoder implementation puts encoded {@link ByteBuffer}s into
-     * {@link ProtocolEncoderOutput}.
+     * 将更高级别的消息对象编码为二进制或特定于协议的数据。
+     * MINA使用从会话写队列中弹出的消息调用{@link #encode(IoSession, Object, ProtocolEncoderOutput)} 方法，然后编码器实现将已编码的{@link ByteBuffer}放入{@link ProtocolEncoderOutput}。
      * 
      * @throws Exception if the message violated protocol specification
      */
-    void encode(IoSession session, Object message, ProtocolEncoderOutput out)
-            throws Exception;
+    void encode(IoSession session, Object message, ProtocolEncoderOutput out) throws Exception;
 
     /**
-     * Releases all resources related with this encoder.
+     * 释放与此编码器有关的所有资源
      * 
      * @throws Exception if failed to dispose all resources
      */

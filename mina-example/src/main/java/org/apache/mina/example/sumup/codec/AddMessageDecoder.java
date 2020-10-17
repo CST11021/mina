@@ -48,7 +48,7 @@ public class AddMessageDecoder extends AbstractMessageDecoder {
         return m;
     }
 
-    public void finishDecode(IoSession session, ProtocolDecoderOutput out)
-            throws Exception {
+    public void finishDecode(IoSession session, ProtocolDecoderOutput out) throws Exception {
     }
+
 }

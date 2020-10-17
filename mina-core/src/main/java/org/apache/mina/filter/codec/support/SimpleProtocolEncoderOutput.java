@@ -32,8 +32,8 @@ import org.apache.mina.filter.codec.ProtocolEncoderOutput;
  * @author The Apache Directory Project (mina-dev@directory.apache.org)
  * @version $Rev$, $Date$
  */
-public abstract class SimpleProtocolEncoderOutput implements
-        ProtocolEncoderOutput {
+public abstract class SimpleProtocolEncoderOutput implements ProtocolEncoderOutput {
+
     private final Queue<ByteBuffer> bufferQueue = new LinkedList<ByteBuffer>();
 
     public SimpleProtocolEncoderOutput() {
@@ -43,6 +43,11 @@ public abstract class SimpleProtocolEncoderOutput implements
         return bufferQueue;
     }
 
+    /**
+     * 将字节缓存区缓存到队列
+     *
+     * @param buf the buffer which contains encoded data
+     */
     public void write(ByteBuffer buf) {
         bufferQueue.add(buf);
     }
@@ -80,6 +85,11 @@ public abstract class SimpleProtocolEncoderOutput implements
         bufferQueue.offer(newBuf);
     }
 
+    /**
+     *
+     *
+     * @return
+     */
     public WriteFuture flush() {
         Queue<ByteBuffer> bufferQueue = this.bufferQueue;
         WriteFuture future = null;
@@ -102,5 +112,10 @@ public abstract class SimpleProtocolEncoderOutput implements
         return future;
     }
 
+    /**
+     *
+     * @param buf
+     * @return
+     */
     protected abstract WriteFuture doFlush(ByteBuffer buf);
 }

@@ -37,23 +37,29 @@ import org.apache.mina.filter.codec.textline.TextLineCodecFactory;
 public class SwingChatClientHandler extends IoHandlerAdapter {
 
     public interface Callback {
+
+        /** 与聊天室建立连接时的回调 */
         void connected();
 
-        void loggedIn();
-
-        void loggedOut();
-
+        /** 与聊天室断开连接时的回调 */
         void disconnected();
 
+        /** 登录聊天室后的回调 */
+        void loggedIn();
+
+        /** 退出聊天室的回调 */
+        void loggedOut();
+
+        /** 接收到消息时的回调 */
         void messageReceived(String message);
 
+        /** 服务端返回错误时的回调 */
         void error(String message);
     }
 
     private static IoFilter LOGGING_FILTER = new LoggingFilter();
 
-    private static IoFilter CODEC_FILTER = new ProtocolCodecFilter(
-            new TextLineCodecFactory());
+    private static IoFilter CODEC_FILTER = new ProtocolCodecFilter(new TextLineCodecFactory());
 
     private final Callback callback;
 
@@ -61,6 +67,12 @@ public class SwingChatClientHandler extends IoHandlerAdapter {
         this.callback = callback;
     }
 
+    /**
+     * 创建连接时
+     *
+     * @param session
+     * @throws Exception
+     */
     public void sessionCreated(IoSession session) throws Exception {
         session.getFilterChain().addLast("codec", CODEC_FILTER);
         session.getFilterChain().addLast("logger", LOGGING_FILTER);
@@ -70,8 +82,7 @@ public class SwingChatClientHandler extends IoHandlerAdapter {
         callback.connected();
     }
 
-    public void messageReceived(IoSession session, Object message)
-            throws Exception {
+    public void messageReceived(IoSession session, Object message) throws Exception {
         String theMessage = (String) message;
         String[] result = theMessage.split(" ", 3);
         String status = result[1];
@@ -82,18 +93,18 @@ public class SwingChatClientHandler extends IoHandlerAdapter {
 
             switch (command.toInt()) {
 
-            case ChatCommand.BROADCAST:
-                if (result.length == 3) {
-                    callback.messageReceived(result[2]);
-                }
-                break;
-            case ChatCommand.LOGIN:
-                callback.loggedIn();
-                break;
+                case ChatCommand.BROADCAST:
+                    if (result.length == 3) {
+                        callback.messageReceived(result[2]);
+                    }
+                    break;
+                case ChatCommand.LOGIN:
+                    callback.loggedIn();
+                    break;
 
-            case ChatCommand.QUIT:
-                callback.loggedOut();
-                break;
+                case ChatCommand.QUIT:
+                    callback.loggedOut();
+                    break;
             }
 
         } else {

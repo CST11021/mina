@@ -156,21 +156,29 @@ import org.apache.mina.filter.codec.ProtocolEncoderOutput;
  * @see ByteBufferAllocator
  */
 public abstract class ByteBuffer implements Comparable<ByteBuffer> {
+
+    /** 缓冲区分配器 */
     private static ByteBufferAllocator allocator = new PooledByteBufferAllocator();
 
     private static boolean useDirectBuffers = true;
 
-    /**
-     * Returns the current allocator which manages the allocated buffers.
-     */
+    private static final Set<String> primitiveTypeNames = new HashSet<String>();
+
+    static {
+        primitiveTypeNames.add("void");
+        primitiveTypeNames.add("boolean");
+        primitiveTypeNames.add("byte");
+        primitiveTypeNames.add("char");
+        primitiveTypeNames.add("short");
+        primitiveTypeNames.add("int");
+        primitiveTypeNames.add("long");
+        primitiveTypeNames.add("float");
+        primitiveTypeNames.add("double");
+    }
+
     public static ByteBufferAllocator getAllocator() {
         return allocator;
     }
-
-    /**
-     * Changes the current allocator with the specified one to manage
-     * the allocated buffers from now.
-     */
     public static void setAllocator(ByteBufferAllocator newAllocator) {
         if (newAllocator == null) {
             throw new NullPointerException("allocator");
@@ -188,7 +196,6 @@ public abstract class ByteBuffer implements Comparable<ByteBuffer> {
     public static boolean isUseDirectBuffers() {
         return useDirectBuffers;
     }
-
     public static void setUseDirectBuffers(boolean useDirectBuffers) {
         ByteBuffer.useDirectBuffers = useDirectBuffers;
     }
@@ -213,7 +220,6 @@ public abstract class ByteBuffer implements Comparable<ByteBuffer> {
 
         return allocate(capacity, false);
     }
-
     /**
      * Returns the buffer which is capable of the specified size.
      *
@@ -231,14 +237,12 @@ public abstract class ByteBuffer implements Comparable<ByteBuffer> {
     public static ByteBuffer wrap(java.nio.ByteBuffer nioBuffer) {
         return allocator.wrap(nioBuffer);
     }
-
     /**
      * Wraps the specified byte array into MINA heap buffer.
      */
     public static ByteBuffer wrap(byte[] byteArray) {
         return wrap(java.nio.ByteBuffer.wrap(byteArray));
     }
-
     /**
      * Wraps the specified byte array into MINA heap buffer.
      * Please note that MINA buffers are going to be pooled, and
@@ -249,27 +253,14 @@ public abstract class ByteBuffer implements Comparable<ByteBuffer> {
         return wrap(java.nio.ByteBuffer.wrap(byteArray, offset, length));
     }
 
-    private static final Set<String> primitiveTypeNames = new HashSet<String>();
-    
-    static {
-        primitiveTypeNames.add("void");
-        primitiveTypeNames.add("boolean");
-        primitiveTypeNames.add("byte");
-        primitiveTypeNames.add("char");
-        primitiveTypeNames.add("short");
-        primitiveTypeNames.add("int");
-        primitiveTypeNames.add("long");
-        primitiveTypeNames.add("float");
-        primitiveTypeNames.add("double");
-    }
+
 
     protected ByteBuffer() {
     }
 
     /**
-     * Increases the internal reference count of this buffer to defer
-     * automatic release.  You have to invoke {@link #release()} as many
-     * as you invoked this method to release this buffer.
+     * 增加此缓冲区的内部引用计数以延迟自动释放。
+     * 您必须调用{@link #release()}和调用此方法一样多才能释放此缓冲区。
      *
      * @throws IllegalStateException if you attempt to acquire already
      *                               released buffer.
@@ -492,7 +483,7 @@ public abstract class ByteBuffer implements Comparable<ByteBuffer> {
     public abstract byte get(int index);
 
     /**
-     * Reads one byte as an unsigned short integer.
+     * 读取一个字节作为无符号的短整数
      */
     public short getUnsigned(int index) {
         return (short) (get(index) & 0xff);
@@ -901,8 +892,7 @@ public abstract class ByteBuffer implements Comparable<ByteBuffer> {
      * specified <code>decoder</code> and returns it.  This method reads
      * until the limit of this buffer if no <tt>NUL</tt> is found.
      */
-    public String getString(CharsetDecoder decoder)
-            throws CharacterCodingException {
+    public String getString(CharsetDecoder decoder) throws CharacterCodingException {
         if (!hasRemaining()) {
             return "";
         }
@@ -993,8 +983,7 @@ public abstract class ByteBuffer implements Comparable<ByteBuffer> {
      *
      * @param fieldSize the maximum number of bytes to read
      */
-    public String getString(int fieldSize, CharsetDecoder decoder)
-            throws CharacterCodingException {
+    public String getString(int fieldSize, CharsetDecoder decoder) throws CharacterCodingException {
         checkFieldSize(fieldSize);
 
         if (fieldSize == 0) {
@@ -1100,8 +1089,7 @@ public abstract class ByteBuffer implements Comparable<ByteBuffer> {
      *
      * @throws BufferOverflowException if the specified string doesn't fit
      */
-    public ByteBuffer putString(CharSequence val, CharsetEncoder encoder)
-            throws CharacterCodingException {
+    public ByteBuffer putString(CharSequence val, CharsetEncoder encoder) throws CharacterCodingException {
         if (val.length() == 0) {
             return this;
         }
@@ -1165,8 +1153,7 @@ public abstract class ByteBuffer implements Comparable<ByteBuffer> {
      *
      * @param fieldSize the maximum number of bytes to write
      */
-    public ByteBuffer putString(CharSequence val, int fieldSize,
-            CharsetEncoder encoder) throws CharacterCodingException {
+    public ByteBuffer putString(CharSequence val, int fieldSize, CharsetEncoder encoder) throws CharacterCodingException {
         checkFieldSize(fieldSize);
 
         if (fieldSize == 0)
@@ -1236,8 +1223,7 @@ public abstract class ByteBuffer implements Comparable<ByteBuffer> {
      * encoded string, using the specified <code>decoder</code> and returns it.
      * This method is a shortcut for <tt>getPrefixedString(2, decoder)</tt>.
      */
-    public String getPrefixedString(CharsetDecoder decoder)
-            throws CharacterCodingException {
+    public String getPrefixedString(CharsetDecoder decoder) throws CharacterCodingException {
         return getPrefixedString(2, decoder);
     }
 
@@ -1247,8 +1233,7 @@ public abstract class ByteBuffer implements Comparable<ByteBuffer> {
      *
      * @param prefixLength the length of the length field (1, 2, or 4)
      */
-    public String getPrefixedString(int prefixLength, CharsetDecoder decoder)
-            throws CharacterCodingException {
+    public String getPrefixedString(int prefixLength, CharsetDecoder decoder) throws CharacterCodingException {
         if (!prefixedDataAvailable(prefixLength)) {
             throw new BufferUnderflowException();
         }
@@ -1342,8 +1327,7 @@ public abstract class ByteBuffer implements Comparable<ByteBuffer> {
      *
      * @throws BufferOverflowException if the specified string doesn't fit
      */
-    public ByteBuffer putPrefixedString(CharSequence in, int prefixLength,
-            CharsetEncoder encoder) throws CharacterCodingException {
+    public ByteBuffer putPrefixedString(CharSequence in, int prefixLength, CharsetEncoder encoder) throws CharacterCodingException {
         return putPrefixedString(in, prefixLength, 0, encoder);
     }
 
@@ -1358,9 +1342,7 @@ public abstract class ByteBuffer implements Comparable<ByteBuffer> {
      *
      * @throws BufferOverflowException if the specified string doesn't fit
      */
-    public ByteBuffer putPrefixedString(CharSequence in, int prefixLength,
-            int padding, CharsetEncoder encoder)
-            throws CharacterCodingException {
+    public ByteBuffer putPrefixedString(CharSequence in, int prefixLength, int padding, CharsetEncoder encoder) throws CharacterCodingException {
         return putPrefixedString(in, prefixLength, padding, (byte) 0, encoder);
     }
 
@@ -1375,9 +1357,7 @@ public abstract class ByteBuffer implements Comparable<ByteBuffer> {
      *
      * @throws BufferOverflowException if the specified string doesn't fit
      */
-    public ByteBuffer putPrefixedString(CharSequence val, int prefixLength,
-            int padding, byte padValue, CharsetEncoder encoder)
-            throws CharacterCodingException {
+    public ByteBuffer putPrefixedString(CharSequence val, int prefixLength, int padding, byte padValue, CharsetEncoder encoder) throws CharacterCodingException {
         int maxLength;
         switch (prefixLength) {
         case 1:
@@ -1485,10 +1465,9 @@ public abstract class ByteBuffer implements Comparable<ByteBuffer> {
     }
 
     /**
-     * Reads a Java object from the buffer using the specified <tt>classLoader</tt>.
+     * 使用指定的classLoader从缓冲区读取Java对象。
      */
-    public Object getObject(final ClassLoader classLoader)
-            throws ClassNotFoundException {
+    public Object getObject(final ClassLoader classLoader) throws ClassNotFoundException {
         if (!prefixedDataAvailable(4)) {
             throw new BufferUnderflowException();
         }
@@ -1511,16 +1490,15 @@ public abstract class ByteBuffer implements Comparable<ByteBuffer> {
                         throw new EOFException();
                     }
                     switch (type) {
-                    case 0: // Primitive types
-                        return super.readClassDescriptor();
-                    case 1: // Non-primitive types
-                        String className = readUTF();
-                        Class<?> clazz =
-                            Class.forName(className, true, classLoader);
-                        return ObjectStreamClass.lookup(clazz);
-                    default:
-                        throw new StreamCorruptedException(
-                                "Unexpected class descriptor type: " + type);
+                        case 0: // Primitive types
+                            return super.readClassDescriptor();
+                        case 1: // Non-primitive types
+                            String className = readUTF();
+                            Class<?> clazz =
+                                Class.forName(className, true, classLoader);
+                            return ObjectStreamClass.lookup(clazz);
+                        default:
+                            throw new StreamCorruptedException("Unexpected class descriptor type: " + type);
                     }
                 }
                 
@@ -1597,12 +1575,10 @@ public abstract class ByteBuffer implements Comparable<ByteBuffer> {
     }
 
     /**
-     * Returns <tt>true</tt> if this buffer contains a data which has a data
-     * length as a prefix and the buffer has remaining data as enough as
-     * specified in the data length field.
+     * 如果此缓冲区包含以数据长度为前缀的数据，并且缓冲区中剩余的数据足够在data length字段中指定，则返回true。
      *
-     * @param prefixLength  the length of the prefix field (1, 2, or 4)
-     * @param maxDataLength the allowed maximum of the read data length
+     * @param prefixLength  前缀字段的长度（1、2或4）
+     * @param maxDataLength 允许的最大读取数据长度
      *
      * @throws IllegalArgumentException if prefixLength is wrong
      * @throws BufferDataException      if data length is negative or greater then <tt>maxDataLength</tt>
@@ -1614,17 +1590,17 @@ public abstract class ByteBuffer implements Comparable<ByteBuffer> {
 
         int dataLength;
         switch (prefixLength) {
-        case 1:
-            dataLength = getUnsigned(position());
-            break;
-        case 2:
-            dataLength = getUnsignedShort(position());
-            break;
-        case 4:
-            dataLength = getInt(position());
-            break;
-        default:
-            throw new IllegalArgumentException("prefixLength: " + prefixLength);
+            case 1:
+                dataLength = getUnsigned(position());
+                break;
+            case 2:
+                dataLength = getUnsignedShort(position());
+                break;
+            case 4:
+                dataLength = getInt(position());
+                break;
+            default:
+                throw new IllegalArgumentException("prefixLength: " + prefixLength);
         }
 
         if (dataLength < 0 || dataLength > maxDataLength) {

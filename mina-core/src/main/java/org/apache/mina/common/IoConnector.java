@@ -52,22 +52,22 @@ public interface IoConnector extends IoService {
     ConnectFuture connect(SocketAddress address, IoHandler handler);
 
     /**
-     * Connects to the specified <code>address</code>.  If communication starts
-     * successfully, events are fired to the specified
-     * <code>handler</code>.
+     * 创建客户端并连接到指定服务
      *
-     * @param config the configuration
-     * @return {@link ConnectFuture} that will tell the result of the connection attempt
+     * @param address   服务端地址
+     * @param handler   客户端的会话事件处理器
+     * @param config    服务配置
+     * @return
      */
     ConnectFuture connect(SocketAddress address, IoHandler handler, IoServiceConfig config);
 
     /**
-     * Connects to the specified <code>address</code>.  If communication starts
-     * successfully, events are fired to the specified
-     * <code>handler</code>.
+     * 创建客户端并连接到指定服务
      *
-     * @param localAddress the local address the channel is bound to
-     * @return {@link ConnectFuture} that will tell the result of the connection attempt
+     * @param address
+     * @param localAddress
+     * @param handler
+     * @return
      */
     ConnectFuture connect(SocketAddress address, SocketAddress localAddress, IoHandler handler);
 
