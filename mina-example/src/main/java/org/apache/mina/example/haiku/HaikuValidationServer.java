@@ -24,6 +24,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
+import org.apache.mina.filter.codec.serialization.ObjectSerializationCodecFactory;
 import org.apache.mina.filter.codec.textline.TextLineCodecFactory;
 import org.apache.mina.filter.executor.ExecutorFilter;
 import org.apache.mina.transport.socket.nio.SocketAcceptor;
@@ -49,7 +50,10 @@ public class HaikuValidationServer {
         // 添加自定义过滤器：该过滤器的作用是将最后接收到的3条消息保存到session的phrases属性中
         config.getFilterChain().addLast("to-haiki", new ToHaikuIoFilter());
 
-        //
+        // HaiKu诗示例：
+        // I look at the sky
+        // The moonlight is really bright
+        // And it is so quiet
         acceptor.bind(new InetSocketAddress(42458), new HaikuValidatorIoHandler(), config);
     }
 }

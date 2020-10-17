@@ -46,6 +46,12 @@ public class HaikuValidatorIoHandler extends IoHandlerAdapter {
         }
     }
 
+    /**
+     * 使用这种方式，telnet的时候才能看到校验结果
+     *
+     * @param session
+     * @param message
+     */
     private void write(IoSession session, String message) {
         ByteBuffer wb = ByteBuffer.allocate(1024);
         wb.put(message.getBytes());

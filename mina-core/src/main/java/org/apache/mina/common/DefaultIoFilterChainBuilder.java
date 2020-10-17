@@ -270,8 +270,7 @@ public class DefaultIoFilterChainBuilder implements IoFilterChainBuilder, Clonea
 
     private void register(int index, Entry e) {
         if (contains(e.getName())) {
-            throw new IllegalArgumentException(
-                    "Other filter is using the same name: " + e.getName());
+            throw new IllegalArgumentException("Other filter is using the same name: " + e.getName());
         }
 
         entries.add(index, e);
