@@ -35,22 +35,21 @@ import org.apache.mina.transport.socket.nio.SocketAcceptorConfig;
  */
 
 public class HaikuValidationServer {
+
     public static void main(String... args) throws Exception {
         ExecutorService executor = Executors.newCachedThreadPool();
-        SocketAcceptor acceptor = new SocketAcceptor(Runtime.getRuntime()
-                .availableProcessors(), executor);
+        SocketAcceptor acceptor = new SocketAcceptor(Runtime.getRuntime().availableProcessors(), executor);
 
         SocketAcceptorConfig config = new SocketAcceptorConfig();
 
-        config.getFilterChain().addLast("executor",
-                new ExecutorFilter(executor));
-        config.getFilterChain().addLast(
-                "to-string",
-                new ProtocolCodecFilter(new TextLineCodecFactory(Charset
-                        .forName("US-ASCII"))));
+        // 设置ExecutorFilter过滤器，将session生命周期内的事件进行异步处理
+        config.getFilterChain().addLast("executor", new ExecutorFilter(executor));
+        // 添加编解码过滤器
+        config.getFilterChain().addLast("to-string", new ProtocolCodecFilter(new TextLineCodecFactory()));
+        // 添加自定义过滤器：该过滤器的作用是将最后接收到的3条消息保存到session的phrases属性中
         config.getFilterChain().addLast("to-haiki", new ToHaikuIoFilter());
 
-        acceptor.bind(new InetSocketAddress(42458),
-                new HaikuValidatorIoHandler(), config);
+        //
+        acceptor.bind(new InetSocketAddress(42458), new HaikuValidatorIoHandler(), config);
     }
 }

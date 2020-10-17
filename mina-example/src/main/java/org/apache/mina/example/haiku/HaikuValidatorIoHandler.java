@@ -18,6 +18,7 @@
  */
 package org.apache.mina.example.haiku;
 
+import org.apache.mina.common.ByteBuffer;
 import org.apache.mina.common.IoHandlerAdapter;
 import org.apache.mina.common.IoSession;
 
@@ -31,15 +32,30 @@ public class HaikuValidatorIoHandler extends IoHandlerAdapter {
     private final HaikuValidator validator = new HaikuValidator();
 
     @Override
-    public void messageReceived(IoSession session, Object message)
-            throws Exception {
-        Haiku haiku = (Haiku) message;
+    public void messageReceived(IoSession session, Object message) throws Exception {
+        System.out.println("接收到消息：" + message.toString());
 
+        Haiku haiku = (Haiku) message;
         try {
             validator.validate(haiku);
-            session.write("HAIKU!");
-        } catch (InvalidHaikuException e) {
-            session.write("NOT A HAIKU: " + e.getMessage());
+            // session.write("HAIKU!");
+            write(session, "HAIKU!");
+        } catch (Exception e) {
+            // session.write("NOT A HAIKU!");
+            write(session, "NOT A HAIKU!");
         }
     }
+
+    private void write(IoSession session, String message) {
+        ByteBuffer wb = ByteBuffer.allocate(1024);
+        wb.put(message.getBytes());
+        wb.flip();
+        session.write(wb);
+    }
+
+    @Override
+    public void messageSent(IoSession session, Object message) throws Exception {
+        System.out.println("发送消息" + message.toString());
+    }
+
 }

@@ -26,8 +26,10 @@ package org.apache.mina.common;
  * @version $Rev$, $Date$
  */
 public interface IoSessionConfig {
+
     /**
      * Returns a deep clone of this configuration.
      */
     Object clone();
+
 }

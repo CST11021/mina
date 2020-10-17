@@ -25,6 +25,7 @@ import java.util.Arrays;
  * @version $Rev: $, $Date:  $
  */
 public class Haiku {
+
     private final String[] phrases;
 
     public Haiku(String... lines) {

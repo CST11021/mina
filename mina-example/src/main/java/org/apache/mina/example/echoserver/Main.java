@@ -37,10 +37,11 @@ import org.apache.mina.transport.socket.nio.SocketAcceptorConfig;
  * @version $Rev$, $Date$
  */
 public class Main {
-    /** Choose your favorite port number. */
+
+    /** 选择您喜欢的端口号 */
     private static final int PORT = 8080;
 
-    /** Set this to true if you want to make the server SSL */
+    /** 如果要使服务器成为SSL，请将其设置为true */
     private static final boolean USE_SSL = false;
 
     public static void main(String[] args) throws Exception {
@@ -56,22 +57,18 @@ public class Main {
         addLogger(chain);
 
         // Bind
-        acceptor.bind(new InetSocketAddress(PORT), new EchoProtocolHandler(),
-                config);
+        acceptor.bind(new InetSocketAddress(PORT), new EchoProtocolHandler(), config);
 
         System.out.println("Listening on port " + PORT);
     }
 
-    private static void addSSLSupport(DefaultIoFilterChainBuilder chain)
-            throws Exception {
-        SSLFilter sslFilter = new SSLFilter(BogusSSLContextFactory
-                .getInstance(true));
+    private static void addSSLSupport(DefaultIoFilterChainBuilder chain) throws Exception {
+        SSLFilter sslFilter = new SSLFilter(BogusSSLContextFactory.getInstance(true));
         chain.addLast("sslFilter", sslFilter);
         System.out.println("SSL ON");
     }
 
-    private static void addLogger(DefaultIoFilterChainBuilder chain)
-            throws Exception {
+    private static void addLogger(DefaultIoFilterChainBuilder chain) throws Exception {
         chain.addLast("logger", new LoggingFilter());
         System.out.println("Logging ON");
     }

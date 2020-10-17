@@ -21,10 +21,13 @@ package org.apache.mina.example.haiku;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.mina.common.ByteBuffer;
 import org.apache.mina.common.IoFilterAdapter;
 import org.apache.mina.common.IoSession;
 
 /**
+ * 该过滤器的作用是：将最后接收到的3条消息保存到session的phrases属性中
+ *
  * @author Apache Mina Project (dev@mina.apache.org)
  * @version $Rev: $, $Date:  $
  */
@@ -32,8 +35,7 @@ public class ToHaikuIoFilter extends IoFilterAdapter {
 
     @SuppressWarnings( { "unchecked" })
     @Override
-    public void messageReceived(NextFilter nextFilter, IoSession session,
-            Object message) throws Exception {
+    public void messageReceived(NextFilter nextFilter, IoSession session, Object message) throws Exception {
         List<String> phrases = (List<String>) session.getAttribute("phrases");
 
         if (null == phrases) {
@@ -45,9 +47,7 @@ public class ToHaikuIoFilter extends IoFilterAdapter {
 
         if (phrases.size() == 3) {
             session.removeAttribute("phrases");
-
-            super.messageReceived(nextFilter, session, new Haiku(phrases
-                    .toArray(new String[3])));
+            super.messageReceived(nextFilter, session, new Haiku(phrases.toArray(new String[3])));
         }
     }
 }

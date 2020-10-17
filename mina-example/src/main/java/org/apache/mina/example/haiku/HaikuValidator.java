@@ -23,6 +23,7 @@ package org.apache.mina.example.haiku;
  * @version $Rev: $, $Date:  $
  */
 public class HaikuValidator {
+
     private static final int[] SYLLABLE_COUNTS = { 5, 7, 5 };
 
     public void validate(Haiku haiku) throws InvalidHaikuException {
@@ -33,8 +34,7 @@ public class HaikuValidator {
             int count = PhraseUtilities.countSyllablesInPhrase(phrase);
 
             if (count != SYLLABLE_COUNTS[i]) {
-                throw new InvalidHaikuException(i + 1, phrase, count,
-                        SYLLABLE_COUNTS[i]);
+                throw new InvalidHaikuException(i + 1, phrase, count, SYLLABLE_COUNTS[i]);
             }
         }
     }

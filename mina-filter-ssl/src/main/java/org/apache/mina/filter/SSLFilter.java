@@ -82,8 +82,7 @@ public class SSLFilter extends IoFilterAdapter {
      * A session attribute key that stores underlying {@link SSLSession}
      * for each session.
      */
-    public static final String SSL_SESSION = SSLFilter.class.getName()
-            + ".SSLSession";
+    public static final String SSL_SESSION = SSLFilter.class.getName() + ".SSLSession";
 
     /**
      * A session attribute key that makes next one write request bypass
@@ -95,9 +94,7 @@ public class SSLFilter extends IoFilterAdapter {
      * bypass this filter.  This is especially useful when you implement
      * StartTLS.   
      */
-    public static final String DISABLE_ENCRYPTION_ONCE = SSLFilter.class
-            .getName()
-            + ".DisableEncryptionOnce";
+    public static final String DISABLE_ENCRYPTION_ONCE = SSLFilter.class.getName() + ".DisableEncryptionOnce";
 
     /**
      * A session attribute key that makes this filter to emit a
@@ -107,30 +104,25 @@ public class SSLFilter extends IoFilterAdapter {
      * value. ({@link Boolean#TRUE} is preferred.)  By default, this filter
      * doesn't emit any events related with SSL session flow control.
      */
-    public static final String USE_NOTIFICATION = SSLFilter.class.getName()
-            + ".UseNotification";
+    public static final String USE_NOTIFICATION = SSLFilter.class.getName() + ".UseNotification";
 
     /**
      * A special message object which is emitted with a {@link IoHandler#messageReceived(IoSession, Object)}
      * event when the session is secured and its {@link #USE_NOTIFICATION}
      * attribute is set.
      */
-    public static final SSLFilterMessage SESSION_SECURED = new SSLFilterMessage(
-            "SESSION_SECURED");
+    public static final SSLFilterMessage SESSION_SECURED = new SSLFilterMessage("SESSION_SECURED");
 
     /**
      * A special message object which is emitted with a {@link IoHandler#messageReceived(IoSession, Object)}
      * event when the session is not secure anymore and its {@link #USE_NOTIFICATION}
      * attribute is set.
      */
-    public static final SSLFilterMessage SESSION_UNSECURED = new SSLFilterMessage(
-            "SESSION_UNSECURED");
+    public static final SSLFilterMessage SESSION_UNSECURED = new SSLFilterMessage("SESSION_UNSECURED");
 
-    private static final String NEXT_FILTER = SSLFilter.class.getName()
-            + ".NextFilter";
+    private static final String NEXT_FILTER = SSLFilter.class.getName() + ".NextFilter";
 
-    private static final String SSL_HANDLER = SSLFilter.class.getName()
-            + ".SSLHandler";
+    private static final String SSL_HANDLER = SSLFilter.class.getName() + ".SSLHandler";
     
     // SSL Context
     private SSLContext sslContext;
@@ -318,11 +310,9 @@ public class SSLFilter extends IoFilterAdapter {
         this.enabledProtocols = protocols;
     }
 
-    public void onPreAdd(IoFilterChain parent, String name,
-            NextFilter nextFilter) throws SSLException {
+    public void onPreAdd(IoFilterChain parent, String name, NextFilter nextFilter) throws SSLException {
         if (parent.contains(SSLFilter.class)) {
-            throw new IllegalStateException(
-                    "A filter chain cannot contain more than one SSLFilter.");
+            throw new IllegalStateException("A filter chain cannot contain more than one SSLFilter.");
         }
 
         IoSession session = parent.getSession();
@@ -333,8 +323,7 @@ public class SSLFilter extends IoFilterAdapter {
         session.setAttribute(SSL_HANDLER, handler);
     }
 
-    public void onPostAdd(IoFilterChain parent, String name,
-            NextFilter nextFilter) throws SSLException {
+    public void onPostAdd(IoFilterChain parent, String name, NextFilter nextFilter) throws SSLException {
         SSLHandler handler = getSSLSessionHandler(parent.getSession());
         synchronized (handler) {
             handler.handshake(nextFilter);
@@ -342,8 +331,7 @@ public class SSLFilter extends IoFilterAdapter {
         handler.flushScheduledEvents();
     }
 
-    public void onPreRemove(IoFilterChain parent, String name,
-            NextFilter nextFilter) throws SSLException {
+    public void onPreRemove(IoFilterChain parent, String name, NextFilter nextFilter) throws SSLException {
         IoSession session = parent.getSession();
         stopSSL(session);
         session.removeAttribute(NEXT_FILTER);
@@ -351,8 +339,7 @@ public class SSLFilter extends IoFilterAdapter {
     }
 
     // IoFilter impl.
-    public void sessionClosed(NextFilter nextFilter, IoSession session)
-            throws SSLException {
+    public void sessionClosed(NextFilter nextFilter, IoSession session) throws SSLException {
         SSLHandler handler = getSSLSessionHandler(session);
         try {
             synchronized (handler) {
@@ -374,8 +361,7 @@ public class SSLFilter extends IoFilterAdapter {
         }
     }
 
-    public void messageReceived(NextFilter nextFilter, IoSession session,
-            Object message) throws SSLException {
+    public void messageReceived(NextFilter nextFilter, IoSession session, Object message) throws SSLException {
         SSLHandler handler = getSSLSessionHandler(session);
         synchronized (handler) {
             if (!isSSLStarted(session) && handler.isInboundDone()) {
@@ -383,8 +369,7 @@ public class SSLFilter extends IoFilterAdapter {
             } else {
                 ByteBuffer buf = (ByteBuffer) message;
                 if (SessionLog.isDebugEnabled(session)) {
-                    SessionLog.debug(session, " Data Read: " + handler + " ("
-                            + buf + ')');
+                    SessionLog.debug(session, " Data Read: " + handler + " (" + buf + ')');
                 }
 
                 try {
@@ -397,8 +382,7 @@ public class SSLFilter extends IoFilterAdapter {
                     if (handler.isInboundDone()) {
                         if (handler.isOutboundDone()) {
                             if (SessionLog.isDebugEnabled(session)) {
-                                SessionLog.debug(session,
-                                        " SSL Session closed.");
+                                SessionLog.debug(session, " SSL Session closed.");
                             }
 
                             handler.destroy();
@@ -413,8 +397,7 @@ public class SSLFilter extends IoFilterAdapter {
                     }
                 } catch (SSLException ssle) {
                     if (!handler.isHandshakeComplete()) {
-                        SSLException newSSLE = new SSLHandshakeException(
-                                "SSL handshake failed.");
+                        SSLException newSSLE = new SSLHandshakeException("SSL handshake failed.");
                         newSSLE.initCause(ssle);
                         ssle = newSSLE;
                     }
@@ -427,8 +410,7 @@ public class SSLFilter extends IoFilterAdapter {
         handler.flushScheduledEvents();
     }
 
-    public void messageSent(NextFilter nextFilter, IoSession session,
-            Object message) {
+    public void messageSent(NextFilter nextFilter, IoSession session, Object message) {
         if (message instanceof EncryptedBuffer) {
             EncryptedBuffer buf = (EncryptedBuffer) message;
             buf.release();
@@ -438,8 +420,7 @@ public class SSLFilter extends IoFilterAdapter {
         }
     }
 
-    public void filterWrite(NextFilter nextFilter, IoSession session,
-            WriteRequest writeRequest) throws SSLException {
+    public void filterWrite(NextFilter nextFilter, IoSession session, WriteRequest writeRequest) throws SSLException {
         boolean needsFlush = true;
         SSLHandler handler = getSSLSessionHandler(session);
         synchronized (handler) {
@@ -513,8 +494,7 @@ public class SSLFilter extends IoFilterAdapter {
         }
     }
 
-    public void filterClose(final NextFilter nextFilter, final IoSession session)
-            throws SSLException {
+    public void filterClose(final NextFilter nextFilter, final IoSession session) throws SSLException {
         SSLHandler handler = getSSLSessionHandler0(session);
         if (handler == null) {
             // The connection might already have closed, or
@@ -544,8 +524,7 @@ public class SSLFilter extends IoFilterAdapter {
         }
     }
 
-    private WriteFuture initiateClosure(NextFilter nextFilter, IoSession session)
-            throws SSLException {
+    private WriteFuture initiateClosure(NextFilter nextFilter, IoSession session) throws SSLException {
         SSLHandler handler = getSSLSessionHandler(session);
         // if already shut down
         if (!handler.closeOutbound()) {
@@ -568,8 +547,7 @@ public class SSLFilter extends IoFilterAdapter {
 
     // Utiliities
 
-    private void handleSSLData(NextFilter nextFilter, SSLHandler handler)
-            throws SSLException {
+    private void handleSSLData(NextFilter nextFilter, SSLHandler handler) throws SSLException {
         // Flush any buffered write requests occurred before handshaking.
         if (handler.isHandshakeComplete()) {
             handler.flushPreHandshakeEvents();

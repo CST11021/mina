@@ -36,20 +36,13 @@ package org.apache.mina.common;
  */
 public class IdleStatus {
 
-    /**
-     * Represents the session status that no data is coming from the remote
-     * peer.
-     */
+    /** 表示会话状态，即没有数据来自远程对等方 */
     public static final IdleStatus READER_IDLE = new IdleStatus("reader idle");
 
-    /**
-     * Represents the session status that the session is not writing any data.
-     */
+    /** 表示会话状态，即该会话未写入任何数据 */
     public static final IdleStatus WRITER_IDLE = new IdleStatus("writer idle");
 
-    /**
-     * Represents both {@link #READER_IDLE} and {@link #WRITER_IDLE}.
-     */
+    /** 代表{@link #READER_IDLE}和{@link #WRITER_IDLE} */
     public static final IdleStatus BOTH_IDLE = new IdleStatus("both idle");
 
     private final String strValue;

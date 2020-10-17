@@ -66,23 +66,18 @@ public final class TransportType implements Serializable {
     /**
      * Transport type: TCP/IP (Registry name: <tt>"SOCKET"</tt> or <tt>"TCP"</tt>)
      */
-    public static final TransportType SOCKET = new TransportType(new String[] {
-            "SOCKET", "TCP" }, false);
-
+    public static final TransportType SOCKET = new TransportType(new String[] {"SOCKET", "TCP" }, false);
     /**
      * Transport type: UDP/IP (Registry name: <tt>"DATAGRAM"</tt> or <tt>"UDP"</tt>)
      */
-    public static final TransportType DATAGRAM = new TransportType(
-            new String[] { "DATAGRAM", "UDP" }, true);
-
+    public static final TransportType DATAGRAM = new TransportType(new String[] { "DATAGRAM", "UDP" }, true);
     /**
      * Transport type: in-VM pipe (Registry name: <tt>"VM_PIPE"</tt>)
      * Please refer to
      * <a href="../protocol/vmpipe/package-summary.htm"><tt>org.apache.mina.protocol.vmpipe</tt></a>
      * package.
      */
-    public static final TransportType VM_PIPE = new TransportType(
-            new String[] { "VM_PIPE" }, Object.class, false);
+    public static final TransportType VM_PIPE = new TransportType(new String[] { "VM_PIPE" }, Object.class, false);
 
     /**
      * Returns the transport type of the specified name.
@@ -102,6 +97,7 @@ public final class TransportType implements Serializable {
                 + name);
     }
 
+
     private final String[] names;
 
     private final transient boolean connectionless;
@@ -120,7 +116,6 @@ public final class TransportType implements Serializable {
     public TransportType(String[] names, boolean connectionless) {
         this(names, ByteBuffer.class, connectionless);
     }
-
     /**
      * Creates a new instance.  New transport type is automatically registered
      * to internal registry so that you can look it up using {@link #getInstance(String)}.
@@ -130,8 +125,7 @@ public final class TransportType implements Serializable {
      *
      * @throws IllegalArgumentException if <tt>names</tt> are already registered or empty
      */
-    public TransportType(String[] names, Class<? extends Object> envelopeType,
-            boolean connectionless) {
+    public TransportType(String[] names, Class<? extends Object> envelopeType, boolean connectionless) {
         if (names == null) {
             throw new NullPointerException("names");
         }
@@ -180,11 +174,6 @@ public final class TransportType implements Serializable {
         return result;
     }
 
-    @Override
-    public String toString() {
-        return names[0];
-    }
-
     private Object readResolve() throws ObjectStreamException {
         for (int i = names.length - 1; i >= 0; i--) {
             try {
@@ -196,4 +185,10 @@ public final class TransportType implements Serializable {
 
         throw new InvalidObjectException("Unknown transport type.");
     }
+
+    @Override
+    public String toString() {
+        return names[0];
+    }
+
 }

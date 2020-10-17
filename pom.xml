@@ -73,13 +73,13 @@
   </repositories>
 
   <modules>
-    <module>core</module>
-    <module>filter-ssl</module>
-    <module>filter-codec-netty</module>
-    <module>filter-compression</module>
-    <module>integration-spring</module>
-    <module>integration-jmx</module>
-    <module>example</module>
+    <module>mina-core</module>
+    <module>mina-filter-ssl</module>
+    <module>mina-filter-codec-netty</module>
+    <module>mina-filter-compression</module>
+    <module>mina-integration-spring</module>
+    <module>mina-integration-jmx</module>
+    <module>mina-example</module>
   </modules>
   
   <build>

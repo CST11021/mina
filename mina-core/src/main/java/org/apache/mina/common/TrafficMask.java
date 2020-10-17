@@ -22,13 +22,13 @@ package org.apache.mina.common;
 import java.nio.channels.SelectionKey;
 
 /**
- * A type-safe mask that is used to control the traffic of {@link IoSession}
- * with {@link IoSession#setTrafficMask(TrafficMask)}.
+ * 类型安全的掩码，用于通过{@link IoSession＃setTrafficMask（TrafficMask）}控制{@link IoSession}的流量。
  *
  * @author The Apache Directory Project (mina-dev@directory.apache.org)
  * @version $Rev$, $Date$
  */
 public class TrafficMask {
+
     /**
      * This mask suspends both reads and writes.
      */

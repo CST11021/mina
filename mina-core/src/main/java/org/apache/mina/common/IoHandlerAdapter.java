@@ -42,14 +42,13 @@ public class IoHandlerAdapter implements IoHandler {
     }
 
     /**
-     * 当连接进入空闲状态时调用
+     * 当连接进入空闲状态时调用：即在session中设置的各种空闲类型的时间，如果再指定时间内，终端（客户端或者服务端）没有对该session进行读写操作，则触发该方法
      *
      * @param session
      * @param status
      * @throws Exception
      */
-    public void sessionIdle(IoSession session, IdleStatus status)
-            throws Exception {
+    public void sessionIdle(IoSession session, IdleStatus status) throws Exception {
     }
 
     public void exceptionCaught(IoSession session, Throwable cause)

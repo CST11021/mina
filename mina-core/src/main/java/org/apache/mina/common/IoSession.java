@@ -51,12 +51,16 @@ import java.util.Set;
 public interface IoSession {
 
     /**
-     * Returns the {@link IoService} which provides I/O service to this session.
+     * 返回为该会话提供I/O服务的IoService
+     *
+     * @return
      */
     IoService getService();
 
     /**
-     * Returns the {@link IoServiceConfig} of this session.
+     * 返回此会话的Io服务配置
+     *
+     * @return
      */
     IoServiceConfig getServiceConfig();
 
@@ -68,7 +72,9 @@ public interface IoSession {
     IoHandler getHandler();
 
     /**
-     * Returns the configuration of this session.
+     * 返回此会话的配置
+     *
+     * @return
      */
     IoSessionConfig getConfig();
 
@@ -176,10 +182,9 @@ public interface IoSession {
 
 
     /**
-     * Returns transport type of this session.
+     * 返回此会话的传输类型
      */
     TransportType getTransportType();
-
 
     /**
      * 获取客户端地址
@@ -202,35 +207,54 @@ public interface IoSession {
      */
     SocketAddress getServiceAddress();
 
+
+    // session读写空闲时间相关配置
+
     /**
-     * Returns idle time for the specified type of idleness in seconds.
+     * 返回指定空闲类型的空闲时间（以秒为单位）
+     *
+     * @param status
+     * @return
      */
     int getIdleTime(IdleStatus status);
-
     /**
-     * Returns idle time for the specified type of idleness in milliseconds.
+     * 返回指定空闲类型的空闲时间（以毫秒为单位）。
+     *
+     * @param status
+     * @return
      */
     long getIdleTimeInMillis(IdleStatus status);
-
     /**
-     * Sets idle time for the specified type of idleness in seconds.
+     * 为指定的空闲类型设置空闲时间，以秒为单位
+     *
+     * @param status
+     * @param idleTime
      */
     void setIdleTime(IdleStatus status, int idleTime);
 
+    // session写超时时间相关配置
+
     /**
-     * Returns write timeout in seconds.
+     * 返回写入超时（以秒为单位）
+     *
+     * @return
      */
     int getWriteTimeout();
-
     /**
-     * Returns write timeout in milliseconds.
+     * 返回写入超时（以毫秒为单位）
+     *
+     * @return
      */
     long getWriteTimeoutInMillis();
-
     /**
-     * Sets write timeout in seconds.
+     * 设置写超时（以秒为单位）
+     *
+     * @param writeTimeout
      */
     void setWriteTimeout(int writeTimeout);
+
+
+
 
     /**
      * Returns the current {@link TrafficMask} of this session.
@@ -257,95 +281,89 @@ public interface IoSession {
     void suspendWrite();
 
     /**
-     * A shortcut method for {@link #setTrafficMask(TrafficMask)} that
-     * resumes read operations for this session.
+     * A shortcut method for {@link #setTrafficMask(TrafficMask)} that resumes read operations for this session.
      */
     void resumeRead();
 
     /**
-     * A shortcut method for {@link #setTrafficMask(TrafficMask)} that
-     * resumes write operations for this session.
+     * A shortcut method for {@link #setTrafficMask(TrafficMask)} that resumes write operations for this session.
      */
     void resumeWrite();
 
     /**
-     * Returns the total number of bytes which were read from this session.
+     *返回从该会话读取的字节总数
      */
     long getReadBytes();
 
     /**
-     * Returns the total number of bytes which were written to this session.
+     * 返回写入此会话的字节总数
      */
     long getWrittenBytes();
 
     /**
-     * Returns the total number of messages which were read and decoded from this session.
+     * 返回从此会话读取和解码的消息总数
      */
     long getReadMessages();
 
     /**
-     * Returns the total number of messages which were written and encoded by this session.
+     * 返回此会话编写和编码的消息总数
      */
     long getWrittenMessages();
 
     /**
-     * Returns the total number of write requests which were written to this session.
+     * 返回已写入此会话的写请求总数
      */
     long getWrittenWriteRequests();
 
     /**
-     * Returns the number of write requests which are scheduled to be written
-     * to this session.
+     * 返回计划写入此会话的写入请求数
      */
     int getScheduledWriteRequests();
 
     /**
-     * Returns the number of bytes which are scheduled to be written to this
-     * session.
+     * 返回计划写入此会话的字节数
      */
     int getScheduledWriteBytes();
 
     /**
-     * Returns the time in millis when this session is created.
+     * 返回创建此会话时的时间（以毫秒为单位）
      */
     long getCreationTime();
 
     /**
-     * Returns the time in millis when I/O occurred lastly.
+     * 以毫秒为单位返回上一次发生I/O的时间
      */
     long getLastIoTime();
 
     /**
-     * Returns the time in millis when read operation occurred lastly.
+     * 返回上一次读取操作发生的时间（以毫秒为单位）
      */
     long getLastReadTime();
 
     /**
-     * Returns the time in millis when write operation occurred lastly.
+     * 返回上一次发生写操作的时间，以毫秒为单位
      */
     long getLastWriteTime();
 
     /**
-     * Returns <code>true</code> if this session is idle for the specified
-     * {@link IdleStatus}.
+     * 判断该session当前是否处于指定的空闲状态
+     *
+     * @param status
+     * @return
      */
     boolean isIdle(IdleStatus status);
 
     /**
-     * Returns the number of the fired continuous <tt>sessionIdle</tt> events
-     * for the specified {@link IdleStatus}.
-     * <p>
-     * If <tt>sessionIdle</tt> event is fired first after some time after I/O,
-     * <tt>idleCount</tt> becomes <tt>1</tt>.  <tt>idleCount</tt> resets to
-     * <tt>0</tt> if any I/O occurs again, otherwise it increases to
-     * <tt>2</tt> and so on if <tt>sessionIdle</tt> event is fired again without
-     * any I/O between two (or more) <tt>sessionIdle</tt> events.
+     * 返回该session发生IdleStatus事件的次数
+     *
+     * @param status
+     * @return
      */
     int getIdleCount(IdleStatus status);
 
     /**
-     * Returns the time in millis when the last <tt>sessionIdle</tt> event
-     * is fired for the specified {@link IdleStatus}.
+     * 返回该session最后一次发生IdleStatus事件的时间（单位毫秒）
      */
     long getLastIdleTime(IdleStatus status);
+
 }

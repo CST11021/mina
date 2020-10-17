@@ -37,24 +37,30 @@ import org.slf4j.LoggerFactory;
  * @version $Rev$, $Date$,
  */
 public class EchoProtocolHandler extends IoHandlerAdapter {
-    private static final Logger log = LoggerFactory
-            .getLogger(EchoProtocolHandler.class);
+
+    private static final Logger log = LoggerFactory.getLogger(EchoProtocolHandler.class);
 
     public void sessionCreated(IoSession session) {
         if (session.getTransportType() == TransportType.SOCKET) {
-            ((SocketSessionConfig) session.getConfig())
-                    .setReceiveBufferSize(2048);
+            ((SocketSessionConfig) session.getConfig()).setReceiveBufferSize(2048);
         }
 
+        // 设置session读写空闲时间为10秒，在10秒内，如果终端（客户端或者服务端）没有对session进行读写操作，则触发sessionIdle()方法
         session.setIdleTime(IdleStatus.BOTH_IDLE, 10);
 
         // We're going to use SSL negotiation notification.
         session.setAttribute(SSLFilter.USE_NOTIFICATION);
     }
 
+    /**
+     * 当连接进入空闲状态时调用：即在session中设置的各种空闲类型的时间，如果再指定时间内，终端（客户端或者服务端）没有对该session进行读写操作，则触发该方法
+     *
+     * @param session
+     * @param status
+     * @throws Exception
+     */
     public void sessionIdle(IoSession session, IdleStatus status) {
-        log.info("*** IDLE #" + session.getIdleCount(IdleStatus.BOTH_IDLE)
-                + " ***");
+        log.info("*** IDLE #" + session.getIdleCount(IdleStatus.BOTH_IDLE) + " ***");
     }
 
     public void exceptionCaught(IoSession session, Throwable cause) {
@@ -62,8 +68,14 @@ public class EchoProtocolHandler extends IoHandlerAdapter {
         session.close();
     }
 
-    public void messageReceived(IoSession session, Object message)
-            throws Exception {
+    /**
+     * 当接收到消息时调用该方法，这里是从客户端什么消息就回复什么消息
+     *
+     * @param session
+     * @param message
+     * @throws Exception
+     */
+    public void messageReceived(IoSession session, Object message) throws Exception {
         if (!(message instanceof ByteBuffer)) {
             return;
         }
@@ -72,6 +84,7 @@ public class EchoProtocolHandler extends IoHandlerAdapter {
         // Write the received data back to remote peer
         ByteBuffer wb = ByteBuffer.allocate(rb.remaining());
         wb.put(rb);
+        // 将一个处于存数据状态的缓冲区变为一个处于准备取数据的状态，当往session写数据时，需要将数据从缓冲区读出来
         wb.flip();
         session.write(wb);
     }

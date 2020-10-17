@@ -5,6 +5,7 @@ package org.apache.mina.example.haiku;
  * @version $Rev: $, $Date:  $
  */
 public class PhraseUtilities {
+
     static int countSyllablesInPhrase(String phrase) {
         int syllables = 0;
 
@@ -58,7 +59,7 @@ public class PhraseUtilities {
     }
 
     static boolean isVowel(char c) {
-        return c == 'a' || c == 'e' || c == 'i' || c == 'o' || c == 'u'
-                || c == 'y';
+        return c == 'a' || c == 'e' || c == 'i' || c == 'o' || c == 'u' || c == 'y';
     }
+
 }
