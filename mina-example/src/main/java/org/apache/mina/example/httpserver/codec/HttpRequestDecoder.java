@@ -42,8 +42,8 @@ import org.apache.mina.filter.codec.demux.MessageDecoderResult;
  * @version $Rev$, $Date$
  */
 public class HttpRequestDecoder extends MessageDecoderAdapter {
-    private static final byte[] CONTENT_LENGTH = new String("Content-Length:")
-            .getBytes();
+
+    private static final byte[] CONTENT_LENGTH = new String("Content-Length:").getBytes();
 
     private CharsetDecoder decoder = Charset.defaultCharset().newDecoder();
 
@@ -55,8 +55,7 @@ public class HttpRequestDecoder extends MessageDecoderAdapter {
     public MessageDecoderResult decodable(IoSession session, ByteBuffer in) {
         // Return NEED_DATA if the whole header is not read yet.
         try {
-            return messageComplete(in) ? MessageDecoderResult.OK
-                    : MessageDecoderResult.NEED_DATA;
+            return messageComplete(in) ? MessageDecoderResult.OK : MessageDecoderResult.NEED_DATA;
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -64,8 +63,7 @@ public class HttpRequestDecoder extends MessageDecoderAdapter {
         return MessageDecoderResult.NOT_OK;
     }
 
-    public MessageDecoderResult decode(IoSession session, ByteBuffer in,
-            ProtocolDecoderOutput out) throws Exception {
+    public MessageDecoderResult decode(IoSession session, ByteBuffer in, ProtocolDecoderOutput out) throws Exception {
         // Try to decode body
         HttpRequestMessage m = decodeBody(in);
 
@@ -137,8 +135,7 @@ public class HttpRequestDecoder extends MessageDecoderAdapter {
     private HttpRequestMessage decodeBody(ByteBuffer in) {
         request = new HttpRequestMessage();
         try {
-            request.setHeaders(parseRequest(new StringReader(in
-                    .getString(decoder))));
+            request.setHeaders(parseRequest(new StringReader(in.getString(decoder))));
             return request;
         } catch (CharacterCodingException ex) {
             ex.printStackTrace();
@@ -152,17 +149,22 @@ public class HttpRequestDecoder extends MessageDecoderAdapter {
         BufferedReader rdr = new BufferedReader(is);
 
         try {
-            // Get request URL.
+            // GET /abc/test?name=whz HTTP/1.1
             String line = rdr.readLine();
             String[] url = line.split(" ");
             if (url.length < 3)
                 return map;
 
+            // GET /abc/test?name=whz HTTP/1.1
             map.put("URI", new String[] { line });
+            // get
             map.put("Method", new String[] { url[0].toUpperCase() });
+            // /abc/test?name=whz
             map.put("Context", new String[] { url[1].substring(1) });
+            // HTTP/1.1
             map.put("Protocol", new String[] { url[2] });
-            // Read header
+
+            // 解析head信息
             while ((line = rdr.readLine()) != null && line.length() > 0) {
                 String[] tokens = line.split(": ");
                 map.put(tokens[0], new String[] { tokens[1] });
@@ -178,13 +180,13 @@ public class HttpRequestDecoder extends MessageDecoderAdapter {
             } else if (url[0].equalsIgnoreCase("GET")) {
                 int idx = url[1].indexOf('?');
                 if (idx != -1) {
-                    map.put("Context",
-                            new String[] { url[1].substring(1, idx) });
+                    map.put("Context", new String[] { url[1].substring(1, idx) });
                     line = url[1].substring(idx + 1);
                 } else {
                     line = null;
                 }
             }
+
             if (line != null) {
                 String[] match = line.split("\\&");
                 for (int i = 0; i < match.length; i++) {

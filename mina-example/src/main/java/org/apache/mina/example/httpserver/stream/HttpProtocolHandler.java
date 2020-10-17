@@ -6,16 +6,16 @@
  *  to you under the Apache License, Version 2.0 (the
  *  "License"); you may not use this file except in compliance
  *  with the License.  You may obtain a copy of the License at
- *  
+ *
  *    http://www.apache.org/licenses/LICENSE-2.0
- *  
+ *
  *  Unless required by applicable law or agreed to in writing,
  *  software distributed under the License is distributed on an
  *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
  *  KIND, either express or implied.  See the License for the
  *  specific language governing permissions and limitations
- *  under the License. 
- *  
+ *  under the License.
+ *
  */
 package org.apache.mina.example.httpserver.stream;
 
@@ -38,23 +38,25 @@ import org.apache.mina.handler.StreamIoHandler;
 /**
  * A simplistic HTTP protocol handler that replies back the URL and headers
  * which a client requested.
- * 
+ *
  * @author The Apache Directory Project (mina-dev@directory.apache.org)
  * @version $Rev$, $Date$
  */
 public class HttpProtocolHandler extends StreamIoHandler {
-    protected void processStreamIo(IoSession session, InputStream in,
-            OutputStream out) {
-        // You *MUST* execute stream I/O logic in a separate thread.
+
+    protected void processStreamIo(IoSession session, InputStream in, OutputStream out) {
+        // 您必须在单独的线程中执行流I/O逻辑。
         new Worker(in, out).start();
     }
 
     private static class Worker extends Thread {
+
         private final InputStream in;
 
         private final OutputStream out;
 
         public Worker(InputStream in, OutputStream out) {
+            // 设置为守护线程
             setDaemon(true);
             this.in = in;
             this.out = out;
@@ -63,14 +65,13 @@ public class HttpProtocolHandler extends StreamIoHandler {
         public void run() {
             String url;
             Map<String, String> headers = new TreeMap<String, String>();
-            BufferedReader in = new BufferedReader(new InputStreamReader(
-                    this.in));
-            PrintWriter out = new PrintWriter(new BufferedWriter(
-                    new OutputStreamWriter(this.out)));
+            BufferedReader in = new BufferedReader(new InputStreamReader(this.in));
+            PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(this.out)));
 
             try {
-                // Get request URL.
-                url = in.readLine().split(" ")[1];
+                // 例如：GET /abc/test?name=whz HTTP/1.1
+                String readLine = in.readLine();
+                url = readLine.split(" ")[1];
 
                 // Read header
                 String line;
@@ -88,14 +89,12 @@ public class HttpProtocolHandler extends StreamIoHandler {
                 // Write content
                 out.println("<html><head></head><body>");
                 out.println("<h3>Request Summary for: " + url + "</h3>");
-                out
-                        .println("<table border=\"1\"><tr><th>Key</th><th>Value</th></tr>");
+                out.println("<table border=\"1\"><tr><th>Key</th><th>Value</th></tr>");
 
                 Iterator it = headers.entrySet().iterator();
                 while (it.hasNext()) {
                     Entry e = (Entry) it.next();
-                    out.println("<tr><td>" + e.getKey() + "</td><td>"
-                            + e.getValue() + "</td></tr>");
+                    out.println("<tr><td>" + e.getKey() + "</td><td>" + e.getValue() + "</td></tr>");
                 }
 
                 out.println("</table>");
@@ -117,4 +116,5 @@ public class HttpProtocolHandler extends StreamIoHandler {
             }
         }
     }
+
 }

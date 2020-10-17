@@ -43,8 +43,7 @@ public class ClientToProxyIoHandler extends AbstractProxyIoHandler {
 
     private final InetSocketAddress address;
 
-    public ClientToProxyIoHandler(ServerToProxyIoHandler connectorHandler,
-            IoConnector connector, InetSocketAddress address) {
+    public ClientToProxyIoHandler(ServerToProxyIoHandler connectorHandler, IoConnector connector, InetSocketAddress address) {
         this.connectorHandler = connectorHandler;
         this.connector = connector;
         this.address = address;

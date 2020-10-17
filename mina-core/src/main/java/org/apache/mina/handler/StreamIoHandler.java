@@ -45,11 +45,10 @@ import org.apache.mina.util.SessionLog;
  * @version $Rev$, $Date$
  */
 public abstract class StreamIoHandler extends IoHandlerAdapter {
-    private static final String KEY_IN = StreamIoHandler.class.getName()
-            + ".in";
 
-    private static final String KEY_OUT = StreamIoHandler.class.getName()
-            + ".out";
+    private static final String KEY_IN = StreamIoHandler.class.getName() + ".in";
+
+    private static final String KEY_OUT = StreamIoHandler.class.getName() + ".out";
 
     private int readTimeout;
 
@@ -59,12 +58,9 @@ public abstract class StreamIoHandler extends IoHandlerAdapter {
     }
 
     /**
-     * Implement this method to execute your stream I/O logic;
-     * <b>please note that you must forward the process request to other
-     * thread or thread pool.</b>
+     * 实现此方法以执行流I/O逻辑，注意，您必须将流程请求转发到其他线程或线程池
      */
-    protected abstract void processStreamIo(IoSession session, InputStream in,
-            OutputStream out);
+    protected abstract void processStreamIo(IoSession session, InputStream in, OutputStream out);
 
     /**
      * Returns read timeout in seconds.
@@ -128,11 +124,10 @@ public abstract class StreamIoHandler extends IoHandlerAdapter {
     }
 
     /**
-     * Forwards read data to input stream.
+     * 将读取的数据转发到输入流
      */
     public void messageReceived(IoSession session, Object buf) {
-        final IoSessionInputStream in = (IoSessionInputStream) session
-                .getAttribute(KEY_IN);
+        final IoSessionInputStream in = (IoSessionInputStream) session.getAttribute(KEY_IN);
         in.write((ByteBuffer) buf);
     }
 
@@ -140,8 +135,7 @@ public abstract class StreamIoHandler extends IoHandlerAdapter {
      * Forwards caught exceptions to input stream.
      */
     public void exceptionCaught(IoSession session, Throwable cause) {
-        final IoSessionInputStream in = (IoSessionInputStream) session
-                .getAttribute(KEY_IN);
+        final IoSessionInputStream in = (IoSessionInputStream) session.getAttribute(KEY_IN);
 
         IOException e = null;
         if (cause instanceof StreamIoException) {
@@ -163,8 +157,7 @@ public abstract class StreamIoHandler extends IoHandlerAdapter {
      */
     public void sessionIdle(IoSession session, IdleStatus status) {
         if (status == IdleStatus.READER_IDLE) {
-            throw new StreamIoException(new SocketTimeoutException(
-                    "Read timeout"));
+            throw new StreamIoException(new SocketTimeoutException("Read timeout"));
         }
     }
 

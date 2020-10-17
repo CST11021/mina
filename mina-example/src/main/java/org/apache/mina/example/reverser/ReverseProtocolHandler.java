@@ -30,21 +30,30 @@ import org.apache.mina.common.IoSession;
  * @version $Rev$, $Date$,
  */
 public class ReverseProtocolHandler extends IoHandlerAdapter {
-    public void exceptionCaught(IoSession session, Throwable cause) {
-        cause.printStackTrace();
-        // Close connection when unexpected exception is caught.
-        session.close();
-    }
 
+    /**
+     * 将收到字符串消息进行反转，然后回写，例如：
+     * request：123abc
+     * response：cba321
+     *
+     * @param session
+     * @param message
+     */
     public void messageReceived(IoSession session, Object message) {
-        // Reverse reveiced string
         String str = message.toString();
         StringBuffer buf = new StringBuffer(str.length());
         for (int i = str.length() - 1; i >= 0; i--) {
             buf.append(str.charAt(i));
         }
 
-        // and write it back.
         session.write(buf.toString());
+        System.out.println(buf.toString());
     }
+
+    public void exceptionCaught(IoSession session, Throwable cause) {
+        cause.printStackTrace();
+        // Close connection when unexpected exception is caught.
+        session.close();
+    }
+
 }

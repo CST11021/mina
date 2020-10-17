@@ -30,7 +30,14 @@ import java.util.Map.Entry;
  * @version $Rev$, $Date$
  */
 public class HttpRequestMessage {
-    /** Map<String, String[]> */
+
+    /**
+     * Map<String, String[]>
+     * 1、key为"Context"的表示消息体；
+     * 2、key是"@"开头的表示请求参数；
+     * 2、其他的都是head头属性；
+     *
+     */
     private Map headers = null;
 
     public void setHeaders(Map headers) {

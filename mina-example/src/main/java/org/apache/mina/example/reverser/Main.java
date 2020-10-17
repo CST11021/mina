@@ -46,14 +46,10 @@ public class Main {
         SocketAcceptorConfig cfg = new SocketAcceptorConfig();
         cfg.setReuseAddress(true);
         cfg.getFilterChain().addLast("logger", new LoggingFilter());
-        cfg.getFilterChain().addLast(
-                "codec",
-                new ProtocolCodecFilter(new TextLineCodecFactory(Charset
-                        .forName("UTF-8"))));
+        cfg.getFilterChain().addLast("codec", new ProtocolCodecFilter(new TextLineCodecFactory(Charset.forName("UTF-8"))));
 
         // Bind
-        acceptor.bind(new InetSocketAddress(PORT),
-                new ReverseProtocolHandler(), cfg);
+        acceptor.bind(new InetSocketAddress(PORT), new ReverseProtocolHandler(), cfg);
 
         System.out.println("Listening on port " + PORT);
     }

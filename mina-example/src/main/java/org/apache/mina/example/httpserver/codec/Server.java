@@ -34,6 +34,7 @@ import org.apache.mina.transport.socket.nio.SocketAcceptorConfig;
  * @version $Rev$, $Date$
  */
 public class Server {
+
     /** Default HTTP port */
     private static int DEFAULT_PORT = 8080;
 
@@ -56,15 +57,10 @@ public class Server {
             // Create a service configuration
             SocketAcceptorConfig cfg = new SocketAcceptorConfig();
             cfg.setReuseAddress(true);
-            cfg.getFilterChain().addLast(
-                    "protocolFilter",
-                    new ProtocolCodecFilter(
-                            new HttpServerProtocolCodecFactory()));
+            cfg.getFilterChain().addLast("protocolFilter", new ProtocolCodecFilter(new HttpServerProtocolCodecFactory()));
             cfg.getFilterChain().addLast("logger", new LoggingFilter());
 
-            acceptor
-                    .bind(new InetSocketAddress(port), new ServerHandler(), cfg);
-
+            acceptor.bind(new InetSocketAddress(port), new ServerHandler(), cfg);
             System.out.println("Server now listening on port " + port);
         } catch (Exception ex) {
             ex.printStackTrace();

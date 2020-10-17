@@ -27,10 +27,11 @@ import org.apache.mina.filter.codec.demux.DemuxingProtocolCodecFactory;
  * @author The Apache Directory Project (mina-dev@directory.apache.org)
  * @version $Rev$, $Date$
  */
-public class HttpServerProtocolCodecFactory extends
-        DemuxingProtocolCodecFactory {
+public class HttpServerProtocolCodecFactory extends DemuxingProtocolCodecFactory {
+
     public HttpServerProtocolCodecFactory() {
         super.register(HttpRequestDecoder.class);
         super.register(HttpResponseEncoder.class);
     }
+
 }

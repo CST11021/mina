@@ -54,23 +54,19 @@ public class Main {
 
         // Create TCP/IP acceptor.
         IoAcceptor acceptor = new SocketAcceptor();
-        ((SocketAcceptorConfig) acceptor.getDefaultConfig())
-                .setReuseAddress(true);
+        ((SocketAcceptorConfig) acceptor.getDefaultConfig()).setReuseAddress(true);
 
         // Create TCP/IP connector.
         IoConnector connector = new SocketConnector();
 
         // Set connect timeout.
-        ((IoConnectorConfig) connector.getDefaultConfig())
-                .setConnectTimeout(30);
+        ((IoConnectorConfig) connector.getDefaultConfig()).setConnectTimeout(30);
 
         ClientToProxyIoHandler handler = new ClientToProxyIoHandler(
-                new ServerToProxyIoHandler(), connector, new InetSocketAddress(
-                        args[1], Integer.parseInt(args[2])));
+                new ServerToProxyIoHandler(), connector, new InetSocketAddress(args[1], Integer.parseInt(args[2])));
 
         // Start proxy.
-        acceptor
-                .bind(new InetSocketAddress(Integer.parseInt(args[0])), handler);
+        acceptor.bind(new InetSocketAddress(Integer.parseInt(args[0])), handler);
 
         System.out.println("Listening on port " + Integer.parseInt(args[0]));
     }

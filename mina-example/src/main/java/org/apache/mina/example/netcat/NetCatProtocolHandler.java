@@ -33,6 +33,7 @@ import org.apache.mina.common.IoSession;
  * @version $Rev$, $Date$,
  */
 public class NetCatProtocolHandler extends IoHandlerAdapter {
+
     public void sessionOpened(IoSession session) {
         // Set reader idle time to 10 seconds.
         // sessionIdle(...) method will be invoked when no data is read

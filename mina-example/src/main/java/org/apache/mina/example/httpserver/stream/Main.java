@@ -54,17 +54,14 @@ public class Main {
         }
 
         // Bind
-        acceptor.bind(new InetSocketAddress(PORT), new HttpProtocolHandler(),
-                config);
+        acceptor.bind(new InetSocketAddress(PORT), new HttpProtocolHandler(), config);
 
         System.out.println("Listening on port " + PORT);
     }
 
-    private static void addSSLSupport(DefaultIoFilterChainBuilder chain)
-            throws Exception {
+    private static void addSSLSupport(DefaultIoFilterChainBuilder chain) throws Exception {
         System.out.println("SSL is enabled.");
-        SSLFilter sslFilter = new SSLFilter(BogusSSLContextFactory
-                .getInstance(true));
+        SSLFilter sslFilter = new SSLFilter(BogusSSLContextFactory.getInstance(true));
         chain.addLast("sslFilter", sslFilter);
     }
 }

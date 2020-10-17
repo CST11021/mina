@@ -34,6 +34,7 @@ import org.apache.mina.transport.socket.nio.SocketConnector;
  * @version $Rev$, $Date$,
  */
 public class Main {
+
     public static void main(String[] args) throws Exception {
         if (args.length != 2) {
             System.out.println(Main.class.getName() + " <hostname> <port>");
@@ -44,14 +45,12 @@ public class Main {
         SocketConnector connector = new SocketConnector();
 
         // Set connect timeout.
-        ((IoConnectorConfig) connector.getDefaultConfig())
-                .setConnectTimeout(15);
+        ((IoConnectorConfig) connector.getDefaultConfig()).setConnectTimeout(15);
 
         // Start communication.
-        ConnectFuture cf = connector.connect(new InetSocketAddress(
-                args[0], Integer.parseInt(args[1])), new NetCatProtocolHandler());
+        ConnectFuture cf = connector.connect(new InetSocketAddress(args[0], Integer.parseInt(args[1])), new NetCatProtocolHandler());
         
-        // Wait for the connection attempt to be finished.
+        // 等待连接尝试完成
         cf.join();
         cf.getSession();
     }

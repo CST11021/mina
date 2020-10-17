@@ -40,6 +40,7 @@ import org.apache.mina.filter.codec.demux.MessageEncoder;
  * @version $Rev$, $Date$
  */
 public class HttpResponseEncoder implements MessageEncoder {
+
     private static final Set<Class<?>> TYPES;
 
     static {
@@ -53,8 +54,7 @@ public class HttpResponseEncoder implements MessageEncoder {
     public HttpResponseEncoder() {
     }
 
-    public void encode(IoSession session, Object message,
-            ProtocolEncoderOutput out) throws Exception {
+    public void encode(IoSession session, Object message, ProtocolEncoderOutput out) throws Exception {
         HttpResponseMessage msg = (HttpResponseMessage) message;
         ByteBuffer buf = ByteBuffer.allocate(256);
         // Enable auto-expand for easier encoding
@@ -66,16 +66,15 @@ public class HttpResponseEncoder implements MessageEncoder {
             buf.putString("HTTP/1.1 ", encoder);
             buf.putString(String.valueOf(msg.getResponseCode()), encoder);
             switch (msg.getResponseCode()) {
-            case HttpResponseMessage.HTTP_STATUS_SUCCESS:
-                buf.putString(" OK", encoder);
-                break;
-            case HttpResponseMessage.HTTP_STATUS_NOT_FOUND:
-                buf.putString(" Not Found", encoder);
-                break;
+                case HttpResponseMessage.HTTP_STATUS_SUCCESS:
+                    buf.putString(" OK", encoder);
+                    break;
+                case HttpResponseMessage.HTTP_STATUS_NOT_FOUND:
+                    buf.putString(" Not Found", encoder);
+                    break;
             }
             buf.put(CRLF);
-            for (Iterator it = msg.getHeaders().entrySet().iterator(); it
-                    .hasNext();) {
+            for (Iterator it = msg.getHeaders().entrySet().iterator(); it.hasNext();) {
                 Entry entry = (Entry) it.next();
                 buf.putString((String) entry.getKey(), encoder);
                 buf.putString(": ", encoder);
@@ -103,4 +102,5 @@ public class HttpResponseEncoder implements MessageEncoder {
     public Set<Class<?>> getMessageTypes() {
         return TYPES;
     }
+
 }

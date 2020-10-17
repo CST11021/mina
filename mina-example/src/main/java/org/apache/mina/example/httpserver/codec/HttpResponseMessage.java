@@ -35,6 +35,7 @@ import org.apache.mina.common.ByteBuffer;
  * @version $Rev$, $Date$
  */
 public class HttpResponseMessage {
+
     /** HTTP response codes */
     public static final int HTTP_STATUS_SUCCESS = 200;
 
@@ -99,4 +100,5 @@ public class HttpResponseMessage {
     public int getBodyLength() {
         return body.size();
     }
+
 }
