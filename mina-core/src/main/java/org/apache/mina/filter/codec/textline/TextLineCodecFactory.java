@@ -36,8 +36,9 @@ import org.apache.mina.filter.codec.ProtocolEncoder;
  */
 public class TextLineCodecFactory implements ProtocolCodecFactory {
 
+    /** 文本行编码器（用于将字节序列化为字节） */
     private final TextLineEncoder encoder;
-
+    /** 文本行解码器（用于将字节反序列化为字节） */
     private final TextLineDecoder decoder;
 
     /**

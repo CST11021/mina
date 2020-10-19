@@ -20,9 +20,7 @@
 package org.apache.mina.filter.codec;
 
 /**
- * Callback for {@link ProtocolDecoder} to generate decoded messages.
- * {@link ProtocolDecoder} must call {@link #write(Object)} for each decoded
- * messages.
+ * 用于保存字节解码（反序列化）后的对象，然后调用下一个过滤器继续处理消息
  * 
  * @author The Apache Directory Project (mina-dev@directory.apache.org)
  * @version $Rev$, $Date$
@@ -30,14 +28,14 @@ package org.apache.mina.filter.codec;
 public interface ProtocolDecoderOutput {
 
     /**
-     * 通过ProtocolDecoder生成解码的消息后，通过该方法将数据转为对象
-     * 
+     * 保存反序列化后的消息对象
+     *
      * @param message the decoded message
      */
     void write(Object message);
 
     /**
-     * 将您通过{@link #write(Object)}编写的所有消息刷新到下一个过滤器。
+     * 字节消息解码完成（反序列化）后，调用下一个过滤器继续处理消息
      */
     void flush();
 

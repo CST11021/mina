@@ -38,6 +38,7 @@ import org.apache.mina.filter.codec.ProtocolDecoderOutput;
  * @version $Rev$, $Date$,
  */
 public class NettyDecoder extends ProtocolDecoderAdapter {
+
     private final MessageRecognizer recognizer;
 
     private java.nio.ByteBuffer readBuf = java.nio.ByteBuffer.allocate(1024);
@@ -68,8 +69,7 @@ public class NettyDecoder extends ProtocolDecoderAdapter {
         readBuf = newBuf;
     }
 
-    public void decode(IoSession session, ByteBuffer in,
-            ProtocolDecoderOutput out) throws Exception {
+    public void decode(IoSession session, ByteBuffer in, ProtocolDecoderOutput out) throws Exception {
         put(in);
 
         Message m = readingMessage;

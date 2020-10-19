@@ -44,6 +44,7 @@ public class TextLineDecoder implements ProtocolDecoder {
     /** 表示行末端的定界符 */
     private final LineDelimiter delimiter;
 
+    /** 表示行末端的定界符 */
     private ByteBuffer delimBuf;
 
     /** 设置要解码的行的最大允许大小，如果要解码的行的大小超出此值，则解码器将引发{@link BufferDataException}，默认值为1024（1KB） */
@@ -80,23 +81,11 @@ public class TextLineDecoder implements ProtocolDecoder {
     }
 
 
-
-    public int getMaxLineLength() {
-        return maxLineLength;
-    }
-    public void setMaxLineLength(int maxLineLength) {
-        if (maxLineLength <= 0) {
-            throw new IllegalArgumentException("maxLineLength: " + maxLineLength);
-        }
-
-        this.maxLineLength = maxLineLength;
-    }
-
     /**
-     * 通过ProtocolDecoderOutput将缓冲区的字节转为ByteBuffer对应的对象，每个buffer都会指定反序列化后对象类型
+     * 将ByteBuffer中的字节转为字符串，然后写到ProtocolDecoderOutput，然后后续ProtocolDecoderOutput通过flush()方法，进行反序列化操作
      *
      * @param session
-     * @param in
+     * @param in            消息对应的ByteBuffer
      * @param out
      * @throws Exception
      */
@@ -129,23 +118,25 @@ public class TextLineDecoder implements ProtocolDecoder {
         // Try to find a match
         int oldPos = in.position();
         int oldLimit = in.limit();
+
         while (in.hasRemaining()) {
             byte b = in.get();
             boolean matched = false;
             switch (b) {
-            case '\r':
-                // 可能是Mac，但我们不会自动检测Mac EOL以免造成混淆
-                matchCount++;
-                break;
-            case '\n':
-                // UNIX
-                matchCount++;
-                matched = true;
-                break;
-            default:
-                matchCount = 0;
+                case '\r':
+                    // 可能是Mac，但我们不会自动检测Mac EOL以免造成混淆
+                    matchCount++;
+                    break;
+                case '\n':
+                    // UNIX
+                    matchCount++;
+                    matched = true;
+                    break;
+                default:
+                    matchCount = 0;
             }
 
+            // 平台是UNIX的情况
             if (matched) {
                 // Found a match.
                 int pos = in.position();
@@ -161,11 +152,13 @@ public class TextLineDecoder implements ProtocolDecoder {
                     ByteBuffer buf = ctx.getBuffer();
                     buf.flip();
                     buf.limit(buf.limit() - matchCount);
+
                     try {
                         out.write(buf.getString(ctx.getDecoder()));
                     } finally {
                         buf.clear();
                     }
+
                 } else {
                     int overflowPosition = ctx.getOverflowPosition();
                     ctx.reset();
@@ -184,11 +177,19 @@ public class TextLineDecoder implements ProtocolDecoder {
         ctx.setMatchCount(matchCount);
     }
 
+    /**
+     * 将ByteBuffer中的字节转为字符串，然后写到ProtocolDecoderOutput，然后后续ProtocolDecoderOutput通过flush()方法，进行反序列化操作
+     *
+     * @param ctx
+     * @param in
+     * @param out
+     * @throws CharacterCodingException
+     */
     private void decodeNormal(Context ctx, ByteBuffer in, ProtocolDecoderOutput out) throws CharacterCodingException {
 
         int matchCount = ctx.getMatchCount();
         
-        // 如果尚未将定界符转换为ByteBuffer
+        // 确定当前消息的行末定界符
         if (delimBuf == null) {
             ByteBuffer tmp = ByteBuffer.allocate(2).setAutoExpand(true);
             tmp.putString(delimiter.getValue(), charset.newEncoder());
@@ -199,6 +200,8 @@ public class TextLineDecoder implements ProtocolDecoder {
         // Try to find a match
         int oldPos = in.position();
         int oldLimit = in.limit();
+
+        // 依次遍历字节缓存区的每个字节
         while (in.hasRemaining()) {
             byte b = in.get();
             if (delimBuf.get(matchCount) == b) {
@@ -219,6 +222,7 @@ public class TextLineDecoder implements ProtocolDecoder {
                         buf.flip();
                         buf.limit(buf.limit() - matchCount);
                         try {
+                            // 将字节转为字符串，然后写到out
                             out.write(buf.getString(ctx.getDecoder()));
                         } finally {
                             buf.clear();
@@ -226,8 +230,7 @@ public class TextLineDecoder implements ProtocolDecoder {
                     } else {
                         int overflowPosition = ctx.getOverflowPosition();
                         ctx.reset();
-                        throw new BufferDataException(
-                                "Line is too long: " + overflowPosition);
+                        throw new BufferDataException("Line is too long: " + overflowPosition);
                     }
 
                     oldPos = pos;
@@ -247,6 +250,12 @@ public class TextLineDecoder implements ProtocolDecoder {
         ctx.setMatchCount(matchCount);
     }
 
+    /**
+     * 从session获取"org.apache.mina.filter.codec.textline.TextLineDecoder.context"属性
+     *
+     * @param session
+     * @return
+     */
     private Context getContext(IoSession session) {
         Context ctx = (Context) session.getAttribute(CONTEXT);
         if (ctx == null) {
@@ -256,8 +265,23 @@ public class TextLineDecoder implements ProtocolDecoder {
         return ctx;
     }
 
+
+    // getter and setter ...
+
+    public int getMaxLineLength() {
+        return maxLineLength;
+    }
+    public void setMaxLineLength(int maxLineLength) {
+        if (maxLineLength <= 0) {
+            throw new IllegalArgumentException("maxLineLength: " + maxLineLength);
+        }
+
+        this.maxLineLength = maxLineLength;
+    }
+
     private class Context {
 
+        /** 解码时使用的编码类型 */
         private final CharsetDecoder decoder;
         private final ByteBuffer buf;
         private int matchCount = 0;
@@ -283,7 +307,6 @@ public class TextLineDecoder implements ProtocolDecoder {
         public int getMatchCount() {
             return matchCount;
         }
-
         public void setMatchCount(int matchCount) {
             this.matchCount = matchCount;
         }

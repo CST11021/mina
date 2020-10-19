@@ -59,8 +59,16 @@ public abstract class AbstractMessageDecoder implements MessageDecoder {
         return MessageDecoderResult.NOT_OK;
     }
 
-    public MessageDecoderResult decode(IoSession session, ByteBuffer in,
-            ProtocolDecoderOutput out) throws Exception {
+    /**
+     * 将接收到消息反序列化为AbstractMessage对象，并保存到ProtocolDecoderOutput
+     *
+     * @param session
+     * @param in
+     * @param out
+     * @return
+     * @throws Exception
+     */
+    public MessageDecoderResult decode(IoSession session, ByteBuffer in, ProtocolDecoderOutput out) throws Exception {
         // Try to skip header if not read.
         if (!readHeader) {
             in.getShort(); // Skip 'type'.
@@ -85,6 +93,5 @@ public abstract class AbstractMessageDecoder implements MessageDecoder {
     /**
      * @return <tt>null</tt> if the whole body is not read yet
      */
-    protected abstract AbstractMessage decodeBody(IoSession session,
-            ByteBuffer in);
+    protected abstract AbstractMessage decodeBody(IoSession session, ByteBuffer in);
 }

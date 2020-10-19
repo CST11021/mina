@@ -22,16 +22,16 @@ package org.apache.mina.example.reverser;
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
 
-import org.apache.mina.common.IoAcceptor;
+import org.apache.mina.common.*;
 import org.apache.mina.filter.LoggingFilter;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
 import org.apache.mina.filter.codec.textline.TextLineCodecFactory;
 import org.apache.mina.transport.socket.nio.SocketAcceptor;
 import org.apache.mina.transport.socket.nio.SocketAcceptorConfig;
+import org.apache.mina.transport.socket.nio.SocketConnector;
 
 /**
- * (<b>Entry point</b>) Reverser server which reverses all text lines from
- * clients.
+ * 该服务用于测试反转字符串
  * 
  * @author The Apache Directory Project (mina-dev@directory.apache.org)
  * @version $Rev$, $Date$,
@@ -52,5 +52,71 @@ public class Main {
         acceptor.bind(new InetSocketAddress(PORT), new ReverseProtocolHandler(), cfg);
 
         System.out.println("Listening on port " + PORT);
+
+        // SocketConnector connector = new SocketConnector();
+        // ConnectFuture future = connector.connect(new InetSocketAddress(PORT), new ClientHandler());
+        // // 阻塞直到连接上服务端
+        // future.join();
+        //
+        // IoSession session = future.getSession();
+        // session.write("123abc");
+        //
+        // Thread.sleep(5000);
     }
+
+
+
+    public static class ReverseProtocolHandler extends IoHandlerAdapter {
+
+        /**
+         * 将收到字符串消息进行反转，然后回写，例如：
+         * request：123abc
+         * response：cba321
+         *
+         * @param session
+         * @param message
+         */
+        @Override
+        public void messageReceived(IoSession session, Object message) {
+            String str = message.toString();
+            StringBuffer buf = new StringBuffer(str.length());
+            for (int i = str.length() - 1; i >= 0; i--) {
+                buf.append(str.charAt(i));
+            }
+
+            session.write("response:" + buf.toString());
+            // write(session, message.toString());
+            System.out.println(buf.toString());
+        }
+
+        /**
+         * 使用这种方式，telnet的时候才能看到返回的结果
+         *
+         * @param session
+         * @param message
+         */
+        private void write(IoSession session, String message) {
+            ByteBuffer wb = ByteBuffer.allocate(1024);
+            wb.put(message.getBytes());
+            wb.flip();
+            session.write(wb);
+        }
+
+        @Override
+        public void exceptionCaught(IoSession session, Throwable cause) {
+            cause.printStackTrace();
+            session.close();
+        }
+
+    }
+
+    public static class ClientHandler extends IoHandlerAdapter {
+
+        @Override
+        public void messageReceived(IoSession session, Object message) throws Exception {
+            System.out.println("客户端接收到消息：" + message.toString());
+        }
+
+    }
+
 }

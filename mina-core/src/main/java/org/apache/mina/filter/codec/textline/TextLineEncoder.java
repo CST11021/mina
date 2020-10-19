@@ -75,32 +75,7 @@ public class TextLineEncoder extends ProtocolEncoderAdapter {
     }
 
     /**
-     * Returns the allowed maximum size of the encoded line.
-     * If the size of the encoded line exceeds this value, the encoder
-     * will throw a {@link IllegalArgumentException}.  The default value
-     * is {@link Integer#MAX_VALUE}.
-     */
-    public int getMaxLineLength() {
-        return maxLineLength;
-    }
-
-    /**
-     * Sets the allowed maximum size of the encoded line.
-     * If the size of the encoded line exceeds this value, the encoder
-     * will throw a {@link IllegalArgumentException}.  The default value
-     * is {@link Integer#MAX_VALUE}.
-     */
-    public void setMaxLineLength(int maxLineLength) {
-        if (maxLineLength <= 0) {
-            throw new IllegalArgumentException("maxLineLength: "
-                    + maxLineLength);
-        }
-
-        this.maxLineLength = maxLineLength;
-    }
-
-    /**
-     * 文本行编码器，该方法是作用是将字符串类型的消息转为字节换取，然后再追加文本行定界符
+     * 文本行编码器，该方法是作用是将字符串类型的消息转为字节缓冲区，并保存到ProtocolEncoderOutput中
      *
      * @param session
      * @param message   文本数据，数据类型一般都是字符串
@@ -129,5 +104,31 @@ public class TextLineEncoder extends ProtocolEncoderAdapter {
     }
 
     public void dispose() throws Exception {
+    }
+
+    // getter and setter ...
+
+    /**
+     * Returns the allowed maximum size of the encoded line.
+     * If the size of the encoded line exceeds this value, the encoder
+     * will throw a {@link IllegalArgumentException}.  The default value
+     * is {@link Integer#MAX_VALUE}.
+     */
+    public int getMaxLineLength() {
+        return maxLineLength;
+    }
+    /**
+     * Sets the allowed maximum size of the encoded line.
+     * If the size of the encoded line exceeds this value, the encoder
+     * will throw a {@link IllegalArgumentException}.  The default value
+     * is {@link Integer#MAX_VALUE}.
+     */
+    public void setMaxLineLength(int maxLineLength) {
+        if (maxLineLength <= 0) {
+            throw new IllegalArgumentException("maxLineLength: "
+                    + maxLineLength);
+        }
+
+        this.maxLineLength = maxLineLength;
     }
 }

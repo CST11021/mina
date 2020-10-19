@@ -66,8 +66,10 @@ public class Client {
             values[i] = Integer.parseInt(args[i]);
         }
 
-        SocketConnector connector = new SocketConnector();
 
+
+
+        SocketConnector connector = new SocketConnector();
         // 将Workder超时更改为1秒，以使没有连接可管理时，I/O线程立即退出。
         connector.setWorkerTimeout(1);
 
@@ -81,11 +83,14 @@ public class Client {
         }
         cfg.getFilterChain().addLast("logger", new LoggingFilter());
 
+
+
         IoSession session;
         for (;;) {
             try {
                 ConnectFuture future = connector.connect(new InetSocketAddress(HOSTNAME, PORT), new ClientSessionHandler(values), cfg);
 
+                // 阻塞线程，直到等待客户端连接上服务端
                 future.join();
                 session = future.getSession();
                 break;

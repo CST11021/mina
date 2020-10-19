@@ -23,15 +23,7 @@ import org.apache.mina.common.ByteBuffer;
 import org.apache.mina.common.IoSession;
 
 /**
- * Decodes binary or protocol-specific data into higher-level message objects.
- * MINA invokes {@link #decode(IoSession, ByteBuffer, ProtocolDecoderOutput)}
- * method with read data, and then the decoder implementation puts decoded
- * messages into {@link ProtocolDecoderOutput} by calling
- * {@link ProtocolDecoderOutput#write(Object)}.
- * <p>
- * Please refer to
- * <a href="../../../../../xref-examples/org/apache/mina/examples/reverser/TextLineDecoder.html"><code>TextLineDecoder</code></a>
- * example. 
+ * 将消息消息对应的字节缓冲区解码（反序列化）为对象，然后保存到ProtocolDecoderOutput，后续通过ProtocolDecoderOutput#flush()方法，调用下一个过滤器继续后续逻辑
  * 
  * @author The Apache Directory Project (mina-dev@directory.apache.org)
  * @version $Rev$, $Date$
@@ -39,28 +31,24 @@ import org.apache.mina.common.IoSession;
 public interface ProtocolDecoder {
 
     /**
-     * 通过ProtocolDecoderOutput将缓冲区的字节转为ByteBuffer对应的对象，每个buffer都会指定反序列化后对象类型
+     * 将消息消息对应的字节缓冲区解码（反序列化）为对象，然后保存到ProtocolDecoderOutput，后续通过ProtocolDecoderOutput#flush()方法，调用下一个过滤器继续后续逻辑
      *
      * @param session
-     * @param in
+     * @param in        消息对应的字节缓冲区
      * @param out
      * @throws Exception
      */
     void decode(IoSession session, ByteBuffer in, ProtocolDecoderOutput out) throws Exception;
 
     /**
-     * Invoked when the specified <tt>session</tt> is closed.  This method is useful
-     * when you deal with the protocol which doesn't specify the length of a message
-     * such as HTTP response without <tt>content-length</tt> header. Implement this
-     * method to process the remaining data that {@link #decode(IoSession, ByteBuffer, ProtocolDecoderOutput)}
-     * method didn't process completely.
+     * 当指定的会话关闭时调用，当您处理未指定消息长度的协议（例如，没有内容长度标头的HTTP响应）时，此方法很有用，实现此方法以处理#decode()方法未完全处理的剩余数据
      * 
      * @throws Exception if the read data violated protocol specification
      */
     void finishDecode(IoSession session, ProtocolDecoderOutput out) throws Exception;
 
     /**
-     * Releases all resources related with this decoder.
+     * 释放与此解码器有关的所有资源
      * 
      * @throws Exception if failed to dispose all resources
      */

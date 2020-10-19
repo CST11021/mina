@@ -52,8 +52,7 @@ public class TextLineDecoderTest extends TestCase {
     }
 
     public void testNormalDecode() throws Exception {
-        TextLineDecoder decoder = new TextLineDecoder(Charset.forName("UTF-8"),
-                LineDelimiter.WINDOWS);
+        TextLineDecoder decoder = new TextLineDecoder(Charset.forName("UTF-8"), LineDelimiter.WINDOWS);
 
         CharsetEncoder encoder = Charset.forName("UTF-8").newEncoder();
         IoSession session = new DummySession();
@@ -369,6 +368,7 @@ public class TextLineDecoderTest extends TestCase {
     }
 
     private static class TestDecoderOutput implements ProtocolDecoderOutput {
+
         private Queue<Object> messageQueue = new LinkedList<Object>();
 
         public void write(Object message) {

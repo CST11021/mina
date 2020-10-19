@@ -28,7 +28,7 @@ import org.apache.mina.common.support.BaseIoSession;
 import org.apache.mina.filter.codec.ProtocolDecoderOutput;
 
 /**
- * A {@link ProtocolDecoderOutput} based on queue.
+ * 用于保存字节解码（反序列化）后的对象，然后调用下一个过滤器继续处理消息
  *
  * @author The Apache Directory Project (mina-dev@directory.apache.org)
  * @version $Rev$, $Date$
@@ -40,6 +40,7 @@ public class SimpleProtocolDecoderOutput implements ProtocolDecoderOutput {
 
     private final IoSession session;
 
+    /** 用于保存反序列化后的消息对象 */
     private final List<Object> messageQueue = new ArrayList<Object>();
 
     public SimpleProtocolDecoderOutput(IoSession session, NextFilter nextFilter) {
@@ -47,16 +48,26 @@ public class SimpleProtocolDecoderOutput implements ProtocolDecoderOutput {
         this.session = session;
     }
 
+    /**
+     * 保存反序列化后的消息对象
+     *
+     * @param message the decoded message
+     */
     public void write(Object message) {
         messageQueue.add(message);
         if (session instanceof BaseIoSession) {
+            // 解码（反序列化）完成后，将session读消息的统计值+1
             ((BaseIoSession) session).increaseReadMessages();
         }
     }
 
+    /**
+     * 字节消息解码完成（反序列化）后，调用下一个过滤器继续处理消息
+     */
     public void flush() {
         while (!messageQueue.isEmpty()) {
             nextFilter.messageReceived(session, messageQueue.remove(0));
         }
     }
+
 }

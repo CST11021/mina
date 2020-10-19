@@ -40,8 +40,7 @@ import org.apache.mina.common.IoSession;
 public interface ProtocolEncoder {
 
     /**
-     * 将更高级别的消息对象编码为二进制或特定于协议的数据。
-     * MINA使用从会话写队列中弹出的消息调用{@link #encode(IoSession, Object, ProtocolEncoderOutput)} 方法，然后编码器实现将已编码的{@link ByteBuffer}放入{@link ProtocolEncoderOutput}。
+     * 将字符串类型的消息转为字节缓冲区，并保存到ProtocolEncoderOutput中
      * 
      * @throws Exception if the message violated protocol specification
      */

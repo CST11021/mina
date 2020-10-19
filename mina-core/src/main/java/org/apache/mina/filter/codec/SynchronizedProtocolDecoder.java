@@ -35,6 +35,7 @@ import org.apache.mina.common.IoSession;
  * @version $Rev$, $Date$
  */
 public class SynchronizedProtocolDecoder implements ProtocolDecoder {
+
     private final ProtocolDecoder decoder;
 
     /**
@@ -54,15 +55,13 @@ public class SynchronizedProtocolDecoder implements ProtocolDecoder {
         return decoder;
     }
 
-    public void decode(IoSession session, ByteBuffer in,
-            ProtocolDecoderOutput out) throws Exception {
+    public void decode(IoSession session, ByteBuffer in, ProtocolDecoderOutput out) throws Exception {
         synchronized (decoder) {
             decoder.decode(session, in, out);
         }
     }
 
-    public void finishDecode(IoSession session, ProtocolDecoderOutput out)
-            throws Exception {
+    public void finishDecode(IoSession session, ProtocolDecoderOutput out) throws Exception {
         synchronized (decoder) {
             decoder.finishDecode(session, out);
         }

@@ -41,6 +41,13 @@ public class ResultMessageDecoder extends AbstractMessageDecoder {
         super(Constants.RESULT);
     }
 
+    /**
+     * 将接收到的消息，反序列化为ResultMessage实例
+     *
+     * @param session
+     * @param in        消息对应的字节缓冲区
+     * @return
+     */
     protected AbstractMessage decodeBody(IoSession session, ByteBuffer in) {
         if (!readCode) {
             if (in.remaining() < Constants.RESULT_CODE_LEN) {

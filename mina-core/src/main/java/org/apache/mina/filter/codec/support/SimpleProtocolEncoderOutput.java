@@ -86,7 +86,7 @@ public abstract class SimpleProtocolEncoderOutput implements ProtocolEncoderOutp
     }
 
     /**
-     *
+     * 该方法为了扩展而设计，在源码里没有任何调用
      *
      * @return
      */

@@ -168,7 +168,7 @@ public class ProtocolCodecFilter extends IoFilterAdapter {
         int oldPos = in.position();
         try {
             synchronized (decoderOut) {
-                // 通过ProtocolDecoderOutput将缓冲区的字节转为ByteBuffer对应的对象，每个buffer都会指定反序列化后对象类型
+                // 核心方法：将ByteBuffer中的字节转为字符串，然后通过ProtocolDecoderOutput#flush()方法，调用下一个过滤器继续处理消息
                 decoder.decode(session, in, decoderOut);
             }
         } catch (Throwable t) {
@@ -188,7 +188,7 @@ public class ProtocolCodecFilter extends IoFilterAdapter {
             throw pde;
         } finally {
             try {
-                // Release the read buffer.
+                // 释放字节缓冲区
                 in.release();
             } finally {
                 decoderOut.flush();
@@ -221,6 +221,7 @@ public class ProtocolCodecFilter extends IoFilterAdapter {
     @Override
     public void filterWrite(NextFilter nextFilter, IoSession session, WriteRequest writeRequest) throws Exception {
         Object message = writeRequest.getMessage();
+        // 如果是字节的形式，则表示已经序列化过了，则直接跳过，调用下一个过滤器继续后面的逻辑，否则会将消息进行序列化，然后封装为MessageByteBuffer对象，在发送给客户端，注意：这样如果telnet的客户端是收不到response消息的
         if (message instanceof ByteBuffer) {
             nextFilter.filterWrite(session, writeRequest);
             return;
@@ -230,10 +231,11 @@ public class ProtocolCodecFilter extends IoFilterAdapter {
         ProtocolEncoderOutputImpl encoderOut = getEncoderOut(session, nextFilter, writeRequest);
 
         try {
-            // 如果消息还没转成字节缓冲区的话，需要将其序列化为字节缓冲区，然后通过ProtocolEncoderOutputImpl#doFlush方法，将编码后的字节缓冲区封装为HiddenByteBuffer放到WriteRequest中，从而继续后续的过滤器
+            // 如果消息还没转成字节缓冲区的话，需要将其序列化为字节缓冲区，然后保存到ProtocolEncoderOutputImpl#bufferQueue队列中，
             encoder.encode(session, message, encoderOut);
 
             nextFilter.filterWrite(session, new WriteRequest(
+                    // 注意：这里writeRequest.getMessage()获取的消息是未进行编码（序列化）的消息
                     new MessageByteBuffer(writeRequest.getMessage()),
                     writeRequest.getFuture(),
                     writeRequest.getDestination()
@@ -359,7 +361,11 @@ public class ProtocolCodecFilter extends IoFilterAdapter {
         }
     }
 
+    /**
+     * 发送消息时，只要经过ProtocolCodecFilter过滤器后，消息都会被封装为MessageByteBuffer对象，而后续的过滤器无法再对消息进行编码操作
+     */
     private static class MessageByteBuffer extends ByteBufferProxy {
+
         private final Object message;
 
         private MessageByteBuffer(Object message) {
