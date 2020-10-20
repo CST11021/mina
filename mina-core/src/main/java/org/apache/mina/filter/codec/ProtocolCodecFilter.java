@@ -234,7 +234,7 @@ public class ProtocolCodecFilter extends IoFilterAdapter {
         try {
             // 如果消息还没转成字节缓冲区的话，需要将其序列化为字节缓冲区，然后保存到ProtocolEncoderOutputImpl#bufferQueue队列中，
             encoder.encode(session, message, encoderOut);
-
+            encoderOut.flush();
             nextFilter.filterWrite(session, new WriteRequest(
                     // 注意：这里writeRequest.getMessage()获取的消息是未进行编码（序列化）的消息
                     new MessageByteBuffer(writeRequest.getMessage()),
