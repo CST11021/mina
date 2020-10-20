@@ -40,51 +40,50 @@ public interface IoFilterChain {
      */
     IoSession getSession();
 
+
+    // 获取过滤器相关的接口
+
     /**
      * Returns the {@link Entry} with the specified <tt>name</tt> in this chain.
      * @return <tt>null</tt> if there's no such name in this chain
      */
     Entry getEntry(String name);
-
     /**
      * Returns the {@link IoFilter} with the specified <tt>name</tt> in this chain.
      * @return <tt>null</tt> if there's no such name in this chain
      */
     IoFilter get(String name);
-
     /**
      * Returns the {@link NextFilter} of the {@link IoFilter} with the
      * specified <tt>name</tt> in this chain.
      * @return <tt>null</tt> if there's no such name in this chain
      */
     NextFilter getNextFilter(String name);
-
     /**
      * Returns the list of all {@link Entry}s this chain contains.
      */
     List<Entry> getAll();
-
     /**
      * Returns the reversed list of all {@link Entry}s this chain contains.
      */
     List<Entry> getAllReversed();
-
     /**
      * Returns <tt>true</tt> if this chain contains an {@link IoFilter} with the
      * specified <tt>name</tt>.
      */
     boolean contains(String name);
-
     /**
      * Returns <tt>true</tt> if this chain contains the specified <tt>filter</tt>.
      */
     boolean contains(IoFilter filter);
-
     /**
      * Returns <tt>true</tt> if this chain contains an {@link IoFilter} of the
      * specified <tt>filterType</tt>.
      */
     boolean contains(Class<? extends IoFilter> filterType);
+
+
+    // 添加和移除过滤器相关的接口
 
     /**
      * Adds the specified filter with the specified name at the beginning of this chain.
@@ -103,8 +102,8 @@ public interface IoFilterChain {
     void addLast(String name, IoFilter filter);
 
     /**
-     * Adds the specified filter with the specified name just before the filter whose name is
-     * <code>baseName</code> in this chain.
+     * 将filter添加到过滤器链中，并放在baseName对应的过滤器的前面
+     *
      * @throws IoFilterLifeCycleException
      *             if {@link IoFilter#onPostAdd(IoFilterChain, String, NextFilter)} or
      *             {@link IoFilter#init()} throws an exception.
@@ -133,6 +132,9 @@ public interface IoFilterChain {
      * @throws Exception if {@link IoFilter#onPostRemove(IoFilterChain, String, NextFilter)} thrown an exception.
      */
     void clear() throws Exception;
+
+
+    // 过滤器事件相关的接口
 
     /**
      * Fires a {@link IoHandler#sessionCreated(IoSession)} event.  Most users don't need to
@@ -198,28 +200,23 @@ public interface IoFilterChain {
      */
     public void fireFilterClose(IoSession session);
 
+
+
     /**
-     * Represents a name-filter pair that an {@link IoFilterChain} contains.
+     * 表示过滤器链包含的过滤器实体
      *
      * @author The Apache Directory Project (mina-dev@directory.apache.org)
      * @version $Rev$, $Date$
      */
     public interface Entry {
-        /**
-         * Returns the name of the filter.
-         */
+
+        /** 过滤器名称 */
         String getName();
 
-        /**
-         * Returns the filter.
-         */
+        /** 过滤器 */
         IoFilter getFilter();
 
-        /**
-         * Returns the {@link NextFilter} of the filter.
-         * 
-         * @throws IllegalStateException if the {@link NextFilter} is not available
-         */
+        /** 用于触发下一个过滤器的事件 */
         NextFilter getNextFilter();
     }
 

@@ -59,14 +59,15 @@ public abstract class AbstractIoFilterChain implements IoFilterChain {
      */
     public static final String CONNECT_FUTURE = AbstractIoFilterChain.class.getName() + ".connectFuture";
 
+    /** 当前过滤器 */
     private final IoSession session;
 
-    /** 表示第一个过滤器 */
+    /** 表示第一个过滤器，对应HeadFilter实例 */
     private final EntryImpl head;
-
-    /** 表示最后一个过滤器 */
+    /** 表示最后一个过滤器，对应TailFilter实例 */
     private final EntryImpl tail;
 
+    /** 保存该过滤器链上的所有过滤器 */
     private final Map<String, Entry> name2entry = new HashMap<String, Entry>();
 
     /**
@@ -89,6 +90,9 @@ public abstract class AbstractIoFilterChain implements IoFilterChain {
         return session;
     }
 
+
+    // 获取过滤器相关的接口
+
     public Entry getEntry(String name) {
         Entry e = name2entry.get(name);
         if (e == null) {
@@ -96,7 +100,6 @@ public abstract class AbstractIoFilterChain implements IoFilterChain {
         }
         return e;
     }
-
     public IoFilter get(String name) {
         Entry e = getEntry(name);
         if (e == null) {
@@ -105,7 +108,6 @@ public abstract class AbstractIoFilterChain implements IoFilterChain {
 
         return e.getFilter();
     }
-
     public NextFilter getNextFilter(String name) {
         Entry e = getEntry(name);
         if (e == null) {
@@ -114,35 +116,88 @@ public abstract class AbstractIoFilterChain implements IoFilterChain {
 
         return e.getNextFilter();
     }
+    public List<Entry> getAll() {
+        List<Entry> list = new ArrayList<Entry>();
+        EntryImpl e = head.nextEntry;
+        while (e != tail) {
+            list.add(e);
+            e = e.nextEntry;
+        }
+
+        return list;
+    }
+    public List<Entry> getAllReversed() {
+        List<Entry> list = new ArrayList<Entry>();
+        EntryImpl e = tail.prevEntry;
+        while (e != head) {
+            list.add(e);
+            e = e.prevEntry;
+        }
+        return list;
+    }
+    public boolean contains(String name) {
+        return getEntry(name) != null;
+    }
+    public boolean contains(IoFilter filter) {
+        EntryImpl e = head.nextEntry;
+        while (e != tail) {
+            if (e.getFilter() == filter) {
+                return true;
+            }
+            e = e.nextEntry;
+        }
+        return false;
+    }
+    public boolean contains(Class<? extends IoFilter> filterType) {
+        EntryImpl e = head.nextEntry;
+        while (e != tail) {
+            if (filterType.isAssignableFrom(e.getFilter().getClass())) {
+                return true;
+            }
+            e = e.nextEntry;
+        }
+        return false;
+    }
+
+
+    // 添加和移除过滤器相关的接口
 
     public synchronized void addFirst(String name, IoFilter filter) {
+        // 过滤器链里的过滤名称不能重复
         checkAddable(name);
+        // 将filter过滤器设置在head后面
         register(head, name, filter);
     }
-
+    /**
+     * 将过滤器添加到过滤器链的最后面，即#tail的前一个过滤器
+     *
+     * @param name
+     * @param filter
+     */
     public synchronized void addLast(String name, IoFilter filter) {
+        // 过滤器链里的过滤名称不能重复
         checkAddable(name);
+        // 将filter过滤器设置tail前一个过滤器的后面（即tail的前一个过滤器）
         register(tail.prevEntry, name, filter);
     }
-
     public synchronized void addBefore(String baseName, String name, IoFilter filter) {
+        // 检查过滤器链是否包含该过滤器
         EntryImpl baseEntry = checkOldName(baseName);
+        // 过滤器链里的过滤名称不能重复
         checkAddable(name);
+        // 将filter放在baseEntry过滤器的前面
         register(baseEntry.prevEntry, name, filter);
     }
-
     public synchronized void addAfter(String baseName, String name, IoFilter filter) {
         EntryImpl baseEntry = checkOldName(baseName);
         checkAddable(name);
         register(baseEntry, name, filter);
     }
-
     public synchronized IoFilter remove(String name) {
         EntryImpl entry = checkOldName(name);
         deregister(entry);
         return entry.getFilter();
     }
-
     public synchronized void clear() throws Exception {
         Iterator<String> it = new ArrayList<String>(name2entry.keySet())
                 .iterator();
@@ -151,87 +206,14 @@ public abstract class AbstractIoFilterChain implements IoFilterChain {
         }
     }
 
-    private void register(EntryImpl prevEntry, String name, IoFilter filter) {
-        EntryImpl newEntry = new EntryImpl(prevEntry, prevEntry.nextEntry,
-                name, filter);
 
-        try {
-            filter.onPreAdd(this, name, newEntry.getNextFilter());
-        } catch (Exception e) {
-            throw new IoFilterLifeCycleException("onPreAdd(): " + name + ':' + filter + " in " + getSession(), e);
-        }
 
-        prevEntry.nextEntry.prevEntry = newEntry;
-        prevEntry.nextEntry = newEntry;
-        name2entry.put(name, newEntry);
-
-        try {
-            filter.onPostAdd(this, name, newEntry.getNextFilter());
-        } catch (Exception e) {
-            deregister0(newEntry);
-            throw new IoFilterLifeCycleException("onPostAdd(): " + name + ':'
-                    + filter + " in " + getSession(), e);
-        }
-    }
-
-    private void deregister(EntryImpl entry) {
-        IoFilter filter = entry.getFilter();
-
-        try {
-            filter.onPreRemove(this, entry.getName(), entry.getNextFilter());
-        } catch (Exception e) {
-            throw new IoFilterLifeCycleException("onPreRemove(): "
-                    + entry.getName() + ':' + filter + " in " + getSession(), e);
-        }
-
-        deregister0(entry);
-
-        try {
-            filter.onPostRemove(this, entry.getName(), entry.getNextFilter());
-        } catch (Exception e) {
-            throw new IoFilterLifeCycleException("onPostRemove(): "
-                    + entry.getName() + ':' + filter + " in " + getSession(), e);
-        }
-    }
-
-    private void deregister0(EntryImpl entry) {
-        EntryImpl prevEntry = entry.prevEntry;
-        EntryImpl nextEntry = entry.nextEntry;
-        prevEntry.nextEntry = nextEntry;
-        nextEntry.prevEntry = prevEntry;
-
-        name2entry.remove(entry.name);
-    }
-
-    /**
-     * Throws an exception when the specified filter name is not registered in this chain.
-     *
-     * @return An filter entry with the specified name.
-     */
-    private EntryImpl checkOldName(String baseName) {
-        EntryImpl e = (EntryImpl) name2entry.get(baseName);
-        if (e == null) {
-            throw new IllegalArgumentException("Unknown filter name:"
-                    + baseName);
-        }
-        return e;
-    }
-
-    /**
-     * Checks the specified filter name is already taken and throws an exception if already taken.
-     */
-    private void checkAddable(String name) {
-        if (name2entry.containsKey(name)) {
-            throw new IllegalArgumentException(
-                    "Other filter is using the same name '" + name + "'");
-        }
-    }
+    // 事件调用相关的接口
 
     public void fireSessionCreated(IoSession session) {
         Entry head = this.head;
         callNextSessionCreated(head, session);
     }
-
     private void callNextSessionCreated(Entry entry, IoSession session) {
         try {
             entry.getFilter().sessionCreated(entry.getNextFilter(), session);
@@ -244,7 +226,6 @@ public abstract class AbstractIoFilterChain implements IoFilterChain {
         Entry head = this.head;
         callNextSessionOpened(head, session);
     }
-
     private void callNextSessionOpened(Entry entry, IoSession session) {
         try {
             entry.getFilter().sessionOpened(entry.getNextFilter(), session);
@@ -265,7 +246,6 @@ public abstract class AbstractIoFilterChain implements IoFilterChain {
         Entry head = this.head;
         callNextSessionClosed(head, session);
     }
-
     private void callNextSessionClosed(Entry entry, IoSession session) {
         try {
             entry.getFilter().sessionClosed(entry.getNextFilter(), session);
@@ -279,7 +259,6 @@ public abstract class AbstractIoFilterChain implements IoFilterChain {
         Entry head = this.head;
         callNextSessionIdle(head, session, status);
     }
-
     private void callNextSessionIdle(Entry entry, IoSession session, IdleStatus status) {
         try {
             entry.getFilter().sessionIdle(entry.getNextFilter(), session,
@@ -299,7 +278,6 @@ public abstract class AbstractIoFilterChain implements IoFilterChain {
         Entry head = this.head;
         callNextMessageReceived(head, session, message);
     }
-
     private void callNextMessageReceived(Entry entry, IoSession session, Object message) {
         try {
             entry.getFilter().messageReceived(entry.getNextFilter(), session, message);
@@ -318,7 +296,6 @@ public abstract class AbstractIoFilterChain implements IoFilterChain {
         Entry head = this.head;
         callNextMessageSent(head, session, request.getMessage());
     }
-
     private void callNextMessageSent(Entry entry, IoSession session, Object message) {
         try {
             entry.getFilter().messageSent(entry.getNextFilter(), session, message);
@@ -341,7 +318,6 @@ public abstract class AbstractIoFilterChain implements IoFilterChain {
             future.setException(cause);
         }
     }
-
     private void callNextExceptionCaught(Entry entry, IoSession session, Throwable cause) {
         try {
             entry.getFilter().exceptionCaught(entry.getNextFilter(), session,
@@ -362,7 +338,6 @@ public abstract class AbstractIoFilterChain implements IoFilterChain {
         // 调用下一个过滤器
         callPreviousFilterWrite(tail, session, writeRequest);
     }
-
     private void callPreviousFilterWrite(Entry entry, IoSession session, WriteRequest writeRequest) {
         try {
             entry.getFilter().filterWrite(entry.getNextFilter(), session, writeRequest);
@@ -376,7 +351,6 @@ public abstract class AbstractIoFilterChain implements IoFilterChain {
         Entry tail = this.tail;
         callPreviousFilterClose(tail, session);
     }
-
     private void callPreviousFilterClose(Entry entry, IoSession session) {
         try {
             entry.getFilter().filterClose(entry.getNextFilter(), session);
@@ -385,52 +359,87 @@ public abstract class AbstractIoFilterChain implements IoFilterChain {
         }
     }
 
-    public List<Entry> getAll() {
-        List<Entry> list = new ArrayList<Entry>();
-        EntryImpl e = head.nextEntry;
-        while (e != tail) {
-            list.add(e);
-            e = e.nextEntry;
+
+
+    /**
+     * 将filter放在prevEntry过滤器的后面
+     *
+     * @param prevEntry 表示filter的前一个过滤器
+     * @param name      当前注册的过滤器名
+     * @param filter    当前注册的过滤器
+     */
+    private void register(EntryImpl prevEntry, String name, IoFilter filter) {
+        // filter：表示当前的过滤器；
+        // prevEntry：表示前一个过滤器；
+        //
+        EntryImpl newEntry = new EntryImpl(prevEntry, prevEntry.nextEntry, name, filter);
+
+        // 过滤器添加到过滤器链前，触发IoFilter#onPreAdd方法
+        try {
+            filter.onPreAdd(this, name, newEntry.getNextFilter());
+        } catch (Exception e) {
+            throw new IoFilterLifeCycleException("onPreAdd(): " + name + ':' + filter + " in " + getSession(), e);
         }
 
-        return list;
-    }
+        prevEntry.nextEntry.prevEntry = newEntry;
+        prevEntry.nextEntry = newEntry;
+        name2entry.put(name, newEntry);
 
-    public List<Entry> getAllReversed() {
-        List<Entry> list = new ArrayList<Entry>();
-        EntryImpl e = tail.prevEntry;
-        while (e != head) {
-            list.add(e);
-            e = e.prevEntry;
+        try {
+            filter.onPostAdd(this, name, newEntry.getNextFilter());
+        } catch (Exception e) {
+            deregister0(newEntry);
+            throw new IoFilterLifeCycleException("onPostAdd(): " + name + ':' + filter + " in " + getSession(), e);
         }
-        return list;
     }
+    private void deregister(EntryImpl entry) {
+        IoFilter filter = entry.getFilter();
 
-    public boolean contains(String name) {
-        return getEntry(name) != null;
-    }
-
-    public boolean contains(IoFilter filter) {
-        EntryImpl e = head.nextEntry;
-        while (e != tail) {
-            if (e.getFilter() == filter) {
-                return true;
-            }
-            e = e.nextEntry;
+        try {
+            filter.onPreRemove(this, entry.getName(), entry.getNextFilter());
+        } catch (Exception e) {
+            throw new IoFilterLifeCycleException("onPreRemove(): "
+                    + entry.getName() + ':' + filter + " in " + getSession(), e);
         }
-        return false;
+
+        deregister0(entry);
+
+        try {
+            filter.onPostRemove(this, entry.getName(), entry.getNextFilter());
+        } catch (Exception e) {
+            throw new IoFilterLifeCycleException("onPostRemove(): "
+                    + entry.getName() + ':' + filter + " in " + getSession(), e);
+        }
+    }
+    private void deregister0(EntryImpl entry) {
+        EntryImpl prevEntry = entry.prevEntry;
+        EntryImpl nextEntry = entry.nextEntry;
+        prevEntry.nextEntry = nextEntry;
+        nextEntry.prevEntry = prevEntry;
+
+        name2entry.remove(entry.name);
+    }
+    /**
+     * 检查过滤器链是否包含该过滤器
+     *
+     * @return An filter entry with the specified name.
+     */
+    private EntryImpl checkOldName(String baseName) {
+        EntryImpl e = (EntryImpl) name2entry.get(baseName);
+        if (e == null) {
+            throw new IllegalArgumentException("Unknown filter name:" + baseName);
+        }
+        return e;
+    }
+    /**
+     * 过滤器链里的过滤名称不能重复
+     */
+    private void checkAddable(String name) {
+        if (name2entry.containsKey(name)) {
+            throw new IllegalArgumentException("Other filter is using the same name '" + name + "'");
+        }
     }
 
-    public boolean contains(Class<? extends IoFilter> filterType) {
-        EntryImpl e = head.nextEntry;
-        while (e != tail) {
-            if (filterType.isAssignableFrom(e.getFilter().getClass())) {
-                return true;
-            }
-            e = e.nextEntry;
-        }
-        return false;
-    }
 
     public String toString() {
         StringBuffer buf = new StringBuffer();
@@ -483,8 +492,11 @@ public abstract class AbstractIoFilterChain implements IoFilterChain {
 
     protected abstract void doClose(IoSession session) throws Exception;
 
+
+
+
     /**
-     * 表示第一个过滤器
+     * 表示第一个过滤器，其内部逻辑是直接调用下一个过滤器处理
      */
     private class HeadFilter extends IoFilterAdapter {
 
@@ -517,7 +529,7 @@ public abstract class AbstractIoFilterChain implements IoFilterChain {
         }
 
         /**
-         * 内部实现逻辑主要是{@link IoSession#write(Object)}方法的调用，向客户端回写响应数据
+         * IoSession#write(Object)方法会来调用该方法
          *
          * @param nextFilter
          * @param session
@@ -618,7 +630,7 @@ public abstract class AbstractIoFilterChain implements IoFilterChain {
         /** 被装饰的过滤器 */
         private final IoFilter filter;
 
-        /** filter指向的下一个过滤器 */
+        /** filter指向的下一个过滤器：用于触发过滤器事件调用的接口 */
         private final NextFilter nextFilter;
 
         private EntryImpl(EntryImpl prevEntry, EntryImpl nextEntry, String name, IoFilter filter) {

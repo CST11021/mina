@@ -221,7 +221,8 @@ public class ProtocolCodecFilter extends IoFilterAdapter {
     @Override
     public void filterWrite(NextFilter nextFilter, IoSession session, WriteRequest writeRequest) throws Exception {
         Object message = writeRequest.getMessage();
-        // 如果是字节的形式，则表示已经序列化过了，则直接跳过，调用下一个过滤器继续后面的逻辑，否则会将消息进行序列化，然后封装为MessageByteBuffer对象，在发送给客户端，注意：这样如果telnet的客户端是收不到response消息的
+        // 如果是字节的形式，则表示已经序列化过了，则直接跳过，调用下一个过滤器继续后面的逻辑，
+        // 否则会将消息进行序列化，然后封装为MessageByteBuffer对象，在发送给客户端，注意：这样如果telnet的客户端是收不到response消息的
         if (message instanceof ByteBuffer) {
             nextFilter.filterWrite(session, writeRequest);
             return;

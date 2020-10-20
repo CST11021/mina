@@ -25,6 +25,7 @@ import java.nio.charset.Charset;
 import org.apache.mina.common.*;
 import org.apache.mina.filter.LoggingFilter;
 import org.apache.mina.filter.codec.ProtocolCodecFilter;
+import org.apache.mina.filter.codec.serialization.ObjectSerializationCodecFactory;
 import org.apache.mina.filter.codec.textline.TextLineCodecFactory;
 import org.apache.mina.transport.socket.nio.SocketAcceptor;
 import org.apache.mina.transport.socket.nio.SocketAcceptorConfig;
@@ -53,18 +54,7 @@ public class Main {
 
         System.out.println("Listening on port " + PORT);
 
-        // SocketConnector connector = new SocketConnector();
-        // ConnectFuture future = connector.connect(new InetSocketAddress(PORT), new ClientHandler());
-        // // 阻塞直到连接上服务端
-        // future.join();
-        //
-        // IoSession session = future.getSession();
-        // session.write("123abc");
-        //
-        // Thread.sleep(5000);
     }
-
-
 
     public static class ReverseProtocolHandler extends IoHandlerAdapter {
 
@@ -78,15 +68,15 @@ public class Main {
          */
         @Override
         public void messageReceived(IoSession session, Object message) {
+            System.out.println("接收到消息：" + message.toString());
             String str = message.toString();
             StringBuffer buf = new StringBuffer(str.length());
             for (int i = str.length() - 1; i >= 0; i--) {
                 buf.append(str.charAt(i));
             }
 
-            session.write("response:" + buf.toString());
-            // write(session, message.toString());
-            System.out.println(buf.toString());
+            // session.write("response:" + buf.toString());
+            write(session, message.toString());
         }
 
         /**
@@ -103,18 +93,14 @@ public class Main {
         }
 
         @Override
+        public void sessionClosed(IoSession session) throws Exception {
+            System.out.println("sessionClosed");
+        }
+
+        @Override
         public void exceptionCaught(IoSession session, Throwable cause) {
             cause.printStackTrace();
             session.close();
-        }
-
-    }
-
-    public static class ClientHandler extends IoHandlerAdapter {
-
-        @Override
-        public void messageReceived(IoSession session, Object message) throws Exception {
-            System.out.println("客户端接收到消息：" + message.toString());
         }
 
     }

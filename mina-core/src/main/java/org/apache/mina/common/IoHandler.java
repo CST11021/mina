@@ -22,7 +22,7 @@ package org.apache.mina.common;
 import java.io.IOException;
 
 /**
- * Handles all I/O events fired by MINA.
+ * TailFilter的内部逻辑都委托给了IoHandler处理
  * 
  * @author The Apache MINA Project (dev@mina.apache.org)
  * @version $Rev$, $Date$
@@ -74,7 +74,7 @@ public interface IoHandler {
     void exceptionCaught(IoSession session, Throwable cause) throws Exception;
 
     /**
-     * 当接收到客户端请求的消息时调用
+     * 当接收到客户端请求的消息时调用，最后一个过滤器TailFilter#messageReceived方法回来调用该方法
      *
      * @param session
      * @param message

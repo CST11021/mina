@@ -156,9 +156,7 @@ public interface IoFilter {
 
 
 
-    /**
-     * Represents the next {@link IoFilter} in {@link IoFilterChain}.
-     */
+    /** 用于触发过滤器事件调用的接口 */
     public interface NextFilter {
         /**
          * Forwards <tt>sessionCreated</tt> event to next filter.

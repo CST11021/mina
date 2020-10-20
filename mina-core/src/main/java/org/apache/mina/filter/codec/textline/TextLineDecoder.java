@@ -122,6 +122,12 @@ public class TextLineDecoder implements ProtocolDecoder {
         while (in.hasRemaining()) {
             byte b = in.get();
             boolean matched = false;
+            // 回车，ASCII码13，"\r"
+            // 换行，ASCII码10，"\n"
+            // 空格，ASCII码32
+            //
+            // Return   =   CR   =   13   =   '\x0d'
+            // NewLine   =   LF   =   10   =   '\x0a'
             switch (b) {
                 case '\r':
                     // 可能是Mac，但我们不会自动检测Mac EOL以免造成混淆
