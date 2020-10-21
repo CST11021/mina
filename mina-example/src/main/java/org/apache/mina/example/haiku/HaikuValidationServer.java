@@ -54,6 +54,6 @@ public class HaikuValidationServer {
         // I look at the sky
         // The moonlight is really bright
         // And it is so quiet
-        acceptor.bind(new InetSocketAddress(42458), new HaikuValidatorIoHandler(), config);
+        acceptor.bind(new InetSocketAddress(8080), new HaikuValidatorIoHandler(), config);
     }
 }

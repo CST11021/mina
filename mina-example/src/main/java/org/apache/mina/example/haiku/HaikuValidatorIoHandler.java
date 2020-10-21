@@ -38,25 +38,10 @@ public class HaikuValidatorIoHandler extends IoHandlerAdapter {
         Haiku haiku = (Haiku) message;
         try {
             validator.validate(haiku);
-            // session.write("HAIKU!");
-            write(session, "HAIKU!");
+            session.write("HAIKU!");
         } catch (Exception e) {
-            // session.write("NOT A HAIKU!");
-            write(session, "NOT A HAIKU!");
+            session.write("NOT A HAIKU!");
         }
-    }
-
-    /**
-     * 使用这种方式，telnet的时候才能看到校验结果
-     *
-     * @param session
-     * @param message
-     */
-    private void write(IoSession session, String message) {
-        ByteBuffer wb = ByteBuffer.allocate(1024);
-        wb.put(message.getBytes());
-        wb.flip();
-        session.write(wb);
     }
 
     @Override

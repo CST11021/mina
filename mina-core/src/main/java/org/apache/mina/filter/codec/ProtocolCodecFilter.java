@@ -222,17 +222,19 @@ public class ProtocolCodecFilter extends IoFilterAdapter {
     public void filterWrite(NextFilter nextFilter, IoSession session, WriteRequest writeRequest) throws Exception {
         Object message = writeRequest.getMessage();
         // 如果是字节的形式，则表示已经序列化过了，则直接跳过，调用下一个过滤器继续后面的逻辑，
-        // 否则会将消息进行序列化，然后封装为MessageByteBuffer对象，在发送给客户端，注意：这样如果telnet的客户端是收不到response消息的
         if (message instanceof ByteBuffer) {
             nextFilter.filterWrite(session, writeRequest);
             return;
         }
+
+        // 走到这里说明发送的消息还没有进行编码（序列化）
 
         ProtocolEncoder encoder = getEncoder(session);
         ProtocolEncoderOutputImpl encoderOut = getEncoderOut(session, nextFilter, writeRequest);
 
         try {
             // 如果消息还没转成字节缓冲区的话，需要将其序列化为字节缓冲区，然后保存到ProtocolEncoderOutputImpl#bufferQueue队列中，
+            // 后续通过ProtocolEncoderOutputImpl#flush()方法，然后调用ProtocolEncoderOutputImpl#doFlush()方法继续执行后续的过滤器
             encoder.encode(session, message, encoderOut);
             encoderOut.flush();
             nextFilter.filterWrite(session, new WriteRequest(
