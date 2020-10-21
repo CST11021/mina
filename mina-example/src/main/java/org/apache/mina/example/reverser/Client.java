@@ -32,11 +32,11 @@ public class Client {
         while (true) {
             String message = br.readLine();
 
-            ByteBuffer wb = ByteBuffer.allocate(1024);
-            wb.put(message.getBytes());
-            wb.flip();
+            // ByteBuffer wb = ByteBuffer.allocate(1024);
+            // wb.put(message.getBytes());
+            // wb.flip();
 
-            session.write(wb);
+            session.write(message);
         }
     }
 

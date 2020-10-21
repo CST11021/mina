@@ -75,8 +75,10 @@ public class Main {
                 buf.append(str.charAt(i));
             }
 
-            // session.write("response:" + buf.toString());
-            write(session, message.toString());
+            session.write(buf.toString());
+
+            // 使用这种方式，telnet的时候才能看到返回的结果
+            // write(session, message.toString());
         }
 
         /**
