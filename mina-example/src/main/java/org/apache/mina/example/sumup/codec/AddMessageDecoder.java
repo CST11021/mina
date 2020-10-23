@@ -38,6 +38,13 @@ public class AddMessageDecoder extends AbstractMessageDecoder {
         super(Constants.ADD);
     }
 
+    /**
+     * 将接收到消息反序列化为AbstractMessage对象
+     *
+     * @param session
+     * @param in
+     * @return
+     */
     protected AbstractMessage decodeBody(IoSession session, ByteBuffer in) {
         if (in.remaining() < Constants.ADD_BODY_LEN) {
             return null;

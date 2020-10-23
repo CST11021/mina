@@ -36,6 +36,8 @@ import org.apache.mina.filter.codec.demux.MessageEncoder;
  * @version $Rev$, $Date$
  */
 public class ResultMessageEncoder extends AbstractMessageEncoder {
+
+    /** 表示支持编码的消息类型，这里是ResultMessage.class */
     private static final Set<Class<?>> TYPES;
 
     static {
@@ -48,8 +50,14 @@ public class ResultMessageEncoder extends AbstractMessageEncoder {
         super(Constants.RESULT);
     }
 
-    protected void encodeBody(IoSession session, AbstractMessage message,
-            ByteBuffer out) {
+    /**
+     * 将消息对象的数据转为字节，并保存到Mina的ByteBuffer字节缓冲区中
+     *
+     * @param session
+     * @param message
+     * @param out
+     */
+    protected void encodeBody(IoSession session, AbstractMessage message, ByteBuffer out) {
         ResultMessage m = (ResultMessage) message;
         if (m.isOk()) {
             out.putShort((short) Constants.RESULT_OK);
@@ -59,6 +67,11 @@ public class ResultMessageEncoder extends AbstractMessageEncoder {
         }
     }
 
+    /**
+     * 返回该编码器支持的序列化对象类型
+     *
+     * @return
+     */
     public Set<Class<?>> getMessageTypes() {
         return TYPES;
     }

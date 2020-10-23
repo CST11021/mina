@@ -276,7 +276,7 @@ public abstract class ByteBuffer implements Comparable<ByteBuffer> {
     public abstract void release();
 
     /**
-     * Returns the underlying NIO buffer instance.
+     * 返回基础的NIO缓冲区实例
      */
     public abstract java.nio.ByteBuffer buf();
 

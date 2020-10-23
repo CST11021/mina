@@ -21,6 +21,7 @@ public class Client {
     public static void main(String[] args) throws Exception {
 
         SocketConnector connector = new SocketConnector();
+        connector.setWorkerTimeout(10);
         ConnectFuture future = connector.connect(new InetSocketAddress("127.0.0.1", 8080), new ClientHandler(), new SocketAcceptorConfig());
         // 阻塞直到连接上服务端
         future.join();
