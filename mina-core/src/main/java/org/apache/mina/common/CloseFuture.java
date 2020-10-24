@@ -23,14 +23,14 @@ package org.apache.mina.common;
  * An {@link IoFuture} for asynchronous close requests.
  *
  * <h3>Example</h3>
- * <pre>
+ *
  * IoSession session = ...;
  * CloseFuture future = session.close();
- * // Wait until the connection is closed
+ * // 阻塞等待直到连接关闭
  * future.join();
  * // Now connection should be closed.
  * assert future.isClosed();
- * </pre>
+ *
  * 
  * @author The Apache Directory Project (mina-dev@directory.apache.org)
  * @version $Rev$, $Date$

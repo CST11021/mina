@@ -111,8 +111,7 @@ public interface IoSession {
     boolean isClosing();
 
     /**
-     * Returns the {@link CloseFuture} of this session.  This method returns
-     * the same instance whenever user calls it.
+     * Returns the {@link CloseFuture} of this session.  This method returns the same instance whenever user calls it.
      */
     CloseFuture getCloseFuture();
 

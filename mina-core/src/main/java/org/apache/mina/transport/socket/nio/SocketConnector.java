@@ -447,25 +447,30 @@ public class SocketConnector extends BaseIoConnector {
         }
     }
 
+    /**
+     * 表示与服务端建立连接的请求
+     */
     private class ConnectionRequest extends DefaultConnectFuture {
+
+        /** 与服务端建立连接的Socket通道 */
         private final SocketChannel channel;
 
+        /** 当时间deadline之前还没连接上服务端时，则视为连接超时 */
         private final long deadline;
 
+        /** 连接事件监听处理器 */
         private final IoHandler handler;
 
+        /** IO服务配置 */
         private final IoServiceConfig config;
 
-        private ConnectionRequest(SocketChannel channel, IoHandler handler,
-                IoServiceConfig config) {
+        private ConnectionRequest(SocketChannel channel, IoHandler handler, IoServiceConfig config) {
             this.channel = channel;
             long timeout;
             if (config instanceof IoConnectorConfig) {
-                timeout = ((IoConnectorConfig) config)
-                        .getConnectTimeoutMillis();
+                timeout = ((IoConnectorConfig) config).getConnectTimeoutMillis();
             } else {
-                timeout = ((IoConnectorConfig) getDefaultConfig())
-                        .getConnectTimeoutMillis();
+                timeout = ((IoConnectorConfig) getDefaultConfig()).getConnectTimeoutMillis();
             }
             this.deadline = System.currentTimeMillis() + timeout;
             this.handler = handler;

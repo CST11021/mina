@@ -22,29 +22,33 @@ package org.apache.mina.common;
 import java.util.EventListener;
 
 /**
- * Something interested in being notified when the result
- * of an {@link IoFuture} becomes available.
+ * 当异步I/O操作完成后会调用该监听器
  * 
  * @author The Apache Directory Project (mina-dev@directory.apache.org)
  * @version $Rev$, $Date$
  */
 public interface IoFutureListener extends EventListener {
+
     /**
-     * An {@link IoFutureListener} that closes the {@link IoSession} which is
-     * associated with the specified {@link IoFuture}.
+     * I/O操作完成后将session关闭的监听器
      */
     static IoFutureListener CLOSE = new IoFutureListener() {
+
+        /**
+         * I/O操作完成后，将session关闭
+         *
+         * @param future  调用此回调的对象实例
+         */
         public void operationComplete(IoFuture future) {
             future.getSession().close();
         }
+
     };
 
     /**
-     * Invoked when the operation associated with the {@link IoFuture}
-     * has been completed.
+     * 当异步I/O操作完成后会调用该方法
      * 
-     * @param future  The source {@link IoFuture} which called this
-     *                callback.
+     * @param future  调用此回调的对象实例
      */
     void operationComplete(IoFuture future);
 }
