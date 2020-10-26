@@ -33,6 +33,7 @@ import org.apache.mina.filter.codec.demux.MessageEncoder;
  * @version $Rev$, $Date$
  */
 public abstract class AbstractMessageEncoder implements MessageEncoder {
+
     private final int type;
 
     protected AbstractMessageEncoder(int type) {
@@ -55,6 +56,5 @@ public abstract class AbstractMessageEncoder implements MessageEncoder {
         out.write(buf);
     }
 
-    protected abstract void encodeBody(IoSession session,
-            AbstractMessage message, ByteBuffer out);
+    protected abstract void encodeBody(IoSession session, AbstractMessage message, ByteBuffer out);
 }

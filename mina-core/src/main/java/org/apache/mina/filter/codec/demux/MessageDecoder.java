@@ -77,19 +77,14 @@ public interface MessageDecoder {
      *         
      * @throws Exception if the read data violated protocol specification 
      */
-    MessageDecoderResult decode(IoSession session, ByteBuffer in,
-            ProtocolDecoderOutput out) throws Exception;
+    MessageDecoderResult decode(IoSession session, ByteBuffer in, ProtocolDecoderOutput out) throws Exception;
 
     /**
-     * Invoked when the specified <tt>session</tt> is closed while this decoder was
-     * parsing the data.  This method is useful when you deal with the protocol which doesn't
-     * specify the length of a message such as HTTP response without <tt>content-length</tt>
-     * header. Implement this method to process the remaining data that
-     * {@link #decode(IoSession, ByteBuffer, ProtocolDecoderOutput)} method didn't process
-     * completely.
+     * 在此解码器解析数据时关闭指定的会话时调用
+     * 当您处理未指定消息长度的协议（例如，没有内容长度标头的HTTP响应）时，此方法很有用。
+     * 实现此方法以处理#decode(IoSession，ByteBuffer，ProtocolDecoderOutput)方法未完全处理的剩余数据。
      * 
      * @throws Exception if the read data violated protocol specification
      */
-    void finishDecode(IoSession session, ProtocolDecoderOutput out)
-            throws Exception;
+    void finishDecode(IoSession session, ProtocolDecoderOutput out) throws Exception;
 }

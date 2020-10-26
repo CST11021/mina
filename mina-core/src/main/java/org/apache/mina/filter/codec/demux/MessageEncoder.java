@@ -35,20 +35,19 @@ import org.apache.mina.filter.codec.ProtocolEncoderOutput;
  * @see MessageEncoderFactory
  */
 public interface MessageEncoder {
+
     /**
-     * Returns the set of message classes this encoder can encode.
+     * 返回此编码器可以编码的一组消息类，对应#encode(IoSession, Object, ProtocolEncoderOutput)方法支持的message序列化的类型
      */
     Set<Class<?>> getMessageTypes();
 
     /**
-     * Encodes higher-level message objects into binary or protocol-specific data.
-     * MINA invokes {@link #encode(IoSession, Object, ProtocolEncoderOutput)}
-     * method with message which is popped from the session write queue, and then
-     * the encoder implementation puts encoded {@link ByteBuffer}s into
-     * {@link ProtocolEncoderOutput}.
-     * 
-     * @throws Exception if the message violated protocol specification
+     * 将消息对象序列化为字节，并保存到ProtocolEncoderOutput中
+     *
+     * @param session
+     * @param message
+     * @param out
+     * @throws Exception
      */
-    void encode(IoSession session, Object message, ProtocolEncoderOutput out)
-            throws Exception;
+    void encode(IoSession session, Object message, ProtocolEncoderOutput out) throws Exception;
 }

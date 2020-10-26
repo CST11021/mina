@@ -20,48 +20,45 @@
 package org.apache.mina.common;
 
 /**
- * Represents the result of an ashynchronous I/O operation.
+ * 表示一次异步I/O操作的结果
  *
  * @author The Apache Directory Project (mina-dev@directory.apache.org)
  * @version $Rev$, $Date$
  */
 public interface IoFuture {
+
     /**
-     * Returns the {@link IoSession} which is associated with this future.
+     * 返回本次I/O请求关联的session
+     *
+     * @return
      */
     IoSession getSession();
 
     /**
-     * Returns the lock object this future acquires.
+     * Returns the lock object this future acquires
      */
     Object getLock();
 
     /**
-     * 等待异步操作结束
+     * 阻塞，直到等待异步操作结束
      */
     void join();
-
-    /**
-     * Wait for the asynchronous operation to end with the specified timeout.
-     *
-     * @return <tt>true</tt> if the operation is finished.
-     */
     boolean join(long timeoutInMillis);
 
     /**
-     * Returns if the asynchronous operation is finished.
+     * 返回异步操作是否完成
+     *
+     * @return
      */
     boolean isReady();
 
-    /**
-     * Adds an event <tt>listener</tt> which is notified when
-     * the state of this future changes.
-     */
-    void addListener(IoFutureListener listener);
+    // 添加和移除事件监听
 
     /**
-     * Removes an existing event <tt>listener</tt> which is notified when
-     * the state of this future changes.
+     * 当异步I/O操作完成后会调用该监听器
+     *
+     * @param listener
      */
+    void addListener(IoFutureListener listener);
     void removeListener(IoFutureListener listener);
 }

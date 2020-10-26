@@ -42,11 +42,12 @@ public class Server {
     private static final boolean USE_CUSTOM_CODEC = true;
 
     public static void main(String[] args) throws Throwable {
-        IoAcceptor acceptor = new SocketAcceptor();
 
-        // Prepare the service configuration.
+        // 1、服务端Socket配置
         SocketAcceptorConfig cfg = new SocketAcceptorConfig();
         cfg.setReuseAddress(true);
+
+        // 2、配置过滤器链
         if (USE_CUSTOM_CODEC) {
             cfg.getFilterChain().addLast("codec", new ProtocolCodecFilter(new SumUpProtocolCodecFactory(true)));
         } else {
@@ -54,7 +55,8 @@ public class Server {
         }
         cfg.getFilterChain().addLast("logger", new LoggingFilter());
 
-        // 绑定端口，启动服务，开始监听来自客户端的请求
+        // 3、绑定端口，启动服务，开始监听来自客户端的请求
+        IoAcceptor acceptor = new SocketAcceptor();
         acceptor.bind(new InetSocketAddress(SERVER_PORT), new ServerSessionHandler(), cfg);
 
         System.out.println("Listening on port " + SERVER_PORT);

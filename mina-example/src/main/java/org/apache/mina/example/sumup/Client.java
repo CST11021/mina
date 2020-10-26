@@ -70,7 +70,6 @@ public class Client {
 
 
         SocketConnector connector = new SocketConnector();
-        // 将Workder超时更改为1秒，以使没有连接可管理时，I/O线程立即退出。
         connector.setWorkerTimeout(1);
 
         // Configure the service.

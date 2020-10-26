@@ -29,10 +29,21 @@ import org.apache.mina.common.RuntimeIOException;
  * @author The Apache Directory Project (mina-dev@directory.apache.org)
  * @version $Rev$, $Date$
  */
-public class DefaultConnectFuture extends DefaultIoFuture implements
-        ConnectFuture {
+public class DefaultConnectFuture extends DefaultIoFuture implements ConnectFuture {
+
+
+    public DefaultConnectFuture() {
+        super(null);
+    }
+    public DefaultConnectFuture(Object lock) {
+        super(null, lock);
+    }
+
     /**
-     * Returns a new {@link ConnectFuture} which is already marked as 'failed to connect'.
+     * 返回一个连接失败的实例
+     *
+     * @param exception
+     * @return
      */
     public static ConnectFuture newFailedFuture(Throwable exception) {
         DefaultConnectFuture failedFuture = new DefaultConnectFuture();
@@ -40,19 +51,6 @@ public class DefaultConnectFuture extends DefaultIoFuture implements
         return failedFuture;
     }
 
-    /**
-     * Creates a new instance.
-     */
-    public DefaultConnectFuture() {
-        super(null);
-    }
-
-    /**
-     * Creates a new instance which uses the specified object as a lock.
-     */
-    public DefaultConnectFuture(Object lock) {
-        super(null, lock);
-    }
 
     @Override
     public IoSession getSession() throws RuntimeIOException {
@@ -67,6 +65,11 @@ public class DefaultConnectFuture extends DefaultIoFuture implements
         }
     }
 
+    /**
+     * 表示是否已经建立连接
+     *
+     * @return
+     */
     public boolean isConnected() {
         return getValue() instanceof IoSession;
     }

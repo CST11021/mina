@@ -27,10 +27,11 @@ package org.apache.mina.common;
  */
 public interface IoServiceConfig extends Cloneable {
 
-    /**
-     * Resturns the default configuration of the new {@link IoSession}s.
-     */
+
     IoSessionConfig getSessionConfig();
+
+
+    // 设置和获取过滤器链
 
     /**
      * 获取Server配置的过滤链，便于后续将Server的过滤器添加到Session中
@@ -38,7 +39,6 @@ public interface IoServiceConfig extends Cloneable {
      * @return
      */
     IoFilterChainBuilder getFilterChainBuilder();
-
     /**
      * 设置服务的过滤器
      *
@@ -52,28 +52,17 @@ public interface IoServiceConfig extends Cloneable {
      */
     DefaultIoFilterChainBuilder getFilterChain();
 
-    /**
-     * Returns the default {@link ThreadModel} of the {@link IoService}.
-     * The default value is a {@link ExecutorThreadModel}() whose service name is
-     * <tt>'AnonymousIoService'</tt> and which has 16 maximum active threads.
-     * It is strongly recommended to set a new {@link ExecutorThreadModel} by calling
-     * {@link ExecutorThreadModel#getInstance(String)}.
-     */
-    ThreadModel getThreadModel();
 
-    /**
-     * Sets the default {@link ThreadModel} of the {@link IoService}.
-     * If you specify <tt>null</tt>, this property will be set to the
-     * default value.
-     * The default value is an {@link ExecutorThreadModel} whose service name is
-     * <tt>'AnonymousIoService'</tt> with 16 threads.
-     * It is strongly recommended to set a new {@link ExecutorThreadModel} by calling
-     * {@link ExecutorThreadModel#getInstance(String)}.
-     */
+    // 该接口实例主要用于执行过滤器，组装过滤器链的时候，会将该接口实例作为第一个过滤器，从而开始执行过滤器链中的过滤器，可以将ThreadModel理解为一个线程池服务，
+    // 一个服务实例共享一个ThreadModel，ThreadModel内部使用线程池实现，服务端处理客户端请求，是通过headModel中的线程池来处理的
+
+    ThreadModel getThreadModel();
     void setThreadModel(ThreadModel threadModel);
 
     /**
-     * Returns a deep clone of this configuration.
+     * 返回此配置的深层克隆
+     *
+     * @return
      */
     Object clone();
 

@@ -76,7 +76,7 @@ public class SocketConnector extends BaseIoConnector {
 
     private int processorDistributor = 0;
 
-    // 1 min.
+    /** 该SocketConnector#Worker线程默认会轮询一分钟后关闭，可以通过SocketConnector.setWorkerTimeout(1)方法设置线程轮询的时间 */
     private int workerTimeout = 60;
 
     /**
@@ -241,7 +241,7 @@ public class SocketConnector extends BaseIoConnector {
         return workerTimeout;
     }
     /**
-     * Set how many seconds the connection worker thread should remain alive once idle before terminating itself.
+     * 设置连接工作线程在空闲之前应保持活动状态多少秒，然后终止自身
      *
      * @param workerTimeout the number of seconds to keep thread alive.
      *                      Must be >=0.  If 0 is specified, the connection
@@ -402,6 +402,7 @@ public class SocketConnector extends BaseIoConnector {
             Selector selector = SocketConnector.this.selector;
             for (;;) {
                 try {
+                    // 监听通道selector事件，阻塞1秒
                     int nKeys = selector.select(1000);
 
                     // 从队列中获取一个连接请求，并注册通道的OP_CONNECT事件
@@ -414,10 +415,10 @@ public class SocketConnector extends BaseIoConnector {
                     processTimedOutSessions(selector.keys());
 
                     if (selector.keys().isEmpty()) {
+                        // 该Worker线程默认会轮询一分钟后关闭，可以通过SocketConnector.setWorkerTimeout(1)方法设置线程轮询的时间
                         if (System.currentTimeMillis() - lastActive > workerTimeout * 1000L) {
                             synchronized (lock) {
-                                if (selector.keys().isEmpty()
-                                        && connectQueue.isEmpty()) {
+                                if (selector.keys().isEmpty() && connectQueue.isEmpty()) {
                                     worker = null;
                                     try {
                                         selector.close();
@@ -446,25 +447,30 @@ public class SocketConnector extends BaseIoConnector {
         }
     }
 
+    /**
+     * 表示与服务端建立连接的请求
+     */
     private class ConnectionRequest extends DefaultConnectFuture {
+
+        /** 与服务端建立连接的Socket通道 */
         private final SocketChannel channel;
 
+        /** 当时间deadline之前还没连接上服务端时，则视为连接超时 */
         private final long deadline;
 
+        /** 连接事件监听处理器 */
         private final IoHandler handler;
 
+        /** IO服务配置 */
         private final IoServiceConfig config;
 
-        private ConnectionRequest(SocketChannel channel, IoHandler handler,
-                IoServiceConfig config) {
+        private ConnectionRequest(SocketChannel channel, IoHandler handler, IoServiceConfig config) {
             this.channel = channel;
             long timeout;
             if (config instanceof IoConnectorConfig) {
-                timeout = ((IoConnectorConfig) config)
-                        .getConnectTimeoutMillis();
+                timeout = ((IoConnectorConfig) config).getConnectTimeoutMillis();
             } else {
-                timeout = ((IoConnectorConfig) getDefaultConfig())
-                        .getConnectTimeoutMillis();
+                timeout = ((IoConnectorConfig) getDefaultConfig()).getConnectTimeoutMillis();
             }
             this.deadline = System.currentTimeMillis() + timeout;
             this.handler = handler;
