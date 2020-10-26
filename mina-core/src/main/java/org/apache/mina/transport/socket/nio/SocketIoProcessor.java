@@ -56,11 +56,9 @@ class SocketIoProcessor {
 
     /** 处理器执行线程的线程名 */
     private final String threadName;
-
     /** 封装Processor处理器的执行逻辑 */
     private Worker worker;
-
-    /** 执行器，用于执行Worker */
+    /** 用于执行#Worker的执行器，对应SocketAcceptor#executor */
     private final Executor executor;
 
 
@@ -68,13 +66,11 @@ class SocketIoProcessor {
 
     private long lastIdleCheckTime = System.currentTimeMillis();
 
-    /** 当session创建时，会保存到该队列中 */
+    /** 该队列用于保存有待处理的session：当session创建时，会保存到该队列中 */
     private final Queue<SocketSessionImpl> newSessions = new ConcurrentLinkedQueue<SocketSessionImpl>();
-
     /** 当读取完客户端的请求数据后，会将session放到该队列中 */
     private final Queue<SocketSessionImpl> removingSessions = new ConcurrentLinkedQueue<SocketSessionImpl>();
-
-    /** 该队列存储的session表示，服务已经对处理过了客户端的请求，并将响应数据write到了session中，消费该队列是将Session中的响应数据进行flush（即将响应数据发送给客户端） */
+    /** 服务端处理完客户端请求后，会将响应数据write到了session中，消费该队列是将Session中的响应数据进行flush（即将响应数据发送给客户端） */
     private final Queue<SocketSessionImpl> flushingSessions = new ConcurrentLinkedQueue<SocketSessionImpl>();
 
     private final Queue<SocketSessionImpl> trafficControllingSessions = new ConcurrentLinkedQueue<SocketSessionImpl>();
@@ -310,7 +306,7 @@ class SocketIoProcessor {
     }
 
     /**
-     * 处理完一次请求后进行事件统计，并检查是否发生了WriteTimeout事件，如果发生了则触发一次fireExceptionCaught事件回调
+     * 处理完一次请求后进行事件统计，并检查是否发生了WRITER_IDLE事件，如果发生了则触发一次fireExceptionCaught事件回调
      */
     private void notifyIdleness() {
         // process idle sessions
@@ -322,7 +318,7 @@ class SocketIoProcessor {
             if (keys != null) {
                 for (SelectionKey key : keys) {
                     SocketSessionImpl session = (SocketSessionImpl) key.attachment();
-                    // 处理完一次请求后进行事件统计，并检查是否发生了WriteTimeout事件，如果发生了则触发一次fireExceptionCaught事件回调
+                    // 处理完一次请求后进行事件统计，并检查是否发生了WRITER_IDLE事件，如果发生了则触发一次fireExceptionCaught事件回调
                     notifyIdleness(session, currentTime);
                 }
             }
@@ -600,7 +596,7 @@ class SocketIoProcessor {
                     // session处理完一次请求后，会从removingSessions队列中移除session，将session中的通道关闭，断开与客户端的连接，然后清除session的中保存的响应数据的缓存，并触发fireSessionDestroyed()监听器方法
                     doRemove();
 
-                    // 处理完一次请求后进行事件统计，并检查是否发生了WriteTimeout事件，如果发生了则触发一次fireExceptionCaught事件回调
+                    // 处理完一次请求后进行事件统计，并检查是否发生了WRITER_IDLE事件，如果发生了则触发一次fireExceptionCaught事件回调
                     notifyIdleness();
 
                     // 如果监听的全部被移除（即服务关闭），则关闭selector，停止Workder线程

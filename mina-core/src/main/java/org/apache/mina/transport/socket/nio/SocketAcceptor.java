@@ -411,6 +411,7 @@ public class SocketAcceptor extends BaseIoAcceptor {
             Selector selector = SocketAcceptor.this.selector;
             for (; ; ) {
                 try {
+                    // 如果客户端没有请求过来，这里会一直阻塞：
                     // 阻塞到至少有一个通道在你注册的事件上就绪了，select()方法返回的int值表示有多少通道已经就绪。即，自上次调用select()方法后有多少通道变成就绪状态。
                     // 如果调用select()方法，因为有一个通道变成就绪状态，返回了1，若再次调用select()方法，如果另一个通道就绪了，它会再次返回1。
                     // 如果对第一个就绪的channel没有做任何操作，现在就有两个就绪的通道，但在每次select()方法调用之间，只有一个通道就绪了。
