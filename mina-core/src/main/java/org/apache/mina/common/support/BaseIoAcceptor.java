@@ -37,10 +37,24 @@ public abstract class BaseIoAcceptor extends BaseIoService implements IoAcceptor
     protected BaseIoAcceptor() {
     }
 
+    /**
+     * 实现IoAcceptor接口，用于启动服务（开始监听客户端请求）
+     *
+     * @param address
+     * @param handler
+     * @throws IOException
+     */
     public void bind(SocketAddress address, IoHandler handler) throws IOException {
         this.bind(address, handler, getDefaultConfig());
     }
 
+    /**
+     * 默认不支持创建session
+     *
+     * @param remoteAddress     客户端地址
+     * @param localAddress      服务端地址
+     * @return
+     */
     public IoSession newSession(SocketAddress remoteAddress, SocketAddress localAddress) {
         throw new UnsupportedOperationException();
     }

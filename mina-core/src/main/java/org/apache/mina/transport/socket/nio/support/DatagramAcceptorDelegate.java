@@ -53,7 +53,7 @@ import org.apache.mina.transport.socket.nio.DatagramSessionConfig;
 import org.apache.mina.util.NamePreservingRunnable;
 
 /**
- * {@link IoAcceptor} for datagram transport (UDP/IP).
+ * 用于数据报传输（UDP/IP）
  *
  * @author The Apache Directory Project (mina-dev@directory.apache.org)
  * @version $Rev$, $Date$
@@ -112,9 +112,11 @@ public class DatagramAcceptorDelegate extends BaseIoAcceptor implements IoAccept
             config = getDefaultConfig();
         }
 
+        // 绑定的服务地址必须是InetSocketAddress的实例
         if (address != null && !(address instanceof InetSocketAddress))
             throw new IllegalArgumentException("Unexpected address type: " + address.getClass());
 
+        // 创建一个启动服务的注册请求
         RegistrationRequest request = new RegistrationRequest(address, handler, config);
         synchronized (lock) {
             startupWorker();
@@ -336,9 +338,13 @@ public class DatagramAcceptorDelegate extends BaseIoAcceptor implements IoAccept
         }
     }
 
+    /**
+     *
+     */
     private class Worker implements Runnable {
 
         public void run() {
+
             Selector selector = DatagramAcceptorDelegate.this.selector;
             for (; ; ) {
                 try {
@@ -550,7 +556,8 @@ public class DatagramAcceptorDelegate extends BaseIoAcceptor implements IoAccept
     }
 
     /**
-     * 创建socket并绑定到指定的端口，开始监听来自客户端的请求
+     * 消费registerQueue队列，创建socket并绑定到指定的端口，开始监听来自客户端的请求：
+     * 创建一个Channel，初始化channel配置，注册OP_READ事件，开始监听客户端请求
      */
     private void registerNew() {
         if (registerQueue.isEmpty())

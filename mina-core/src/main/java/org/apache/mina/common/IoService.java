@@ -40,9 +40,9 @@ public interface IoService {
      */
     IoServiceConfig getDefaultConfig();
     /**
-     * Returns <tt>true</tt> if this service is managing the specified <tt>serviceAddress</tt>.
-     * If this service is an {@link IoAcceptor}, <tt>serviceAddress</tt> is a bind address.
-     * If this service is an {@link IoConnector}, <tt>serviceAddress</tt> is a remote address.
+     * 如果此服务正在管理指定的serviceAddress，则返回true。
+     * 1、当服务是IoAcceptor，则serviceAddress是绑定地址；
+     * 2、当服务是IoConnector，则serviceAddress是远程地址。
      */
     boolean isManaged(SocketAddress serviceAddress);
     /**
