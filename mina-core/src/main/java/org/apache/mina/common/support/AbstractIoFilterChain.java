@@ -335,7 +335,7 @@ public abstract class AbstractIoFilterChain implements IoFilterChain {
      */
     public void fireFilterWrite(IoSession session, WriteRequest writeRequest) {
         Entry tail = this.tail;
-        // 调用下一个过滤器
+        // 调用前面一个过滤器执行写操作
         callPreviousFilterWrite(tail, session, writeRequest);
     }
     private void callPreviousFilterWrite(Entry entry, IoSession session, WriteRequest writeRequest) {

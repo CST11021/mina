@@ -247,7 +247,7 @@ public interface IoFilter {
             }
         };
 
-        /** 发送的消息 */
+        /** 发送的消息：注意这里的使用final进行修饰，并且该类中只有get方法，没有set方法，这很重要，可以防止过滤器通过filterWrite方法来修改发送的消息内容 */
         private final Object message;
 
         private final WriteFuture future;

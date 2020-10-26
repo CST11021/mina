@@ -489,6 +489,7 @@ class SocketIoProcessor {
         int maxWrittenBytes = ((SocketSessionConfig) session.getConfig()).getSendBufferSize() << 1;
         try {
             for (; ; ) {
+                // 获取队列的头元素，不会删除头元素
                 WriteRequest req = writeRequestQueue.peek();
 
                 if (req == null)
