@@ -35,17 +35,17 @@ public class TrafficMask {
     public static final TrafficMask NONE = new TrafficMask(0, "none");
 
     /**
-     * This mask suspends writes, and resumes reads if reads were suspended.
+     * 此掩码挂起写入，如果读取被挂起，则恢复读取。
      */
     public static final TrafficMask READ = new TrafficMask(SelectionKey.OP_READ, "read");
 
     /**
-     * This mask suspends reads, and resumes writes if writes were suspended.
+     * 此掩码挂起读取，如果写入被挂起，则恢复写入。
      */
     public static final TrafficMask WRITE = new TrafficMask(SelectionKey.OP_WRITE, "write");
 
     /**
-     * This mask resumes both reads and writes if any of them were suspended.
+     * 如果其中任何一个已暂停，则此掩码将恢复读取和写入。
      */
     public static final TrafficMask ALL = new TrafficMask(SelectionKey.OP_READ | SelectionKey.OP_WRITE, "all");
 

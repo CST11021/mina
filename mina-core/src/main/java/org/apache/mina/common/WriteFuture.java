@@ -43,15 +43,18 @@ package org.apache.mina.common;
  * @version $Rev$, $Date$
  */
 public interface WriteFuture extends IoFuture {
+
     /**
-     * Returns <tt>true</tt> if the write operation is finished successfully.
+     * 如果写入操作成功完成，则返回true.
+     *
+     * @return
      */
     boolean isWritten();
 
     /**
-     * Sets whether the message is written or not, and notifies all threads
-     * waiting for this future.  This method is invoked by MINA internally.
-     * Please do not call this method directly.
+     * 设置是否写入消息，并通知所有等待此将来的线程，该方法由MINA内部调用，请不要直接调用此方法。
+     *
+     * @param written
      */
     void setWritten(boolean written);
 }

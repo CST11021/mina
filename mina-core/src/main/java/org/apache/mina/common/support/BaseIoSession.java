@@ -194,10 +194,7 @@ public abstract class BaseIoSession implements IoSession {
     }
 
     /**
-     * Implement this method to perform real write operation with the specified <code>writeRequest</code>.
-     * <p>
-     * By default, this method is implemented to set the future to
-     * 'not written' immediately.
+     * 实现此方法以使用指定的writeRequest执行实际的写操作。默认情况下，此方法实现为将将来立即设置为“未写入”。
      *
      * @param writeRequest Write request to make
      */

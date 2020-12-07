@@ -397,10 +397,15 @@ class SocketIoProcessor {
     }
 
     /**
-     * session处理完一次请求后（即接收客户端请求，然后发起响应了之后）的后置处理动作
+     * 消费flushingSessions队列中的session：
+     * 1、获取session中的请求消息队列，处理WriteRequest；
+     * 2、将WriteRequest转发给IoFilterChain，并调用#fireMessageSent()方法；
+     * 3、调用过滤器的IoFilter#messageSent(IoSession session, Object message)方法；
+     * 4、调用IoHandler#messageSent(IoSession session, Object message)方法；
      */
     private void doFlush() {
         for (; ; ) {
+            // 将首个元素从队列中弹出，如果队列是空的，就返回null
             SocketSessionImpl session = flushingSessions.poll();
             if (session == null)
                 break;
@@ -481,6 +486,7 @@ class SocketIoProcessor {
 
         // Clear OP_WRITE
         SelectionKey key = session.getSelectionKey();
+        // 将当前的session标记为不能再写的标志
         key.interestOps(key.interestOps() & (~SelectionKey.OP_WRITE));
 
         Queue<WriteRequest> writeRequestQueue = session.getWriteRequestQueue();
@@ -521,7 +527,7 @@ class SocketIoProcessor {
                 writtenBytes += localWrittenBytes;
 
                 if (localWrittenBytes == 0 || writtenBytes >= maxWrittenBytes) {
-                    // Kernel buffer is full or wrote too much.
+                    // 内核缓冲区已满或写入过多
                     key.interestOps(key.interestOps() | SelectionKey.OP_WRITE);
                     return false;
                 }
@@ -591,7 +597,7 @@ class SocketIoProcessor {
                         process(selector.selectedKeys());
                     }
 
-                    // session处理完一次请求后（即接收客户端请求，然后发起响应了之后）的后置处理动作
+                    // 消费flushingSessions队列中的session
                     doFlush();
 
                     // session处理完一次请求后，会从removingSessions队列中移除session，将session中的通道关闭，断开与客户端的连接，然后清除session的中保存的响应数据的缓存，并触发fireSessionDestroyed()监听器方法
