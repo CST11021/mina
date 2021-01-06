@@ -86,6 +86,11 @@ public class VmPipeAcceptor extends BaseIoAcceptor {
         getListeners().fireServiceActivated(this, address, handler, config);
     }
 
+    /**
+     * 断开所有客户端的连接，并关闭服务
+     *
+     * @param address
+     */
     public void unbind(SocketAddress address) {
         if (address == null)
             throw new NullPointerException("address");
@@ -93,21 +98,21 @@ public class VmPipeAcceptor extends BaseIoAcceptor {
         VmPipe pipe;
         synchronized (boundHandlers) {
             if (!boundHandlers.containsKey(address)) {
-                throw new IllegalArgumentException("Address not bound: "
-                        + address);
+                throw new IllegalArgumentException("Address not bound: " + address);
             }
 
             pipe = boundHandlers.remove(address);
         }
 
-        getListeners().fireServiceDeactivated(this, pipe.getAddress(),
-                pipe.getHandler(), pipe.getConfig());
+        getListeners().fireServiceDeactivated(this, pipe.getAddress(), pipe.getHandler(), pipe.getConfig());
     }
 
+    /**
+     * 取消绑定此接受者绑定的所有地址
+     */
     public void unbindAll() {
         synchronized (boundHandlers) {
-            for (SocketAddress address : new ArrayList<SocketAddress>(
-                    boundHandlers.keySet())) {
+            for (SocketAddress address : new ArrayList<SocketAddress>(boundHandlers.keySet())) {
                 unbind(address);
             }
         }

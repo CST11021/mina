@@ -20,13 +20,13 @@
 package org.apache.mina.example.tennis;
 
 /**
- * A tennis ball which has TTL value and state whose value is one of 'PING' and
- * 'PONG'.
+ * 具有TTL值和状态值为"PING"和"PONG"之一的网球。
  * 
  * @author The Apache Directory Project (mina-dev@directory.apache.org)
  * @version $Rev$, $Date$
  */
 public class TennisBall {
+
     private final boolean ping;
 
     private final int ttl;
@@ -37,7 +37,6 @@ public class TennisBall {
     public TennisBall(int ttl) {
         this(ttl, true);
     }
-
     /**
      * Creates a new ball with the specified TTL value and PING/PONG state.
      */
@@ -62,8 +61,7 @@ public class TennisBall {
     }
 
     /**
-     * Returns string representation of this message (<code>[PING|PONG]
-     * (TTL)</code>).
+     * Returns string representation of this message (<code>[PING|PONG](TTL)</code>).
      */
     public String toString() {
         if (ping) {

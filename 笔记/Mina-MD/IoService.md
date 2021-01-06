@@ -1,12 +1,4 @@
-
-
-
-
-
-
-
-
-##IoService
+## IoService
 
 ```java
 public interface IoService {
@@ -64,7 +56,7 @@ public interface IoAcceptor extends IoService {
 
 
 
-###IoConnector
+### IoConnector
 
 ```java
 public interface IoConnector extends IoService {
@@ -91,9 +83,7 @@ public interface IoConnector extends IoService {
 
 
 
-##Mina的工作流程
-
-
+## Mina的工作流程
 
 1、客户端与服务端建立连接后会拿到一个IoSession对象；
 

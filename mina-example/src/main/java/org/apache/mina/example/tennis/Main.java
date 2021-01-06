@@ -27,39 +27,35 @@ import org.apache.mina.transport.vmpipe.VmPipeAddress;
 import org.apache.mina.transport.vmpipe.VmPipeConnector;
 
 /**
- * （入口点）“虚拟机内管道”示例，用于模拟客户端和服务器之间的网球比赛。
- * <ol>
- *   <li>Client connects to server</li>
- *   <li>At first, client sends {@link TennisBall} with TTL value '10'.</li>
- *   <li>Received side (either server or client) decreases the TTL value of the
- *     received ball, and returns it to remote peer.</li>
- *   <li>Who gets the ball with 0 TTL loses.</li>
- * </ol> 
+ * "虚拟机内管道"示例，用于模拟客户端和服务器之间的网球比赛，客户端连接到服务器后比赛开始：
+ *      首先，客户端发送TennisBall的TTL值是"10"。
+ *      接收方（服务器或客户端）减小接收到的球的TTL值，并将其返回给对等方。
+ *      谁得到TTL为0的球算输了。
  * 
  * @author The Apache Directory Project (mina-dev@directory.apache.org)
  * @version $Rev$, $Date$
  */
 public class Main {
 
-    public static void main(String[] args) throws Exception {
-        IoAcceptor acceptor = new VmPipeAcceptor();
-        VmPipeAddress address = new VmPipeAddress(8080);
+    private static VmPipeAddress address = new VmPipeAddress(8080);
 
-        // Set up server
+    public static void main(String[] args) throws Exception {
+        // 1、创建并启动Server
+        IoAcceptor acceptor = new VmPipeAcceptor();
         acceptor.bind(address, new TennisPlayer());
 
-        // Connect to the server.
+        // 2、创建Client并连接Server
         VmPipeConnector connector = new VmPipeConnector();
         ConnectFuture future = connector.connect(address, new TennisPlayer());
+        // 阻塞直到连接上服务端
         future.join();
-        IoSession session = future.getSession();
 
-        // Send the first ping message
+        // 3、发送第一个PING
+        IoSession session = future.getSession();
         session.write(new TennisBall(10));
 
-        // Wait until the match ends.
+        // 4、获取session关闭的Future，这里阻塞，直到会话关闭
         session.getCloseFuture().join();
-
         acceptor.unbind(address);
     }
 }
