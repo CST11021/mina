@@ -84,6 +84,7 @@ public class StatCollector {
     private float bytesReadThroughput = 0f;
 
     private final IoServiceListener serviceListener = new IoServiceListener() {
+
         public void serviceActivated(IoService service, SocketAddress serviceAddress, IoHandler handler, IoServiceConfig config) {
         }
 
@@ -97,6 +98,7 @@ public class StatCollector {
         public void sessionDestroyed(IoSession session) {
             removeSession(session);
         }
+
     };
 
     /**

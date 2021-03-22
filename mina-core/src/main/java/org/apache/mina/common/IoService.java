@@ -35,8 +35,7 @@ public interface IoService {
     // 服务绑定和配置
 
     /**
-     * Returns the default configuration which is used when you didn't specify
-     * any configuration.
+     * Returns the default configuration which is used when you didn't specify any configuration.
      */
     IoServiceConfig getDefaultConfig();
     /**
@@ -56,17 +55,13 @@ public interface IoService {
     // 获取session集合
 
     /**
-     * Returns all sessions with the specified remote or local address,
-     * which are currently managed by this service.
-     * {@link IoAcceptor} will assume the specified <tt>address</tt> is a local
-     * address, and {@link IoConnector} will assume it's a remote address.
+     * Returns all sessions with the specified remote or local address, which are currently managed by this service.
+     * {@link IoAcceptor} will assume the specified <tt>address</tt> is a local address, and {@link IoConnector} will assume it's a remote address.
      *
      * @param serviceAddress the address to return all sessions for.
      * @return the sessions. An empty collection if there's no session.
-     * @throws IllegalArgumentException if the specified <tt>address</tt> has
-     *         not been bound.
-     * @throws UnsupportedOperationException if this operation isn't supported
-     *         for the particular transport type implemented by this {@link IoService}.
+     * @throws IllegalArgumentException if the specified <tt>address</tt> has not been bound.
+     * @throws UnsupportedOperationException if this operation isn't supported for the particular transport type implemented by this {@link IoService}.
      */
     Set<IoSession> getManagedSessions(SocketAddress serviceAddress);
 

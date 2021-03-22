@@ -48,6 +48,7 @@ public abstract class BaseIoService implements IoService {
 
 
 
+
     // 过滤器相关
 
     /**
@@ -83,7 +84,11 @@ public abstract class BaseIoService implements IoService {
     }
 
 
-    // 监听器相关接口
+
+
+
+
+    // 监听器相关接口：一下接口都是直接委托IoServiceListenerSupport组件来处理
 
     /**
      * 获取IoServiceListener管理器
@@ -109,7 +114,6 @@ public abstract class BaseIoService implements IoService {
     public void removeListener(IoServiceListener listener) {
         getListeners().remove(listener);
     }
-
 
     /**
      * 获取所有被管理的监听器的服务地址
