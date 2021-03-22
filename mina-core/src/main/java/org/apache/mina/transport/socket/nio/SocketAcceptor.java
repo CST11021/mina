@@ -418,7 +418,7 @@ public class SocketAcceptor extends BaseIoAcceptor {
                     // 如果对第一个就绪的channel没有做任何操作，现在就有两个就绪的通道，但在每次select()方法调用之间，只有一个通道就绪了。
                     int nKeys = selector.select();
 
-                    // 从registerQueue获取一个请求，然后创建一个通道并注册到Selector上
+                    // 从registerQueue获取一个请求，然后创建一个通道并注册到Selector上，然后开始监听OP_ACCEPT事件
                     registerNew();
 
                     if (nKeys > 0) {
