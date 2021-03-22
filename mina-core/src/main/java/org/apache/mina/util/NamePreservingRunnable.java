@@ -22,8 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A {@link Runnable} wrapper that preserves the name of the thread after the runnable is
- * complete (for {@link Runnable}s that change the name of the Thread they use.)
+ * 对线程的包装：当线程运行时使用一个指定的线程名，当线程运行结束后，回复其初始的线程名
  * 
  * @author The Apache MINA Project (dev@mina.apache.org)
  * @version $Rev: 446581 $, $Date: 2006-09-15 11:36:12Z $,
@@ -53,10 +52,12 @@ public class NamePreservingRunnable implements Runnable {
             setName(currentThread, oldName);
         }
     }
-    
+
     /**
-     * Wraps {@link Thread#setName(String)} to catch a possible {@link Exception}s such as
-     * {@link SecurityException} in sandbox environments, such as applets
+     * 设置线程的线程名
+     *
+     * @param thread
+     * @param name
      */
     private void setName(Thread thread, String name) {
         try {

@@ -41,11 +41,11 @@ public class BogusSSLContextFactory {
      */
     private static final String PROTOCOL = "TLS";
 
+    /** 算法名称，默认：SunX509 */
     private static final String KEY_MANAGER_FACTORY_ALGORITHM;
 
     static {
-        String algorithm = Security
-                .getProperty("ssl.KeyManagerFactory.algorithm");
+        String algorithm = Security.getProperty("ssl.KeyManagerFactory.algorithm");
         if (algorithm == null) {
             algorithm = "SunX509";
         }
@@ -74,14 +74,14 @@ public class BogusSSLContextFactory {
     private static SSLContext clientInstance = null;
 
     /**
-     * Get SSLContext singleton.
+     * 获取一个SSLContext单例
      *
+     * @param server 是否为服务端
      * @return SSLContext
      * @throws java.security.GeneralSecurityException
      *
      */
-    public static SSLContext getInstance(boolean server)
-            throws GeneralSecurityException {
+    public static SSLContext getInstance(boolean server) throws GeneralSecurityException {
         SSLContext retInstance = null;
         if (server) {
             if (serverInstance == null) {
@@ -90,8 +90,7 @@ public class BogusSSLContextFactory {
                         try {
                             serverInstance = createBougusServerSSLContext();
                         } catch (Exception ioe) {
-                            throw new GeneralSecurityException(
-                                    "Can't create Server SSLContext:" + ioe);
+                            throw new GeneralSecurityException("Can't create Server SSLContext:" + ioe);
                         }
                     }
                 }
@@ -110,14 +109,19 @@ public class BogusSSLContextFactory {
         return retInstance;
     }
 
-    private static SSLContext createBougusServerSSLContext()
-            throws GeneralSecurityException, IOException {
+    /**
+     * 创建服务端的SSLContext
+     *
+     * @return
+     * @throws GeneralSecurityException
+     * @throws IOException
+     */
+    private static SSLContext createBougusServerSSLContext() throws GeneralSecurityException, IOException {
         // Create keystore
         KeyStore ks = KeyStore.getInstance("JKS");
         InputStream in = null;
         try {
-            in = BogusSSLContextFactory.class
-                    .getResourceAsStream(BOGUS_KEYSTORE);
+            in = BogusSSLContextFactory.class.getResourceAsStream(BOGUS_KEYSTORE);
             ks.load(in, BOGUS_PW);
         } finally {
             if (in != null) {
@@ -129,20 +133,23 @@ public class BogusSSLContextFactory {
         }
 
         // Set up key manager factory to use our key store
-        KeyManagerFactory kmf = KeyManagerFactory
-                .getInstance(KEY_MANAGER_FACTORY_ALGORITHM);
+        KeyManagerFactory kmf = KeyManagerFactory.getInstance(KEY_MANAGER_FACTORY_ALGORITHM);
         kmf.init(ks, BOGUS_PW);
 
         // Initialize the SSLContext to work with our key managers.
         SSLContext sslContext = SSLContext.getInstance(PROTOCOL);
-        sslContext.init(kmf.getKeyManagers(),
-                BogusTrustManagerFactory.X509_MANAGERS, null);
+        sslContext.init(kmf.getKeyManagers(), BogusTrustManagerFactory.X509_MANAGERS, null);
 
         return sslContext;
     }
 
-    private static SSLContext createBougusClientSSLContext()
-            throws GeneralSecurityException {
+    /**
+     * 创建客户端的SSLContext
+     *
+     * @return
+     * @throws GeneralSecurityException
+     */
+    private static SSLContext createBougusClientSSLContext() throws GeneralSecurityException {
         SSLContext context = SSLContext.getInstance(PROTOCOL);
         context.init(null, BogusTrustManagerFactory.X509_MANAGERS, null);
         return context;

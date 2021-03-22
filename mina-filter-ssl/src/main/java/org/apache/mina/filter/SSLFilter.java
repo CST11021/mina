@@ -78,6 +78,7 @@ import org.apache.mina.util.SessionLog;
  * @version $Rev$, $Date$
  */
 public class SSLFilter extends IoFilterAdapter {
+
     /**
      * A session attribute key that stores underlying {@link SSLSession}
      * for each session.
@@ -170,8 +171,7 @@ public class SSLFilter extends IoFilterAdapter {
         boolean started;
         synchronized (handler) {
             if (handler.isOutboundDone()) {
-                NextFilter nextFilter = (NextFilter) session
-                        .getAttribute(NEXT_FILTER);
+                NextFilter nextFilter = (NextFilter) session.getAttribute(NEXT_FILTER);
                 handler.destroy();
                 handler.init();
                 handler.handshake(nextFilter);
@@ -310,6 +310,14 @@ public class SSLFilter extends IoFilterAdapter {
         this.enabledProtocols = protocols;
     }
 
+    /**
+     * 添加一个过滤器到链之前会调用该方法
+     *
+     * @param parent
+     * @param name
+     * @param nextFilter
+     * @throws Exception
+     */
     public void onPreAdd(IoFilterChain parent, String name, NextFilter nextFilter) throws SSLException {
         if (parent.contains(SSLFilter.class)) {
             throw new IllegalStateException("A filter chain cannot contain more than one SSLFilter.");
@@ -323,6 +331,16 @@ public class SSLFilter extends IoFilterAdapter {
         session.setAttribute(SSL_HANDLER, handler);
     }
 
+    /**
+     * 将此过滤器添加到指定的父级后调用。
+     * 请注意，如果将此过滤器添加到多个父对象中，则可以多次调用此方法。
+     * 在调用{@link #init()}之前，不会调用此方法。
+     *
+     * @param parent     调用此方法的过滤器链
+     * @param name       the name assigned to this filter
+     * @param nextFilter the {@link NextFilter} for this filter.  You can reuse
+     *                   this object until this filter is removed from the chain.
+     */
     public void onPostAdd(IoFilterChain parent, String name, NextFilter nextFilter) throws SSLException {
         SSLHandler handler = getSSLSessionHandler(parent.getSession());
         synchronized (handler) {
@@ -331,6 +349,16 @@ public class SSLFilter extends IoFilterAdapter {
         handler.flushScheduledEvents();
     }
 
+    /**
+     * 从指定的父级删除此过滤器之前调用。
+     * 请注意，如果从多个父级中删除此过滤器，则可以多次调用此方法。
+     * 始终在调用{@link #destroy()}之前调用此方法。
+     *
+     * @param parent     the parent who called this method
+     * @param name       the name assigned to this filter
+     * @param nextFilter the {@link NextFilter} for this filter.  You can reuse
+     *                   this object until this filter is removed from the chain.
+     */
     public void onPreRemove(IoFilterChain parent, String name, NextFilter nextFilter) throws SSLException {
         IoSession session = parent.getSession();
         stopSSL(session);
@@ -338,7 +366,7 @@ public class SSLFilter extends IoFilterAdapter {
         session.removeAttribute(SSL_HANDLER);
     }
 
-    // IoFilter impl.
+
     public void sessionClosed(NextFilter nextFilter, IoSession session) throws SSLException {
         SSLHandler handler = getSSLSessionHandler(session);
         try {
@@ -497,8 +525,7 @@ public class SSLFilter extends IoFilterAdapter {
     public void filterClose(final NextFilter nextFilter, final IoSession session) throws SSLException {
         SSLHandler handler = getSSLSessionHandler0(session);
         if (handler == null) {
-            // The connection might already have closed, or
-            // SSL might have not started yet.
+            // The connection might already have closed, or SSL might have not started yet.
             nextFilter.filterClose(session);
             return;
         }
@@ -599,8 +626,7 @@ public class SSLFilter extends IoFilterAdapter {
     }
 
     /**
-     * A message that is sent from {@link SSLFilter} when the connection became
-     * secure or is not secure anymore. 
+     * A message that is sent from {@link SSLFilter} when the connection became secure or is not secure anymore.
      *
      * @author The Apache Directory Project (mina-dev@directory.apache.org)
      * @version $Rev$, $Date$

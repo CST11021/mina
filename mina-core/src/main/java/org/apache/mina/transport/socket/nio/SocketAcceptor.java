@@ -74,13 +74,13 @@ public class SocketAcceptor extends BaseIoAcceptor {
 
     private SocketAcceptorConfig defaultConfig = new SocketAcceptorConfig();
 
-    /** 保存所有的通道 */
+    /** 保存绑定的地址对应的通道 */
     private final Map<SocketAddress, ServerSocketChannel> channels = new ConcurrentHashMap<SocketAddress, ServerSocketChannel>();
 
     /** 用于创建Session的请求，当接收到客户端请求时，会创建一个RegistrationRequest到队列中，以便后续创建Session */
     private final Queue<RegistrationRequest> registerQueue = new ConcurrentLinkedQueue<RegistrationRequest>();
 
-    /** 保存服务关闭的请求，Worker中会处理该请求，并将服务关闭 */
+    /** 保存服务关闭的请求，Worker中会处理该请求，并将服务关闭，当调用{@link #unbind(SocketAddress)}方法时，会将请求保存到该队列中 */
     private final Queue<CancellationRequest> cancelQueue = new ConcurrentLinkedQueue<CancellationRequest>();
 
     /** 用于处理请求的处理器（创建session） */
@@ -127,13 +127,13 @@ public class SocketAcceptor extends BaseIoAcceptor {
     }
 
 
-
-
     /**
-     * Binds to the specified <code>address</code> and handles incoming connections with the specified
-     * <code>handler</code>.  Backlog value is configured to the value of <code>backlog</code> property.
+     * 绑定Socket地址
      *
-     * @throws IOException if failed to bind
+     * @param address   InetSocketAddress
+     * @param handler   IO处理器，不允许为null
+     * @param config    服务配置
+     * @throws IOException  如果绑定失败返回该异常
      */
     public void bind(SocketAddress address, IoHandler handler, IoServiceConfig config) throws IOException {
         // 参数校验
@@ -156,7 +156,7 @@ public class SocketAcceptor extends BaseIoAcceptor {
             startupWorker();
             // 添加请求到队列中
             registerQueue.add(request);
-            // 换线Worker中会执行selector.select()一直阻塞线程，然后这里调用selector.wakeup()方法来唤醒线程
+            // Worker中selector.select()会阻塞线程，当调用selector.wakeup()方法后，可以唤醒线程
             selector.wakeup();
         }
 
@@ -167,6 +167,7 @@ public class SocketAcceptor extends BaseIoAcceptor {
             ExceptionMonitor.getInstance().exceptionCaught(e);
         }
 
+        // 如果处理请求过程中出现异常（及服务启动过程出现异常），则抛出异常
         if (request.exception != null) {
             throw request.exception;
         }
@@ -518,14 +519,20 @@ public class SocketAcceptor extends BaseIoAcceptor {
      * 标识一个启动服务的请求
      */
     private static class RegistrationRequest {
+
+        /** 服务端监听的地址 */
         private InetSocketAddress address;
 
+        /** IoHandler */
         private final IoHandler handler;
 
+        /** 服务端配置 */
         private final IoServiceConfig config;
 
+        /** 当该请求被处理完成后，则将该闭锁countDown() */
         private final CountDownLatch done = new CountDownLatch(1);
 
+        /** 如果该请求处理过程异常，则该变量保存为对应的异常引用 */
         private volatile IOException exception;
 
         private RegistrationRequest(SocketAddress address, IoHandler handler, IoServiceConfig config) {

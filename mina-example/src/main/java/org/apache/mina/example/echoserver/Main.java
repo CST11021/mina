@@ -42,7 +42,7 @@ public class Main {
     private static final int PORT = 8080;
 
     /** 如果要使服务器成为SSL，请将其设置为true */
-    private static final boolean USE_SSL = false;
+    private static final boolean USE_SSL = true;
 
     public static void main(String[] args) throws Exception {
         IoAcceptor acceptor = new SocketAcceptor();

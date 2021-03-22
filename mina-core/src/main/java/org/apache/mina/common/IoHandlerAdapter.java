@@ -31,13 +31,32 @@ import org.apache.mina.util.SessionUtil;
  * @version $Rev$, $Date$
  */
 public class IoHandlerAdapter implements IoHandler {
+
+    /**
+     * 当一个新的连接建立时，由I/O processor thread调用
+     *
+     * @param session
+     * @throws Exception
+     */
     public void sessionCreated(IoSession session) throws Exception {
         SessionUtil.initialize(session);
     }
 
+    /**
+     * 当连接打开时调用
+     *
+     * @param session
+     * @throws Exception
+     */
     public void sessionOpened(IoSession session) throws Exception {
     }
 
+    /**
+     * 当连接关闭时调用
+     *
+     * @param session
+     * @throws Exception
+     */
     public void sessionClosed(IoSession session) throws Exception {
     }
 
@@ -51,16 +70,21 @@ public class IoHandlerAdapter implements IoHandler {
     public void sessionIdle(IoSession session, IdleStatus status) throws Exception {
     }
 
+    /**
+     * 当实现IoHandler的类抛出异常时调用
+     *
+     * @param session
+     * @param cause
+     * @throws Exception
+     */
     public void exceptionCaught(IoSession session, Throwable cause) throws Exception {
         if (SessionLog.isWarnEnabled(session)) {
-            SessionLog.warn(session, "EXCEPTION, please implement "
-                    + getClass().getName()
-                    + ".exceptionCaught() for proper handling:", cause);
+            SessionLog.warn(session, "EXCEPTION, please implement " + getClass().getName() + ".exceptionCaught() for proper handling:", cause);
         }
     }
 
     /**
-     * 接收来自的请求
+     * 当接收到客户端请求的消息时调用，最后一个过滤器TailFilter#messageReceived方法回来调用该方法
      *
      * @param session
      * @param message
@@ -69,6 +93,13 @@ public class IoHandlerAdapter implements IoHandler {
     public void messageReceived(IoSession session, Object message) throws Exception {
     }
 
+    /**
+     * 当一个消息被(IoSession#write)发送出去后调用
+     *
+     * @param session
+     * @param message
+     * @throws Exception
+     */
     public void messageSent(IoSession session, Object message) throws Exception {
     }
 }

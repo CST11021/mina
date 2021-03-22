@@ -33,6 +33,14 @@ public class IoFilterAdapter implements IoFilter {
     public void destroy() throws Exception {
     }
 
+    /**
+     * 添加一个过滤器到链之前会调用该方法
+     *
+     * @param parent
+     * @param name
+     * @param nextFilter
+     * @throws Exception
+     */
     public void onPreAdd(IoFilterChain parent, String name, NextFilter nextFilter) throws Exception {
     }
 

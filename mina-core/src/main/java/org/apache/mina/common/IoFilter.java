@@ -56,12 +56,11 @@ public interface IoFilter {
     void onPreAdd(IoFilterChain parent, String name, NextFilter nextFilter) throws Exception;
 
     /**
-     * Invoked after this filter is added to the specified <tt>parent</tt>.
-     * Please note that this method can be invoked more than once if
-     * this filter is added to more than one parents.  This method is not
-     * invoked before {@link #init()} is invoked.
+     * 将此过滤器添加到指定的父级后调用。
+     * 请注意，如果将此过滤器添加到多个父对象中，则可以多次调用此方法。
+     * 在调用{@link #init()}之前，不会调用此方法。
      *
-     * @param parent     the parent who called this method
+     * @param parent     调用此方法的过滤器链
      * @param name       the name assigned to this filter
      * @param nextFilter the {@link NextFilter} for this filter.  You can reuse
      *                   this object until this filter is removed from the chain.
@@ -69,10 +68,9 @@ public interface IoFilter {
     void onPostAdd(IoFilterChain parent, String name, NextFilter nextFilter) throws Exception;
 
     /**
-     * Invoked before this filter is removed from the specified <tt>parent</tt>.
-     * Please note that this method can be invoked more than once if
-     * this filter is removed from more than one parents.
-     * This method is always invoked before {@link #destroy()} is invoked.
+     * 从指定的父级删除此过滤器之前调用。
+     * 请注意，如果从多个父级中删除此过滤器，则可以多次调用此方法。
+     * 始终在调用{@link #destroy()}之前调用此方法。
      *
      * @param parent     the parent who called this method
      * @param name       the name assigned to this filter

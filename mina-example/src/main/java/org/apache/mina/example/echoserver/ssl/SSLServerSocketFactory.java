@@ -34,6 +34,7 @@ import javax.net.ServerSocketFactory;
  * @version $Rev$, $Date$
  */
 public class SSLServerSocketFactory extends javax.net.ServerSocketFactory {
+
     private static boolean sslEnabled = false;
 
     private static javax.net.ServerSocketFactory sslFactory = null;
@@ -48,26 +49,21 @@ public class SSLServerSocketFactory extends javax.net.ServerSocketFactory {
         return new ServerSocket(port);
     }
 
-    public ServerSocket createServerSocket(int port, int backlog)
-            throws IOException {
+    public ServerSocket createServerSocket(int port, int backlog) throws IOException {
         return new ServerSocket(port, backlog);
     }
 
-    public ServerSocket createServerSocket(int port, int backlog,
-            InetAddress ifAddress) throws IOException {
+    public ServerSocket createServerSocket(int port, int backlog, InetAddress ifAddress) throws IOException {
         return new ServerSocket(port, backlog, ifAddress);
     }
 
-    public static javax.net.ServerSocketFactory getServerSocketFactory()
-            throws IOException {
+    public static javax.net.ServerSocketFactory getServerSocketFactory() throws IOException {
         if (isSslEnabled()) {
             if (sslFactory == null) {
                 try {
-                    sslFactory = BogusSSLContextFactory.getInstance(true)
-                            .getServerSocketFactory();
+                    sslFactory = BogusSSLContextFactory.getInstance(true).getServerSocketFactory();
                 } catch (GeneralSecurityException e) {
-                    IOException ioe = new IOException(
-                            "could not create SSL socket");
+                    IOException ioe = new IOException("could not create SSL socket");
                     ioe.initCause(e);
                     throw ioe;
                 }

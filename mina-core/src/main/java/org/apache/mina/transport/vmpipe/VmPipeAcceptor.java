@@ -57,6 +57,7 @@ public class VmPipeAcceptor extends BaseIoAcceptor {
      *
      * @param address
      * @param handler
+     * @param config
      * @throws IOException
      */
     public void bind(SocketAddress address, IoHandler handler, IoServiceConfig config) throws IOException {

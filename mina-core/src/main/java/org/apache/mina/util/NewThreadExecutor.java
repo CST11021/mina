@@ -21,13 +21,18 @@ package org.apache.mina.util;
 import java.util.concurrent.Executor;
 
 /**
- * An Executor that just launches in a new thread.
+ * 创建一个线程，执行指定的Runnable
  *
  * @author The Apache Directory Project (mina-dev@directory.apache.org)
  * @version $Rev: 446581 $, $Date: 2006-09-15 11:36:12Z $,
  */
 public class NewThreadExecutor implements Executor {
 
+    /**
+     * 创建一个线程，执行指定的Runnable
+     *
+     * @param command
+     */
     public void execute(Runnable command) {
         new Thread(command).start();
     }

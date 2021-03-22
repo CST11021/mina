@@ -40,6 +40,12 @@ public class EchoProtocolHandler extends IoHandlerAdapter {
 
     private static final Logger log = LoggerFactory.getLogger(EchoProtocolHandler.class);
 
+    /**
+     * 当一个新的连接建立时，由I/O processor thread调用
+     *
+     * @param session
+     * @throws Exception
+     */
     public void sessionCreated(IoSession session) {
         if (session.getTransportType() == TransportType.SOCKET) {
             ((SocketSessionConfig) session.getConfig()).setReceiveBufferSize(2048);
@@ -84,6 +90,13 @@ public class EchoProtocolHandler extends IoHandlerAdapter {
         log.info("*** IDLE #" + session.getIdleCount(IdleStatus.BOTH_IDLE) + " ***");
     }
 
+    /**
+     * 当实现IoHandler的类抛出异常时调用
+     *
+     * @param session
+     * @param cause
+     * @throws Exception
+     */
     public void exceptionCaught(IoSession session, Throwable cause) {
         cause.printStackTrace();
         session.close();

@@ -450,6 +450,7 @@ public class SSLHandler {
     }
 
     /**
+     * 执行任何握手处理
      * Perform any handshaking processing.
      */
     public void handshake(NextFilter nextFilter) throws SSLException {
@@ -459,54 +460,44 @@ public class SSLHandler {
 
         for (;;) {
             if (handshakeStatus == SSLEngineResult.HandshakeStatus.FINISHED) {
-                session.setAttribute(SSLFilter.SSL_SESSION, sslEngine
-                        .getSession());
+                session.setAttribute(SSLFilter.SSL_SESSION, sslEngine.getSession());
                 if (SessionLog.isDebugEnabled(session)) {
                     SSLSession sslSession = sslEngine.getSession();
-                    SessionLog.debug(session,
-                            "  handshakeStatus=FINISHED");
-                    SessionLog.debug(session, "  sslSession CipherSuite used "
-                            + sslSession.getCipherSuite());
+                    SessionLog.debug(session, "  handshakeStatus=FINISHED");
+                    SessionLog.debug(session, "  sslSession CipherSuite used " + sslSession.getCipherSuite());
                 }
                 handshakeComplete = true;
-                if (!initialHandshakeComplete
-                        && session.containsAttribute(SSLFilter.USE_NOTIFICATION)) {
+                if (!initialHandshakeComplete && session.containsAttribute(SSLFilter.USE_NOTIFICATION)) {
                     // SESSION_SECURED is fired only when it's the first handshake.
                     // (i.e. renegotiation shouldn't trigger SESSION_SECURED.)
                     initialHandshakeComplete = true;
-                    scheduleMessageReceived(nextFilter,
-                            SSLFilter.SESSION_SECURED);
+                    scheduleMessageReceived(nextFilter, SSLFilter.SESSION_SECURED);
                 }
                 break;
             } else if (handshakeStatus == SSLEngineResult.HandshakeStatus.NEED_TASK) {
                 if (SessionLog.isDebugEnabled(session)) {
-                    SessionLog.debug(session,
-                            "  handshakeStatus=NEED_TASK");
+                    SessionLog.debug(session, "  handshakeStatus=NEED_TASK");
                 }
                 handshakeStatus = doTasks();
             } else if (handshakeStatus == SSLEngineResult.HandshakeStatus.NEED_UNWRAP) {
                 // we need more data read
                 if (SessionLog.isDebugEnabled(session)) {
-                    SessionLog.debug(session,
-                            "  handshakeStatus=NEED_UNWRAP");
+                    SessionLog.debug(session, "  handshakeStatus=NEED_UNWRAP");
                 }
                 SSLEngineResult.Status status = unwrapHandshake(nextFilter);
-                if (status == SSLEngineResult.Status.BUFFER_UNDERFLOW
-                        || isInboundDone()) {
+                if (status == SSLEngineResult.Status.BUFFER_UNDERFLOW || isInboundDone()) {
                     // We need more data or the session is closed
                     break;
                 }
             } else if (handshakeStatus == SSLEngineResult.HandshakeStatus.NEED_WRAP) {
                 if (SessionLog.isDebugEnabled(session)) {
-                    SessionLog.debug(session,
-                            "  handshakeStatus=NEED_WRAP");
+                    SessionLog.debug(session, "  handshakeStatus=NEED_WRAP");
                 }
                 // First make sure that the out buffer is completely empty. Since we
                 // cannot call wrap with data left on the buffer
                 if (outNetBuffer.hasRemaining()) {
                     if (SessionLog.isDebugEnabled(session)) {
-                        SessionLog
-                                .debug(session, "  Still data in out buffer!");
+                        SessionLog.debug(session, "  Still data in out buffer!");
                     }
                     break;
                 }
@@ -520,8 +511,7 @@ public class SSLHandler {
                 handshakeStatus = result.getHandshakeStatus();
                 writeNetBuffer(nextFilter);
             } else {
-                throw new IllegalStateException("Invalid Handshaking State"
-                        + handshakeStatus);
+                throw new IllegalStateException("Invalid Handshaking State" + handshakeStatus);
             }
         }
     }
