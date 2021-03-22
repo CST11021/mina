@@ -66,6 +66,12 @@ public class DefaultIoFilterChainBuilder implements IoFilterChainBuilder, Clonea
         entries = new CopyOnWriteArrayList<Entry>();
     }
 
+    /**
+     * 将当前IoFilterChainBuilder的实例的过滤器集，放到 IoFilterChain 中
+     *
+     * @param chain
+     * @throws Exception
+     */
     public void buildFilterChain(IoFilterChain chain) throws Exception {
         for (Iterator i = entries.iterator(); i.hasNext(); ) {
             Entry e = (Entry) i.next();

@@ -34,6 +34,7 @@ import org.apache.mina.common.ThreadModel;
  * @version $Rev$, $Date$
  */
 public abstract class BaseIoServiceConfig implements IoServiceConfig, Cloneable {
+
     /**
      * Current filter chain builder.
      */

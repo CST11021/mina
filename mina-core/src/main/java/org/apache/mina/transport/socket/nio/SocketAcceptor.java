@@ -493,7 +493,7 @@ public class SocketAcceptor extends BaseIoAcceptor {
                     // 2、IoServiceConfig配置的过滤器；
                     // 3、ThreadModel过滤器
 
-                    // getFilterChainBuilder()仅获取Server配置的过滤器，session创建时候，会初始化好过滤器链第一次过滤器和最后一个过滤器，这里是将Service配置的过滤器添加到Session的过滤器链中
+                    // getFilterChainBuilder()仅获取Server配置的过滤器，session创建时候，会初始化好过滤器链第一个过滤器和最后一个过滤器，这里是将Service配置的过滤器添加到Session的过滤器链中
                     getFilterChainBuilder().buildFilterChain(session.getFilterChain());
                     // 将配置中的过滤器添加到session的过滤器链中
                     req.config.getFilterChainBuilder().buildFilterChain(session.getFilterChain());

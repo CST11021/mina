@@ -23,6 +23,7 @@ package org.apache.mina.common;
  * 用于将指定的过滤器，添加到目标过滤器链
  */
 public interface IoFilterChainBuilder {
+
     /**
      * An implementation which does nothing.
      */
