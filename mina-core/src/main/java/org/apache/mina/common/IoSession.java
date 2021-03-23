@@ -150,9 +150,7 @@ public interface IoSession {
     Object setAttribute(String key, Object value);
 
     /**
-     * Sets a user defined attribute without a value.  This is useful when
-     * you just want to put a 'mark' attribute.  Its value is set to
-     * {@link Boolean#TRUE}.
+     * 给session设置一个标记属性，默认的value为：{@link Boolean#TRUE}
      *
      * @param key the key of the attribute
      * @return The old value of the attribute.  <tt>null</tt> if it is new.
@@ -160,28 +158,33 @@ public interface IoSession {
     Object setAttribute(String key);
 
     /**
-     * Removes a user-defined attribute with the specified key.
+     * 移除属性
      *
-     * @return The old value of the attribute.  <tt>null</tt> if not found.
+     * @param key
+     * @return
      */
     Object removeAttribute(String key);
 
     /**
-     * Returns <tt>true</tt> if this session contains the attribute with
-     * the specified <tt>key</tt>.
+     * 判断session中是否包含该属性
+     *
+     * @param key
+     * @return
      */
     boolean containsAttribute(String key);
 
     /**
-     * Returns the set of keys of all user-defined attributes.
+     * 返回所有的属性
+     *
+     * @return
      */
     Set<String> getAttributeKeys();
 
 
-
-
     /**
      * 返回此会话的传输类型
+     *
+     * @return
      */
     TransportType getTransportType();
 

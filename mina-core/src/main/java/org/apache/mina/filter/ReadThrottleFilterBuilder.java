@@ -60,15 +60,13 @@ import org.apache.mina.filter.executor.ExecutorFilter;
  * @version $Rev: 406554 $, $Date: 2006-05-15 06:46:02Z $
  */
 public class ReadThrottleFilterBuilder {
-    public static final String COUNTER = ReadThrottleFilterBuilder.class
-            .getName()
-            + ".counter";
 
-    public static final String SUSPENDED_READS = ReadThrottleFilterBuilder.class
-            .getName()
-            + ".suspendedReads";
+    public static final String COUNTER = ReadThrottleFilterBuilder.class.getName() + ".counter";
 
-    private volatile int maximumConnectionBufferSize = 1024 * 1024; // 1mb
+    public static final String SUSPENDED_READS = ReadThrottleFilterBuilder.class.getName() + ".suspendedReads";
+
+    /** 1mb */
+    private volatile int maximumConnectionBufferSize = 1024 * 1024;
 
     /**
      * Set the maximum amount of data to buffer in the ThreadPoolFilter prior to disabling
@@ -82,8 +80,7 @@ public class ReadThrottleFilterBuilder {
     }
 
     /**
-     * Attach this filter to the specified filter chain. It will search for the ThreadPoolFilter, and attach itself
-     * before and after that filter.
+     * Attach this filter to the specified filter chain. It will search for the ThreadPoolFilter, and attach itself before and after that filter.
      *
      * @param chain {@link IoFilterChain} to attach self to.
      */
@@ -131,8 +128,7 @@ public class ReadThrottleFilterBuilder {
 
             session.setAttribute(COUNTER, new Integer(counter));
 
-            if (counter >= maximumConnectionBufferSize
-                    && session.getTrafficMask().isReadable()) {
+            if (counter >= maximumConnectionBufferSize && session.getTrafficMask().isReadable()) {
                 session.suspendRead();
                 session.setAttribute(SUSPENDED_READS);
             }
@@ -154,21 +150,36 @@ public class ReadThrottleFilterBuilder {
         }
     }
 
+    /**
+     * 获取session中{@link #SUSPENDED_READS}属性的值，属性为null时，返回：false
+     *
+     * @param session
+     * @return
+     */
     private boolean isSuspendedReads(IoSession session) {
         Boolean flag = (Boolean) session.getAttribute(SUSPENDED_READS);
 
         return null != flag && flag.booleanValue();
     }
 
+    /**
+     * 获取session中{@link #COUNTER}属性的值，属性为null时，返回：0
+     *
+     * @param session
+     * @return
+     */
     private int getCounter(IoSession session) {
         Integer i = (Integer) session.getAttribute(COUNTER);
         return null == i ? 0 : i.intValue();
     }
 
+
+
+
     private class Add extends IoFilterAdapter {
-        public void messageReceived(NextFilter nextFilter, IoSession session,
-                Object message) throws Exception {
+        public void messageReceived(NextFilter nextFilter, IoSession session, Object message) throws Exception {
             if (message instanceof ByteBuffer) {
+                // remaining()：获取剩余的可用空间
                 add(session, ((ByteBuffer) message).remaining());
             }
 
@@ -177,8 +188,7 @@ public class ReadThrottleFilterBuilder {
     }
 
     private class Release extends IoFilterAdapter {
-        public void messageReceived(NextFilter nextFilter, IoSession session,
-                Object message) throws Exception {
+        public void messageReceived(NextFilter nextFilter, IoSession session, Object message) throws Exception {
             if (message instanceof ByteBuffer) {
                 release(session, ((ByteBuffer) message).remaining());
             }
@@ -186,4 +196,5 @@ public class ReadThrottleFilterBuilder {
             nextFilter.messageReceived(session, message);
         }
     }
+
 }

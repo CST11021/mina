@@ -33,8 +33,7 @@ import java.util.TreeSet;
  * <ul>
  *   <li>{@link #SOCKET} - TCP/IP</li>
  *   <li>{@link #DATAGRAM} - UDP/IP</li>
- *   <li>{@link #VM_PIPE} - in-VM pipe support (only available in protocol
- *       layer</li>
+ *   <li>{@link #VM_PIPE} - in-VM pipe support (only available in protocol layer</li>
  * </ul>
  * <p>
  * You can also create your own transport type.  Please refer to

@@ -95,9 +95,7 @@ public interface IoFilter {
     // session相关的事件方法
 
     /**
-     * 当session被创建时，从Session获取过滤器链，然后调用每个过滤器的sessionCreated方法，如：{@link IoSession#getFilterChain()#sessionCreated(NextFilter, IoSession)}
-     *
-     * Filters {@link IoHandler#sessionCreated(IoSession)} event.
+     * 调用顺序1：当session被创建时，调用该方法
      *
      * @param nextFilter
      * @param session
@@ -106,7 +104,11 @@ public interface IoFilter {
     void sessionCreated(NextFilter nextFilter, IoSession session) throws Exception;
 
     /**
-     * Filters {@link IoHandler#sessionOpened(IoSession)} event.
+     * 调用顺序2：当session被创建后，调用该方法，该方法执行
+     *
+     * @param nextFilter
+     * @param session
+     * @throws Exception
      */
     void sessionOpened(NextFilter nextFilter, IoSession session) throws Exception;
 

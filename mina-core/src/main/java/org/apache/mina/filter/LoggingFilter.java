@@ -49,6 +49,13 @@ public class LoggingFilter extends IoFilterAdapter {
     public LoggingFilter() {
     }
 
+    /**
+     * 调用顺序1：当session被创建时，调用该方法，该方法会打印一条"CREATED"日志
+     *
+     * @param nextFilter
+     * @param session
+     * @throws Exception
+     */
     public void sessionCreated(NextFilter nextFilter, IoSession session) {
         SessionLog.info(session, "CREATED");
         nextFilter.sessionCreated(session);
