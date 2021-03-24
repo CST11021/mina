@@ -27,25 +27,13 @@ import org.springframework.beans.factory.config.AbstractFactoryBean;
 import org.springframework.util.Assert;
 
 /**
- * Spring {@link org.springframework.beans.factory.FactoryBean}
- * which creates {@link DefaultIoFilterChainBuilder} instances. This
- * factory bean makes it possible to configure the filters to be added to all the
- * sessions created by an {@link org.apache.mina.common.IoAcceptor} 
- * or {@link org.apache.mina.common.IoConnector} using Spring.
- * <p>
- * The filters may be set up in two ways. By creating
- * {@link IoFilterMapping} objects which associate a name with an {@link IoFilter}
- * instance and set them using {@link #setFilterMappings(IoFilterMapping[])} or
- * by using {@link #setFilters(IoFilter[])} directly which assigns automatically
- * generated names to each {@link IoFilter}. Use the 
- * {@link #setFilterNamePrefix(String)} method to set the prefix used for
- * auto generated names.
- * </p>
+ * 用于创建{@link DefaultIoFilterChainBuilder}实例的Spring工厂Bean
  *
  * @author The Apache Directory Project (mina-dev@directory.apache.org)
  * @version $Rev$, $Date$
  */
 public class DefaultIoFilterChainBuilderFactoryBean extends AbstractFactoryBean {
+
     private IoFilterMapping[] filterMappings = new IoFilterMapping[0];
 
     private String prefix = "filter";
@@ -69,7 +57,7 @@ public class DefaultIoFilterChainBuilderFactoryBean extends AbstractFactoryBean 
 
     /**
      * Sets the prefix used to create the names for automatically named filters
-     * added using {@link #setFilters(IoFilter[])}. The default prefix is 
+     * added using setFilters(IoFilter[]). The default prefix is
      * <tt>filter</tt>.
      * 
      * @param prefix the prefix.

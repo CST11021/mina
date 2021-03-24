@@ -55,21 +55,17 @@ public class NettyDecoder extends ProtocolDecoderAdapter {
         this.recognizer = recognizer;
     }
 
-    private void put(ByteBuffer in) {
-        // copy to read buffer
-        if (in.remaining() > readBuf.remaining())
-            expand((readBuf.position() + in.remaining()) * 3 / 2);
-        readBuf.put(in.buf());
-    }
-
-    private void expand(int newCapacity) {
-        java.nio.ByteBuffer newBuf = java.nio.ByteBuffer.allocate(newCapacity);
-        readBuf.flip();
-        newBuf.put(readBuf);
-        readBuf = newBuf;
-    }
-
+    /**
+     * 将消息消息对应的字节缓冲区解码（反序列化）为对象，然后保存到ProtocolDecoderOutput，后续通过ProtocolDecoderOutput#flush()方法，
+     * 调用下一个过滤器继续后续逻辑
+     *
+     * @param session
+     * @param in        消息对应的字节缓冲区
+     * @param out
+     * @throws Exception
+     */
     public void decode(IoSession session, ByteBuffer in, ProtocolDecoderOutput out) throws Exception {
+        // 将in对应的字节copy到 #readBuf
         put(in);
 
         Message m = readingMessage;
@@ -120,10 +116,35 @@ public class NettyDecoder extends ProtocolDecoderAdapter {
                 }
             }
         } catch (MessageParseException e) {
-            m = null; // discard reading message
+            // discard reading message
+            m = null;
             throw new ProtocolDecoderException("Failed to decode.", e);
         } finally {
             readingMessage = m;
         }
+    }
+
+    /**
+     * 将入参对应的字节copy到{@link #readBuf}
+     *
+     * @param in
+     */
+    private void put(ByteBuffer in) {
+        // copy to read buffer
+        if (in.remaining() > readBuf.remaining())
+            expand((readBuf.position() + in.remaining()) * 3 / 2);
+        readBuf.put(in.buf());
+    }
+
+    /**
+     * 给{@link #readBuf}进行扩容
+     *
+     * @param newCapacity
+     */
+    private void expand(int newCapacity) {
+        java.nio.ByteBuffer newBuf = java.nio.ByteBuffer.allocate(newCapacity);
+        readBuf.flip();
+        newBuf.put(readBuf);
+        readBuf = newBuf;
     }
 }

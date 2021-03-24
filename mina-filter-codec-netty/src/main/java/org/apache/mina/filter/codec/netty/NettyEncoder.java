@@ -28,8 +28,7 @@ import org.apache.mina.filter.codec.ProtocolEncoderException;
 import org.apache.mina.filter.codec.ProtocolEncoderOutput;
 
 /**
- * A MINA <tt>ProtocolEncoder</tt> that encodes Netty2 {@link Message}s
- * into byte buffers. 
+ * 一个MINA协议编码器，将Netty2 {@link Message} 编码到字节缓冲区中
  * 
  * @author The Apache Directory Project (mina-dev@directory.apache.org)
  * @version $Rev$, $Date$,
@@ -41,11 +40,14 @@ public class NettyEncoder implements ProtocolEncoder {
     public NettyEncoder() {
     }
 
-    public void encode(IoSession session, Object message,
-            ProtocolEncoderOutput out) throws Exception {
+    /**
+     * 将消息对象转为字节缓冲区，并保存到ProtocolEncoderOutput中
+     *
+     * @throws Exception if the message violated protocol specification
+     */
+    public void encode(IoSession session, Object message, ProtocolEncoderOutput out) throws Exception {
         if (!(message instanceof Message)) {
-            throw new ProtocolEncoderException(
-                    "This encoder can decode only Netty Messages.");
+            throw new ProtocolEncoderException("This encoder can decode only Netty Messages.");
         }
 
         for (;;) {
@@ -64,6 +66,7 @@ public class NettyEncoder implements ProtocolEncoder {
                 }
             }
         }
+
     }
 
     public void dispose(IoSession session) throws Exception {

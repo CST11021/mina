@@ -32,15 +32,13 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Spring {@link FactoryBean} which enables the configuration of
- * {@link ThreadPoolExecutor} instances using Spring. Most of this code
- * has been copied from the <code>ThreadPoolTaskExecutor</code> class
- * available in Spring 2.0.
+ * 用于创建线程池的工厂Bean
  *
  * @author The Apache Directory Project (mina-dev@directory.apache.org)
  * @version $Rev$, $Date$
  */
 public class ThreadPoolExecutorFactoryBean extends AbstractFactoryBean {
+
     private int corePoolSize = 1;
 
     private int maxPoolSize = Integer.MAX_VALUE;
@@ -106,8 +104,7 @@ public class ThreadPoolExecutorFactoryBean extends AbstractFactoryBean {
      *
      * @see ThreadPoolExecutor.AbortPolicy
      */
-    public void setRejectedExecutionHandler(
-            RejectedExecutionHandler rejectedExecutionHandler) {
+    public void setRejectedExecutionHandler(RejectedExecutionHandler rejectedExecutionHandler) {
         this.rejectedExecutionHandler = (rejectedExecutionHandler != null ? rejectedExecutionHandler
                 : new ThreadPoolExecutor.AbortPolicy());
     }

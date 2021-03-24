@@ -6,16 +6,16 @@
  *  to you under the Apache License, Version 2.0 (the
  *  "License"); you may not use this file except in compliance
  *  with the License.  You may obtain a copy of the License at
- *  
+ *
  *    http://www.apache.org/licenses/LICENSE-2.0
- *  
+ *
  *  Unless required by applicable law or agreed to in writing,
  *  software distributed under the License is distributed on an
  *  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
  *  KIND, either express or implied.  See the License for the
  *  specific language governing permissions and limitations
- *  under the License. 
- *  
+ *  under the License.
+ *
  */
 package org.apache.mina.integration.spring;
 
@@ -28,14 +28,16 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.Assert;
 
 /**
+ * 服务端绑定的配置Bean
+ *
  * Defines an address to {@link IoHandler} binding.
  * This is used when specifying the addresses to accept new connections on when
- * creating {@link org.apache.mina.common.IoAcceptor} objects using 
+ * creating {@link org.apache.mina.common.IoAcceptor} objects using
  * {@link IoAcceptorFactoryBean}.
  * <p>
  * Note that the <code>address</code> property is of {@link java.net.SocketAddress}
  * type. Use {@link InetSocketAddressEditor} or {@link VmPipeAddressEditor} in
- * your Spring configuration file to simply the creation of 
+ * your Spring configuration file to simply the creation of
  * {@link java.net.SocketAddress} instances using Spring.
  * </p>
  * <p>
@@ -48,13 +50,14 @@ import org.springframework.util.Assert;
  * confiuration options and define port specific filters. This makes it possible
  * to specify different filters depending on the port the client is connecting
  * on (e.g. using an {@link org.apache.mina.filter.SSLFilter} when connecting
- * on port 443 but not on port 80). 
+ * on port 443 but not on port 80).
  * </p>
  *
  * @author The Apache Directory Project (mina-dev@directory.apache.org)
  * @version $Rev$, $Date$
  */
 public class Binding implements InitializingBean {
+
     private SocketAddress address = null;
 
     private IoHandler handler = null;
@@ -66,31 +69,28 @@ public class Binding implements InitializingBean {
      */
     public Binding() {
     }
-
     /**
      * Creates a new instance using the specified values.
-     * 
+     *
      * @param address the address.
      * @param handler the handler.
-     * @throws IllegalArgumentException if the any of the specified values are 
-     *         <code>null</code>.
+     * @throws IllegalArgumentException if the any of the specified values are
+     *                                  <code>null</code>.
      */
     public Binding(SocketAddress address, IoHandler handler) {
         setAddress(address);
         setHandler(handler);
     }
-
     /**
      * Creates a new instance using the specified values.
-     * 
-     * @param address the address.
-     * @param handler the handler.
+     *
+     * @param address       the address.
+     * @param handler       the handler.
      * @param serviceConfig the service configuration.
-     * @throws IllegalArgumentException if the any of the specified values are 
-     *         <code>null</code>.
+     * @throws IllegalArgumentException if the any of the specified values are
+     *                                  <code>null</code>.
      */
-    public Binding(SocketAddress address, IoHandler handler,
-            IoServiceConfig serviceConfig) {
+    public Binding(SocketAddress address, IoHandler handler, IoServiceConfig serviceConfig) {
         setAddress(address);
         setHandler(handler);
         setServiceConfig(serviceConfig);
@@ -98,7 +98,7 @@ public class Binding implements InitializingBean {
 
     /**
      * Returns the address the handler of this object will be bound to.
-     *  
+     *
      * @return the address.
      */
     public SocketAddress getAddress() {
@@ -107,10 +107,10 @@ public class Binding implements InitializingBean {
 
     /**
      * Sets the address the handler of this object will be bound to.
-     * 
+     *
      * @param address the address.
-     * @throws IllegalArgumentException if the specified value is 
-     *         <code>null</code>.
+     * @throws IllegalArgumentException if the specified value is
+     *                                  <code>null</code>.
      */
     public void setAddress(SocketAddress address) {
         Assert.notNull(address, "Property 'address' may not be null");
@@ -119,7 +119,7 @@ public class Binding implements InitializingBean {
 
     /**
      * Returns the handler of this binding object.
-     * 
+     *
      * @return the handler.
      */
     public IoHandler getHandler() {
@@ -130,8 +130,8 @@ public class Binding implements InitializingBean {
      * Sets the handler of this binding object.
      *
      * @param handler the handler.
-     * @throws IllegalArgumentException if the specified value is 
-     *         <code>null</code>.
+     * @throws IllegalArgumentException if the specified value is
+     *                                  <code>null</code>.
      */
     public void setHandler(IoHandler handler) {
         Assert.notNull(handler, "Property 'handler' may not be null");

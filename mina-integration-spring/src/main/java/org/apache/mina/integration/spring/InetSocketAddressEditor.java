@@ -43,10 +43,17 @@ import org.springframework.util.Assert;
  * @see java.net.InetSocketAddress
  */
 public class InetSocketAddressEditor extends PropertyEditorSupport {
+
     public void setAsText(String text) throws IllegalArgumentException {
         setValue(parseSocketAddress(text));
     }
 
+    /**
+     * 解析字符串，获取机器节点和端口，例如：google.com:80
+     *
+     * @param s
+     * @return 返回一个SocketAddress实例
+     */
     private SocketAddress parseSocketAddress(String s) {
         Assert.notNull(s, "null SocketAddress string");
         s = s.trim();

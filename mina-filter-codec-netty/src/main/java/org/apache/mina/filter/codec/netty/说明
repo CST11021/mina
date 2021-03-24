@@ -1,0 +1,2 @@
+
+使用Netty的编解码实现Mina的ProtocolCodecFactory接口

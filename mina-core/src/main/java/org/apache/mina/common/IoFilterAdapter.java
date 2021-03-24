@@ -50,6 +50,16 @@ public class IoFilterAdapter implements IoFilter {
     public void onPreRemove(IoFilterChain parent, String name, NextFilter nextFilter) throws Exception {
     }
 
+    /**
+     * 从指定的父级删除此过滤器后调用该方法
+     * 请注意，如果从多个父级中删除此过滤器，则可以多次调用此方法。
+     * 始终在调用{@link #destroy()}之前调用此方法。
+     *
+     * @param parent     the parent who called this method
+     * @param name       the name assigned to this filter
+     * @param nextFilter the {@link NextFilter} for this filter.  You can reuse
+     *                   this object until this filter is removed from the chain.
+     */
     public void onPostRemove(IoFilterChain parent, String name, NextFilter nextFilter) throws Exception {
     }
 

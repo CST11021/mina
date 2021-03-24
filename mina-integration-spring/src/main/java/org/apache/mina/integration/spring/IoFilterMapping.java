@@ -24,23 +24,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.Assert;
 
 /**
- * Associates a name with an {@link IoFilter}. This makes it possible to configure
- * named filters using Spring.
- * <p> 
- * Use this class when you want to configure the
- * filters added to the filter chain of all sessions created from a particular
- * {@link org.apache.mina.common.IoService} created using one of the
- * {@link org.apache.mina.integration.spring.IoAcceptorFactoryBean}
- * sub-classes but you don't want the names to be generated automatically.
- * </p>
- * <p>
- * This class can also be used when creating {@link Binding} objects. This lets
- * one configure per-port filters. These filters will only be added to the
- * filter chain of sessions for incoming connections on the port specified by
- * the {@link Binding}. Note that {@link Binding} can also be configured to 
- * generate filter names automatically. In that case you add the {@link IoFilter}
- * instances directly to the {@link Binding}.
- * </p>
+ * 关联一个名词的过滤器
  * 
  * @author The Apache Directory Project (mina-dev@directory.apache.org)
  * @version $Rev$, $Date$
@@ -49,24 +33,13 @@ import org.springframework.util.Assert;
  * @see org.apache.mina.integration.spring.Binding
  */
 public class IoFilterMapping implements InitializingBean {
+
     private String name = null;
 
     private IoFilter filter = null;
 
-    /**
-     * Creates a new empty instance.
-     */
     public IoFilterMapping() {
     }
-
-    /**
-     * Creates a new instance using the specified name and filter.
-     * 
-     * @param name the name.
-     * @param filter the filter.
-     * @throws IllegalArgumentException if any of the arguments are 
-     *         <code>null</code>.
-     */
     public IoFilterMapping(String name, IoFilter filter) {
         Assert.notNull(name, "Argument 'name' may not be null");
         Assert.notNull(filter, "Argument 'filter' may not be null");

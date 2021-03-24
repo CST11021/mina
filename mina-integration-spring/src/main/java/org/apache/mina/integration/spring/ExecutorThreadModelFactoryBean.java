@@ -34,8 +34,8 @@ import java.util.concurrent.Executor;
  * @author The Apache Directory Project (mina-dev@directory.apache.org)
  * @version $Rev$, $Date$
  */
-public class ExecutorThreadModelFactoryBean implements FactoryBean,
-        InitializingBean {
+public class ExecutorThreadModelFactoryBean implements FactoryBean, InitializingBean {
+
     private String serviceName = null;
 
     private Executor executor = null;
@@ -47,7 +47,7 @@ public class ExecutorThreadModelFactoryBean implements FactoryBean,
      *
      * @param executor the executor.
      * @throws IllegalArgumentException if the specified value is
-     *         <code>null</code>.
+     *                                  <code>null</code>.
      */
     public void setExecutor(Executor executor) {
         Assert.notNull(executor, "Property 'executor' may not be null");
@@ -59,9 +59,9 @@ public class ExecutorThreadModelFactoryBean implements FactoryBean,
      * {@link ExecutorThreadModel#getInstance(String)}. This property is
      * required.
      *
-     * @param executor the executor.
+     * @param serviceName the executor.
      * @throws IllegalArgumentException if the specified value is
-     *         <code>null</code>.
+     *                                  <code>null</code>.
      */
     public void setServiceName(String serviceName) {
         Assert.notNull(serviceName, "Property 'serviceName' may not be null");

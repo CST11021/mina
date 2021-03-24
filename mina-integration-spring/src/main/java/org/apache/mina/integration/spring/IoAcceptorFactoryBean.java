@@ -105,24 +105,25 @@ import org.springframework.util.Assert;
  * @author The Apache Directory Project (mina-dev@directory.apache.org)
  * @version $Rev$, $Date$
  */
-public class IoAcceptorFactoryBean implements FactoryBean, InitializingBean,
-        DisposableBean {
+public class IoAcceptorFactoryBean implements FactoryBean, InitializingBean, DisposableBean {
+
+    /** 服务端相关配置：绑定的端口，业务处理IoHandler和服务配置 */
     private Binding[] bindings = new Binding[0];
 
+    /** 服务端实现 */
     private IoAcceptor target;
 
     /**
-     * Sets the {@link IoAcceptor} to be configured using this factory bean.
-     * 
-     * @param target the target {@link IoAcceptor}.
+     * 设置服务端实现
+     *
+     * @param target
      */
     public void setTarget(IoAcceptor target) {
         this.target = target;
     }
 
     /**
-     * Sets the bindings to be used by the {@link IoAcceptor} configured by this 
-     * factory bean.
+     * 设置服务端的相关配置
      * 
      * @param bindings the bindings.
      * @throws IllegalArgumentException if the specified value is 
@@ -157,8 +158,7 @@ public class IoAcceptorFactoryBean implements FactoryBean, InitializingBean,
         for (int i = 0; i < bindings.length; i++) {
             Binding b = bindings[i];
             if (b.getServiceConfig() != null) {
-                target.bind(b.getAddress(), b.getHandler(), b
-                        .getServiceConfig());
+                target.bind(b.getAddress(), b.getHandler(), b.getServiceConfig());
             } else {
                 target.bind(b.getAddress(), b.getHandler());
             }

@@ -42,6 +42,7 @@ import java.net.UnknownHostException;
  * @see java.net.InetAddress
  */
 public class InetAddressEditor extends PropertyEditorSupport {
+
     public void setAsText(String text) throws IllegalArgumentException {
         try {
             setValue(InetAddress.getByName(text));
@@ -50,4 +51,5 @@ public class InetAddressEditor extends PropertyEditorSupport {
             iae.initCause(uhe);
         }
     }
+
 }

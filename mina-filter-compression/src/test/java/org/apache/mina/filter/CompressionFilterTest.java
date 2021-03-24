@@ -57,7 +57,7 @@ public class CompressionFilterTest extends TestCase {
 
     private Zlib actualInflater;
 
-    // the sample data to be used for testing
+    /** 用于测试的字符串 */
     String strCompress = "The quick brown fox jumps over the lazy dog.  "
             + "The quick brown fox jumps over the lazy dog.  "
             + "The quick brown fox jumps over the lazy dog.  "

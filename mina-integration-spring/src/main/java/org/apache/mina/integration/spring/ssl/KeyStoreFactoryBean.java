@@ -50,15 +50,13 @@ public class KeyStoreFactoryBean extends AbstractFactoryBean {
     private Resource resource = null;
 
     /**
-     * Creates a new {@link KeyStore}. This method will be called
-     * by the base class when Spring creates a bean using this FactoryBean.
+     * Creates a new {@link KeyStore}. This method will be called by the base class when Spring creates a bean using this FactoryBean.
      * 
      * @return the {@link KeyStore} instance.
      */
     protected Object createInstance() throws Exception {
         if (file == null && resource == null) {
-            throw new IllegalArgumentException("Required property missing. "
-                    + "Either 'file' or 'resource' have to be specified");
+            throw new IllegalArgumentException("Required property missing. Either 'file' or 'resource' have to be specified");
         }
 
         KeyStore ks = null;

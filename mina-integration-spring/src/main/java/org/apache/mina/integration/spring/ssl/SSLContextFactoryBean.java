@@ -57,6 +57,7 @@ import org.springframework.util.Assert;
  * @version $Rev$, $Date$
  */
 public class SSLContextFactoryBean extends AbstractFactoryBean {
+
     private String protocol = "TLS";
 
     private String provider = null;
@@ -100,8 +101,7 @@ public class SSLContextFactoryBean extends AbstractFactoryBean {
                 if (keyManagerFactoryProvider == null) {
                     kmf = KeyManagerFactory.getInstance(algorithm);
                 } else {
-                    kmf = KeyManagerFactory.getInstance(algorithm,
-                            keyManagerFactoryProvider);
+                    kmf = KeyManagerFactory.getInstance(algorithm, keyManagerFactoryProvider);
                 }
             }
         }
@@ -115,18 +115,17 @@ public class SSLContextFactoryBean extends AbstractFactoryBean {
                 if (trustManagerFactoryProvider == null) {
                     tmf = TrustManagerFactory.getInstance(algorithm);
                 } else {
-                    tmf = TrustManagerFactory.getInstance(algorithm,
-                            trustManagerFactoryProvider);
+                    tmf = TrustManagerFactory.getInstance(algorithm, trustManagerFactoryProvider);
                 }
             }
         }
 
         KeyManager[] keyManagers = null;
         if (kmf != null) {
-            kmf.init(keyManagerFactoryKeyStore,
-                    keyManagerFactoryKeyStorePassword);
+            kmf.init(keyManagerFactoryKeyStore, keyManagerFactoryKeyStorePassword);
             keyManagers = kmf.getKeyManagers();
         }
+
         TrustManager[] trustManagers = null;
         if (tmf != null) {
             if (trustManagerFactoryParameters != null) {
@@ -154,12 +153,10 @@ public class SSLContextFactoryBean extends AbstractFactoryBean {
     }
 
     /**
-     * Sets the protocol to use when creating the {@link SSLContext}. The
-     * default is <code>TLS</code>.
+     * Sets the protocol to use when creating the {@link SSLContext}. The default is TLS.
      * 
      * @param protocol the name of the protocol.
-     * @throws IllegalArgumentException if the specified value is 
-     *         <code>null</code>.
+     * @throws IllegalArgumentException if the specified value is null.
      */
     public void setProtocol(String protocol) {
         Assert.notNull(protocol, "Property 'protocol' may not be null");
@@ -327,8 +324,7 @@ public class SSLContextFactoryBean extends AbstractFactoryBean {
      *  
      * @param parameters describing provider-specific trust material.
      */
-    public void setTrustManagerFactoryParameters(
-            ManagerFactoryParameters parameters) {
+    public void setTrustManagerFactoryParameters(ManagerFactoryParameters parameters) {
         this.trustManagerFactoryParameters = parameters;
     }
 
@@ -354,7 +350,7 @@ public class SSLContextFactoryBean extends AbstractFactoryBean {
     }
 
     /**
-     * Sets the {@link SecureRandom} to use when initializing the 
+     * Sets the {@link SecureRandom} to use when initializing the
      * {@link SSLContext}. The JVM's default will be used if this isn't set.
      * 
      * @param secureRandom the {@link SecureRandom} or <code>null</code> if the 

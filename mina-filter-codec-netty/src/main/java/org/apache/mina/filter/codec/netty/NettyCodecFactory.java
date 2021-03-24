@@ -25,17 +25,13 @@ import net.gleamynode.netty2.MessageRecognizer;
 import org.apache.mina.filter.codec.ProtocolCodecFactory;
 
 /**
- * A MINA <tt>ProtocolCodecFactory</tt> that provides encoder and decoder
- * for Netty2 {@link Message}s and {@link MessageRecognizer}s.
- * <p>
- * Please note that this codec factory assumes one {@link MessageRecognizer}
- * can be used for multiple sessions.  If not, you'll have to create your
- * own factory after this factory.
+ * Netty编解码工厂，通过适配Mina ProtocolCodecFactory接口，但是内部使用Netty的编解码实现
  *
  * @author The Apache Directory Project (mina-dev@directory.apache.org)
  * @version $Rev$, $Date$,
  */
 public class NettyCodecFactory implements ProtocolCodecFactory {
+
     private static final NettyEncoder ENCODER = new NettyEncoder();
 
     private final MessageRecognizer recognizer;
