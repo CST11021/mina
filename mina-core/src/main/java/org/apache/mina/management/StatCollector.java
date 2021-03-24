@@ -25,11 +25,7 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.mina.common.IoHandler;
-import org.apache.mina.common.IoService;
-import org.apache.mina.common.IoServiceConfig;
-import org.apache.mina.common.IoServiceListener;
-import org.apache.mina.common.IoSession;
+import org.apache.mina.common.*;
 
 /**
  * Collects statistics of an {@link IoService}. It's polling all the sessions of a given
@@ -50,6 +46,7 @@ import org.apache.mina.common.IoSession;
  * @version $Rev$, $Date$
  */
 public class StatCollector {
+
     /**
      * The session attribute key for {@link IoSessionStat}.
      */
@@ -70,9 +67,10 @@ public class StatCollector {
 
     private int pollingInterval = 5000;
 
+    /** 保存当前有效的连接数，会话创建时，add到该队列，会话销毁时，从该队列移除 */
     private Queue<IoSession> polledSessions;
 
-    // resume of session stats, for simplifying acces to the statistics 
+    /** 统计会话的创建个数 */
     private AtomicLong totalProcessedSessions = new AtomicLong();
 
     private float msgWrittenThroughput = 0f;
@@ -85,21 +83,53 @@ public class StatCollector {
 
     private final IoServiceListener serviceListener = new IoServiceListener() {
 
+        /**
+         * 当服务启动时，调用该方法
+         *
+         * @param service        the {@link IoService}
+         * @param serviceAddress the socket address of the {@link IoService} listens
+         *                       to manage sessions.  If the service is an {@link IoAcceptor},
+         *                       it is a bind address.  If the service is an {@link IoConnector},
+         *                       it is a remote address.
+         * @param handler        the {@link IoHandler} that serves the new service
+         * @param config         the {@link IoServiceConfig} of the new service
+         */
         public void serviceActivated(IoService service, SocketAddress serviceAddress, IoHandler handler, IoServiceConfig config) {
         }
 
+        /**
+         * 当服务关闭时调用该方法
+         *
+         * @param service
+         * @param serviceAddress
+         * @param handler
+         * @param config
+         */
         public void serviceDeactivated(IoService service, SocketAddress serviceAddress, IoHandler handler, IoServiceConfig config) {
         }
 
+        /**
+         * 当session被创建时，调用该方法
+         *
+         * @param session
+         */
         public void sessionCreated(IoSession session) {
             addSession(session);
         }
 
+        /**
+         * 当session被销毁时，调用该方法
+         *
+         * @param session
+         */
         public void sessionDestroyed(IoSession session) {
             removeSession(session);
         }
 
     };
+
+
+
 
     /**
      * Create a stat collector for the given service with a default polling time of 5 seconds. 
@@ -108,16 +138,19 @@ public class StatCollector {
     public StatCollector(IoService service) {
         this(service, 5000);
     }
-
     /**
      * create a stat collector for the given given service
-     * @param service the IoService to inspect
-     * @param pollingInterval milliseconds
+     *
+     * @param service           服务对象
+     * @param pollingInterval   轮询间隔，单位毫秒
      */
     public StatCollector(IoService service, int pollingInterval) {
         this.service = service;
         this.pollingInterval = pollingInterval;
     }
+
+
+
 
     /**
      * Start collecting stats for the {@link IoSession} of the service.
@@ -129,17 +162,13 @@ public class StatCollector {
                 throw new RuntimeException("Stat collecting already started");
 
             // add all current sessions
-
             polledSessions = new ConcurrentLinkedQueue<IoSession>();
 
-            for (Iterator<SocketAddress> iter = service
-                    .getManagedServiceAddresses().iterator(); iter.hasNext();) {
+            for (Iterator<SocketAddress> iter = service.getManagedServiceAddresses().iterator(); iter.hasNext();) {
                 SocketAddress element = iter.next();
 
-                for (Iterator<IoSession> iter2 = service.getManagedSessions(
-                        element).iterator(); iter2.hasNext();) {
+                for (Iterator<IoSession> iter2 = service.getManagedSessions(element).iterator(); iter2.hasNext();) {
                     addSession(iter2.next());
-
                 }
             }
 
@@ -149,9 +178,7 @@ public class StatCollector {
             // start polling
             worker = new Worker();
             worker.start();
-
         }
-
     }
 
     /**
@@ -197,6 +224,11 @@ public class StatCollector {
         }
     }
 
+    /**
+     * 保存连接会话
+     *
+     * @param session
+     */
     private void addSession(IoSession session) {
         IoSessionStat sessionStats = new IoSessionStat();
         session.setAttribute(KEY, sessionStats);
@@ -215,14 +247,10 @@ public class StatCollector {
         // computing with time between polling and closing
         long currentTime = System.currentTimeMillis();
         synchronized (calcLock) {
-            bytesReadThroughput += (session.getReadBytes() - sessStat.lastByteRead)
-                    / ((currentTime - sessStat.lastPollingTime) / 1000f);
-            bytesWrittenThroughput += (session.getWrittenBytes() - sessStat.lastByteWrite)
-                    / ((currentTime - sessStat.lastPollingTime) / 1000f);
-            msgReadThroughput += (session.getReadMessages() - sessStat.lastMessageRead)
-                    / ((currentTime - sessStat.lastPollingTime) / 1000f);
-            msgWrittenThroughput += (session.getWrittenMessages() - sessStat.lastMessageWrite)
-                    / ((currentTime - sessStat.lastPollingTime) / 1000f);
+            bytesReadThroughput += (session.getReadBytes() - sessStat.lastByteRead) / ((currentTime - sessStat.lastPollingTime) / 1000f);
+            bytesWrittenThroughput += (session.getWrittenBytes() - sessStat.lastByteWrite) / ((currentTime - sessStat.lastPollingTime) / 1000f);
+            msgReadThroughput += (session.getReadMessages() - sessStat.lastMessageRead) / ((currentTime - sessStat.lastPollingTime) / 1000f);
+            msgWrittenThroughput += (session.getWrittenMessages() - sessStat.lastMessageWrite) / ((currentTime - sessStat.lastPollingTime) / 1000f);
         }
 
         session.removeAttribute(KEY);
@@ -265,11 +293,11 @@ public class StatCollector {
         }
 
         public void run() {
+
             while (!stop) {
                 for (Iterator iter = polledSessions.iterator(); iter.hasNext();) {
                     IoSession session = (IoSession) iter.next();
-                    IoSessionStat sessStat = (IoSessionStat) session
-                            .getAttribute(KEY);
+                    IoSessionStat sessStat = (IoSessionStat) session.getAttribute(KEY);
 
                     sessStat.lastByteRead = session.getReadBytes();
                     sessStat.lastByteWrite = session.getWrittenBytes();
@@ -281,6 +309,7 @@ public class StatCollector {
                 try {
                     Thread.sleep(pollingInterval);
                 } catch (InterruptedException e) {
+
                 }
 
                 float tmpMsgWrittenThroughput = 0f;
@@ -292,24 +321,18 @@ public class StatCollector {
 
                     // upadating individual session statistics
                     IoSession session = (IoSession) iter.next();
-                    IoSessionStat sessStat = (IoSessionStat) session
-                            .getAttribute(KEY);
+                    IoSessionStat sessStat = (IoSessionStat) session.getAttribute(KEY);
 
-                    sessStat.byteReadThroughput = (session.getReadBytes() - sessStat.lastByteRead)
-                            / (pollingInterval / 1000f);
+                    sessStat.byteReadThroughput = (session.getReadBytes() - sessStat.lastByteRead) / (pollingInterval / 1000f);
                     tmpBytesReadThroughput += sessStat.byteReadThroughput;
 
-                    sessStat.byteWrittenThroughput = (session.getWrittenBytes() - sessStat.lastByteWrite)
-                            / (pollingInterval / 1000f);
+                    sessStat.byteWrittenThroughput = (session.getWrittenBytes() - sessStat.lastByteWrite) / (pollingInterval / 1000f);
                     tmpBytesWrittenThroughput += sessStat.byteWrittenThroughput;
 
-                    sessStat.messageReadThroughput = (session.getReadMessages() - sessStat.lastMessageRead)
-                            / (pollingInterval / 1000f);
+                    sessStat.messageReadThroughput = (session.getReadMessages() - sessStat.lastMessageRead) / (pollingInterval / 1000f);
                     tmpMsgReadThroughput += sessStat.messageReadThroughput;
 
-                    sessStat.messageWrittenThroughput = (session
-                            .getWrittenMessages() - sessStat.lastMessageWrite)
-                            / (pollingInterval / 1000f);
+                    sessStat.messageWrittenThroughput = (session.getWrittenMessages() - sessStat.lastMessageWrite) / (pollingInterval / 1000f);
                     tmpMsgWrittenThroughput += sessStat.messageWrittenThroughput;
 
                     synchronized (calcLock) {
@@ -319,8 +342,12 @@ public class StatCollector {
                         bytesReadThroughput = tmpBytesReadThroughput;
                         sessStat.lastPollingTime = System.currentTimeMillis();
                     }
+
                 }
+
             }
+
         }
     }
+
 }

@@ -24,9 +24,11 @@ package org.apache.mina.integration.jmx;
  * @version $Rev$, $Date$
  */
 public interface IoServiceManagerMBean {
+
     /**
-     * amount of session currently managed
-     * @return session count
+     * 获取所有的连接数
+     *
+     * @return
      */
     int getManagedSessionCount();
 

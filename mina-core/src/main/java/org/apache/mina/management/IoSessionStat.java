@@ -34,6 +34,7 @@ import org.apache.mina.common.IoSession;
  * @version $Rev$, $Date$
  */
 public class IoSessionStat {
+
     long lastByteRead = -1;
 
     long lastByteWrite = -1;

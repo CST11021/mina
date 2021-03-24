@@ -31,6 +31,7 @@ import org.apache.mina.management.StatCollector;
  * @version $Rev$, $Date$
  */
 public class IoServiceManager implements IoServiceManagerMBean {
+
     private IoService service;
 
     private StatCollector collector = null;
@@ -39,11 +40,15 @@ public class IoServiceManager implements IoServiceManagerMBean {
         this.service = service;
     }
 
+    /**
+     * 获取所有的连接数
+     *
+     * @return
+     */
     public int getManagedSessionCount() {
 
         int count = 0;
-        for (Iterator iter = service.getManagedServiceAddresses().iterator(); iter
-                .hasNext();) {
+        for (Iterator iter = service.getManagedServiceAddresses().iterator(); iter.hasNext();) {
             SocketAddress element = (SocketAddress) iter.next();
 
             count += service.getManagedSessions(element).size();
